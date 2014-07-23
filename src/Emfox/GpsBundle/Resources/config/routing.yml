@@ -1,0 +1,8 @@
+emfox_gps_homepage:
+    path:     /hello/{name}
+    defaults: { _controller: "EmfoxGpsBundle:Default:index" }
+
+emfox_gps_category:
+    resource: "@EmfoxGpsBundle/Controller/CategoryController.php"
+    type: annotation
+    prefix:   /
