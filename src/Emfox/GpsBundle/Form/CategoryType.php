@@ -15,12 +15,13 @@ class CategoryType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('title')
-            ->add('lft')
-            ->add('lvl')
-            ->add('rgt')
-            ->add('root')
-            ->add('parent')
+            ->add('title',null,array('label' => '单位名'))
+            ->add('parent', null, array('property' => 'optionLabel', 'label'=>'上级单位', 'query_builder' => function($er) {
+    																					return $er->createQueryBuilder('c')
+    																					->orderBy('c.root', 'ASC')
+    																					->addOrderBy('c.lft', 'ASC');},
+                                          )
+            	 )
         ;
     }
     

@@ -1,5 +1,5 @@
 emfox_gps_homepage:
-    path:     /hello/{name}
+    path:     /
     defaults: { _controller: "EmfoxGpsBundle:Default:index" }
 
 emfox_gps_category:

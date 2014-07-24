@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @Gedmo\Tree(type="nested")
  * @ORM\Table(name="categories")
  * use repository for handy tree functions
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Gedmo\Tree\Entity\Repository\NestedTreeRepository")
  */
 class Category
 {
@@ -25,6 +25,19 @@ class Category
      */
     private $title;
 
+    /**
+     * @ORM\Column(name="updatetime", type="datetime")
+     */
+    private $updatetime;
+    /**
+     * @ORM\Column(name="lat", type="string", length=20)
+     */
+    private $lat;
+    /**
+     * @ORM\Column(name="lng", type="string", length=20)
+     */
+    private $lng;
+    
     /**
      * @Gedmo\TreeLeft
      * @ORM\Column(name="lft", type="integer")
@@ -62,6 +75,11 @@ class Category
      */
     private $children;
 
+    public function __toString()
+    {
+    	return $this->title;
+    }
+    
     public function getId()
     {
         return $this->id;
@@ -85,5 +103,137 @@ class Category
     public function getParent()
     {
         return $this->parent;
+    }
+    /**
+     * Constructor
+     */
+    public function __construct()
+    {
+        $this->children = new \Doctrine\Common\Collections\ArrayCollection();
+    }
+
+    /**
+     * Set lft
+     *
+     * @param integer $lft
+     * @return Category
+     */
+    public function setLft($lft)
+    {
+        $this->lft = $lft;
+
+        return $this;
+    }
+
+    /**
+     * Get lft
+     *
+     * @return integer 
+     */
+    public function getLft()
+    {
+        return $this->lft;
+    }
+
+    /**
+     * Set lvl
+     *
+     * @param integer $lvl
+     * @return Category
+     */
+    public function setLvl($lvl)
+    {
+        $this->lvl = $lvl;
+
+        return $this;
+    }
+
+    /**
+     * Get lvl
+     *
+     * @return integer 
+     */
+    public function getLvl()
+    {
+        return $this->lvl;
+    }
+
+    /**
+     * Set rgt
+     *
+     * @param integer $rgt
+     * @return Category
+     */
+    public function setRgt($rgt)
+    {
+        $this->rgt = $rgt;
+
+        return $this;
+    }
+
+    /**
+     * Get rgt
+     *
+     * @return integer 
+     */
+    public function getRgt()
+    {
+        return $this->rgt;
+    }
+
+    /**
+     * Set root
+     *
+     * @param integer $root
+     * @return Category
+     */
+    public function setRoot($root)
+    {
+        $this->root = $root;
+
+        return $this;
+    }
+
+    /**
+     * Get root
+     *
+     * @return integer 
+     */
+    public function getRoot()
+    {
+        return $this->root;
+    }
+
+    /**
+     * Add children
+     *
+     * @param \Emfox\GpsBundle\Entity\Category $children
+     * @return Category
+     */
+    public function addChild(\Emfox\GpsBundle\Entity\Category $children)
+    {
+        $this->children[] = $children;
+
+        return $this;
+    }
+
+    /**
+     * Remove children
+     *
+     * @param \Emfox\GpsBundle\Entity\Category $children
+     */
+    public function removeChild(\Emfox\GpsBundle\Entity\Category $children)
+    {
+        $this->children->removeElement($children);
+    }
+
+    /**
+     * Get children
+     *
+     * @return \Doctrine\Common\Collections\Collection 
+     */
+    public function getChildren()
+    {
+        return $this->children;
     }
 }

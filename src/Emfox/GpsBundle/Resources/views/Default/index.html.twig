@@ -17,7 +17,8 @@ body{height:100%;margin:0px;padding:0px;}
 <body onload="init()" onresize="checkSize()">
 <div id="top"><div id="top_content">物联网</div></div>
 <div id="main">
-<div id="aside">单位列表</div>
+<div id="aside">单位列表
+{{ render(controller('EmfoxGpsBundle:Category:hierarchy',{'root':0})) }}</div>
 <div id="map"></div>
 </div>
 </body>

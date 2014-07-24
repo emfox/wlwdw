@@ -9,7 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
  * @Gedmo\Tree(type="nested")
  * @ORM\Table(name="categories")
  * use repository for handy tree functions
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="Gedmo\Tree\Entity\Repository\NestedTreeRepository")
  */
 class Category
 {
@@ -25,6 +25,19 @@ class Category
      */
     private $title;
 
+    /**
+     * @ORM\Column(name="updatetime", type="datetime")
+     */
+    private $updatetime;
+    /**
+     * @ORM\Column(name="lat", type="string", length=20)
+     */
+    private $lat;
+    /**
+     * @ORM\Column(name="lng", type="string", length=20)
+     */
+    private $lng;
+    
     /**
      * @Gedmo\TreeLeft
      * @ORM\Column(name="lft", type="integer")
@@ -222,5 +235,82 @@ class Category
     public function getChildren()
     {
         return $this->children;
+    }
+
+    /**
+     * Set updatetime
+     *
+     * @param \DateTime $updatetime
+     * @return Category
+     */
+    public function setUpdatetime($updatetime)
+    {
+        $this->updatetime = $updatetime;
+
+        return $this;
+    }
+
+    /**
+     * Get updatetime
+     *
+     * @return \DateTime 
+     */
+    public function getUpdatetime()
+    {
+        return $this->updatetime;
+    }
+
+    /**
+     * Set lat
+     *
+     * @param string $lat
+     * @return Category
+     */
+    public function setLat($lat)
+    {
+        $this->lat = $lat;
+
+        return $this;
+    }
+
+    /**
+     * Get lat
+     *
+     * @return string 
+     */
+    public function getLat()
+    {
+        return $this->lat;
+    }
+
+    /**
+     * Set lng
+     *
+     * @param string $lng
+     * @return Category
+     */
+    public function setLng($lng)
+    {
+        $this->lng = $lng;
+
+        return $this;
+    }
+
+    /**
+     * Get lng
+     *
+     * @return string 
+     */
+    public function getLng()
+    {
+        return $this->lng;
+    }
+    
+    public function getOptionLabel()
+    {
+    	return str_repeat(
+    			html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8'),
+    			($this->getLvl() + 1) * 3
+    	) . $this->getTitle();
     }
 }

@@ -1,0 +1,58 @@
+ <link rel="stylesheet" href="{{ asset('bundles/emfoxgps/css/zTreeStyle/zTreeStyle.css') }}" type="text/css">
+  <script type="text/javascript" src="{{ asset('bundles/emfoxgps/js/jquery-1.4.4.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bundles/emfoxgps/js/jquery.cookie.js') }}"></script>
+  <script type="text/javascript" src="{{ asset('bundles/emfoxgps/js/jquery.ztree.all-3.5.min.js') }}"></script>
+
+<script type="text/javascript"> 
+
+var ztreeStatusCookieKey ='ztree-log-status-gps1s';
+$.cookie.defaults.path = '/';
+var zTreeObj;
+//zTree 的参数配置，深入使用请参考 API 文档（setting 配置详解）
+var setting = { callback:{onClick:openUrl,onExpand:logStatus,onCollapse:logStatus}, data:{key:{name:"title"} } };
+var zNodes = {{ jsonTree|raw }};
+$(document).ready(function(){
+    zTreeObj = $.fn.zTree.init($("#jsonTree"), setting, zNodes);
+    var opennodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+
+	if(opennodes !== null && opennodes.length !== 0)
+	{
+		for ( i in opennodes){
+			the_node = zTreeObj.getNodeByParam("id",opennodes[i])
+			if(the_node)
+				the_node.open = true;
+		}
+	}
+	zTreeObj.refresh();
+    
+ });
+
+function logStatus(event, treeId, treeNode)
+{
+
+	var _nodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+	var _index = $.inArray(treeNode.id + '', _nodes);
+
+	if(treeNode.open && _index === -1)
+	{
+		_nodes.push(treeNode.id);
+	}	
+	else
+	{
+		_nodes.splice(_index, 1);
+	}
+
+	$.cookie(ztreeStatusCookieKey, _nodes.join(','));
+}
+
+function openUrl(event, treeId, treeNode)
+{	
+	window.location.assign("aaa");
+
+}
+</script>
+
+
+<div id="jsonTree" class="ztree">
+
+</div>
