@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="utf-8" />
-<title>物联网</title>
+<title>物流定位监控系统</title>
 <style type="text/css">
 html{height:100%;}
 body{height:100%;margin:0px;padding:0px;}
@@ -11,18 +11,36 @@ body{height:100%;margin:0px;padding:0px;}
 #aside{position:absolute;top:80px;width:159px;border-right:1px solid #bbb;background:#ddd;}
 #map{margin-left:160px;}
 </style>
+<script type="text/javascript" src="{{ asset('bundles/emfoxgps/js/jquery-1.4.4.min.js') }}"></script>
 <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
 </head>
 
 <body onload="init()" onresize="checkSize()">
-<div id="top"><div id="top_content">物联网</div></div>
+<div id="top"><div id="top_content">物流定位监控系统</div></div>
 <div id="main">
 <div id="aside">单位列表
-{{ render(controller('EmfoxGpsBundle:Category:hierarchy',{'root':0})) }}</div>
+{{ render(controller('EmfoxGpsBundle:Category:hierarchy',{'root':0})) }}
+<div id="updatepoints" ajax-url="{{ path('category_ajax') }}">Click to update</div></div>
 <div id="map"></div>
 </div>
 </body>
 <script type="text/javascript">
+//百度地图API功能
+var map = new BMap.Map("map",{mapType: BMAP_HYBRID_MAP});
+map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
+
+    $('#updatepoints').click(function() {
+        $.get($(this).attr("ajax-url"), function (data) {
+            points = $.parseJSON( data ).points;
+            Object.keys(points).forEach(function(key) {
+                point = points[key];
+                p = new BMap.Point(point.lng,point.lat);
+                c = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
+                addMarker(p,c);
+            });
+		});
+    });
+
 function checkSize() {
 	var h = document.documentElement.clientHeight;
 	document.getElementById('aside').style.height = h - 80 + "px";
@@ -30,29 +48,21 @@ function checkSize() {
 	}
 function init() {
 	checkSize();
-
 	}
 
-// 百度地图API功能
-var map = new BMap.Map("map");
-map.centerAndZoom(new BMap.Point(116.404, 39.915), 14);
-var marker1 = new BMap.Marker(new BMap.Point(116.384, 39.925));  // 创建标注
-map.addOverlay(marker1);              // 将标注添加到地图中
-
-//创建信息窗口
-var infoWindow1 = new BMap.InfoWindow("普通标注");
-marker1.addEventListener("click", function(){this.openInfoWindow(infoWindow1);});
-
-
-//创建小狐狸
-var pt = new BMap.Point(116.417, 39.909);
-var myIcon = new BMap.Icon("fox.gif", new BMap.Size(300,157));
-var marker2 = new BMap.Marker(pt,{icon:myIcon});  // 创建标注
-map.addOverlay(marker2);              // 将标注添加到地图中
-
-//让小狐狸说话（创建信息窗口）
-var infoWindow2 = new BMap.InfoWindow("<p style='font-size:14px;'>哈哈，你看见我啦！我可不常出现哦！</p><p style='font-size:14px;'>赶快查看源代码，看看我是如何添加上来的！</p>");
-marker2.addEventListener("click", function(){this.openInfoWindow(infoWindow2);});
+function addMarker(point,content){  
+    var marker = new BMap.Marker(point);  
+    //var infoWindow = new BMap.InfoWindow(sContent);   
+    var infoWindow = new BMap.InfoWindow(content);   
+    map.addOverlay(marker);  
+    marker.addEventListener("click", function(){            
+        this.openInfoWindow(infoWindow);  
+        //图片加载完毕重绘infowindow  
+        //document.getElementById('imgDemo').onload = function (){  
+        //    infoWindow.redraw();   //防止在网速较慢，图片未加载时，生成的信息框高度比图片的总高度小，导致图片部分被隐藏  
+        //};  
+    });
+}
 
 
 </script>

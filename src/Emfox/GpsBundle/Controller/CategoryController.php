@@ -3,6 +3,7 @@
 namespace Emfox\GpsBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
@@ -30,6 +31,28 @@ class CategoryController extends Controller
 		return array(
 				'jsonTree' => json_encode($arrayTree)
 		);
+	}
+	/**
+	 * Lists all Category entities via ajax.
+	 *
+	 * @Route("/ajax", name="category_ajax")
+	 * @Method("GET")
+	 */
+	public function ajaxAction()
+	{
+		$em = $this->getDoctrine()->getManager();
+	
+		$entities = $em->getRepository('EmfoxGpsBundle:Category')->findAll();
+		foreach($entities as $entity)
+		{
+			$id = $entity->getId();
+			$points[$id] = array("lng" => $entity->getLng(),
+					"lat" => $entity->getLat(),
+					"title" => $entity->getTitle(),
+					"time" => $entity->getUpdatetime()->format("Y-m-d H:i:s"));
+		}
+		$response = array("code" => 100, "success" => true, "points" => $points);
+		return new Response(json_encode($response));
 	}
     /**
      * Lists all Category entities.
