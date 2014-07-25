@@ -32,11 +32,9 @@ map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
     $('#updatepoints').click(function() {
         $.get($(this).attr("ajax-url"), function (data) {
             points = $.parseJSON( data ).points;
+            map.clearOverlays();
             Object.keys(points).forEach(function(key) {
-                point = points[key];
-                p = new BMap.Point(point.lng,point.lat);
-                c = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
-                addMarker(p,c);
+                addMarker(points[key]);
             });
 		});
     });
@@ -50,17 +48,23 @@ function init() {
 	checkSize();
 	}
 
-function addMarker(point,content){  
-    var marker = new BMap.Marker(point);  
-    //var infoWindow = new BMap.InfoWindow(sContent);   
+function addMarker(point){ 
+    p = new BMap.Point(point.lng,point.lat);
+    content = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
+    var marker = new BMap.Marker(p);  
     var infoWindow = new BMap.InfoWindow(content);   
     map.addOverlay(marker);  
     marker.addEventListener("click", function(){            
         this.openInfoWindow(infoWindow);  
-        //图片加载完毕重绘infowindow  
-        //document.getElementById('imgDemo').onload = function (){  
-        //    infoWindow.redraw();   //防止在网速较慢，图片未加载时，生成的信息框高度比图片的总高度小，导致图片部分被隐藏  
-        //};  
+    });
+    opts = {
+  		  position : p,    // 指定文本标注所在的地理位置
+  		  offset   : new BMap.Size(10, -15)    //设置文本偏移量
+  		}
+	var label = new BMap.Label(point.title, opts);
+	map.addOverlay(label);
+    label.addEventListener("click", function(){            
+        this.hide();  
     });
 }
 
