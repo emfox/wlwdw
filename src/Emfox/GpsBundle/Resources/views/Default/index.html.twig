@@ -54,7 +54,8 @@ body {
 		<div id="aside">
 			单位列表 {{
 			render(controller('EmfoxGpsBundle:Category:hierarchy',{'root':0})) }}
-			<div id="updatepoints" ajax-url="{{ path('category_ajax') }}">手动刷新</div>
+			<input type="button" value="手动刷新" id="updatepoints" ajax-url="{{ path('category_ajax') }}" />
+			<input type="button" value="当前位置" id="allpoints" />
 			<div>百度加密坐标<input type="text" id="mouse_pos_bd09" />
 			GPS真实坐标<input type="text" id="mouse_pos_wgs84" /></div>
 		</div>
@@ -63,10 +64,12 @@ body {
 </body>
 <script type="text/javascript">
 var map;
+var bdpoints = new Array();
 $(document).ready(function(){
 	checkSize();
 	map = new BMap.Map("map",{mapType: BMAP_HYBRID_MAP});
 	map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
+	map.setDefaultCursor("default");
 
     $('#updatepoints').click(function() {
         $.get($(this).attr("ajax-url"), function (data) {
@@ -78,6 +81,9 @@ $(document).ready(function(){
 		});
     });
 
+    $('#allpoints').click(function() {
+        map.setViewport(bdpoints,{zoomFactor:-1});
+    });
     map.addEventListener("mousemove",function(e){
         $('#mouse_pos_bd09').val(e.point.lng+","+e.point.lat);
         p=bd2wgs(e.point);
@@ -94,6 +100,7 @@ function checkSize() {
 
 function addMarker(point){ 
     p = new BMap.Point(point.lng,point.lat);
+    bdpoints.push(p);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
     var marker = new BMap.Marker(p);  
     var infoWindow = new BMap.InfoWindow(content);   
