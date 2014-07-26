@@ -30,11 +30,11 @@ class Category
      */
     private $updatetime;
     /**
-     * @ORM\Column(name="lat", type="string", length=20)
+     * @ORM\Column(name="lat", type="float")
      */
     private $lat;
     /**
-     * @ORM\Column(name="lng", type="string", length=20)
+     * @ORM\Column(name="lng", type="float")
      */
     private $lng;
     
@@ -263,7 +263,7 @@ class Category
     /**
      * Set lat
      *
-     * @param string $lat
+     * @param float $lat
      * @return Category
      */
     public function setLat($lat)
@@ -276,7 +276,7 @@ class Category
     /**
      * Get lat
      *
-     * @return string 
+     * @return float 
      */
     public function getLat()
     {
@@ -286,7 +286,7 @@ class Category
     /**
      * Set lng
      *
-     * @param string $lng
+     * @param float $lng
      * @return Category
      */
     public function setLng($lng)
@@ -299,7 +299,7 @@ class Category
     /**
      * Get lng
      *
-     * @return string 
+     * @return float 
      */
     public function getLng()
     {
