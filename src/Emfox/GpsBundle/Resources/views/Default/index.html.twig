@@ -76,7 +76,8 @@ $(document).ready(function(){
             points = $.parseJSON(data).points;
             map.clearOverlays();
             Object.keys(points).forEach(function(key) {
-                addMarker(points[key]);
+                if(points[key].lat*points[key].lng !=0)
+                	addMarker(points[key]);
             });
 		});
     });
