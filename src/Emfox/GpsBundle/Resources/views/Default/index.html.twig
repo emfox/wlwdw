@@ -46,24 +46,27 @@ body {
 	src="http://api.map.baidu.com/api?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
 </head>
 
-<body onload="init()" onresize="checkSize()">
+<body onresize="checkSize()">
 	<div id="top">
 		<div id="top_content">物流定位监控系统</div>
 	</div>
 	<div id="main">
 		<div id="aside">
-			单位列表
-			 {{ render(controller('EmfoxGpsBundle:Category:hierarchy',{'root':0})) }}
-			<div id="updatepoints" ajax-url="{{ path('category_ajax') }}">Click
-				to update</div>
+			单位列表 {{
+			render(controller('EmfoxGpsBundle:Category:hierarchy',{'root':0})) }}
+			<div id="updatepoints" ajax-url="{{ path('category_ajax') }}">手动刷新</div>
+			<div>百度加密坐标<input type="text" id="mouse_pos_bd09" />
+			GPS真实坐标<input type="text" id="mouse_pos_wgs84" /></div>
 		</div>
 		<div id="map"></div>
 	</div>
 </body>
 <script type="text/javascript">
-//百度地图API功能
-var map = new BMap.Map("map",{mapType: BMAP_HYBRID_MAP});
-map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
+var map;
+$(document).ready(function(){
+	checkSize();
+	map = new BMap.Map("map",{mapType: BMAP_HYBRID_MAP});
+	map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
 
     $('#updatepoints').click(function() {
         $.get($(this).attr("ajax-url"), function (data) {
@@ -75,13 +78,18 @@ map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
 		});
     });
 
+    map.addEventListener("mousemove",function(e){
+        $('#mouse_pos_bd09').val(e.point.lng+","+e.point.lat);
+        p=bd2wgs(e.point);
+        p.lng=Math.round(p.lng*1000000)/1000000;
+        p.lat=Math.round(p.lat*1000000)/1000000;
+        $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
+    });
+});
 function checkSize() {
 	var h = document.documentElement.clientHeight;
 	document.getElementById('aside').style.height = h - 80 + "px";
 	document.getElementById('map').style.height = h - 80 + "px";
-	}
-function init() {
-	checkSize();
 	}
 
 function addMarker(point){ 
