@@ -59,11 +59,10 @@ body {
 	</div>
 	<div id="main">
 		<div id="aside">
-			单位列表
+			单位列表<input type="button" value="全局视图" id="viewAll" />
 			<div id="jsonTree" class="ztree"></div>
-			<input type="button" value="手动刷新" id="updatepoints"
-				ajax-url="{{ path('category_hierarchy') }}" /> <input type="button"
-				value="当前位置" id="allpoints" />
+			<input type="button" value="手动刷新" id="reloadAll"
+				ajax-url= />
 			<div>
 				百度加密坐标<input type="text" id="mouse_pos_bd09" /> GPS真实坐标<input
 					type="text" id="mouse_pos_wgs84" />
@@ -77,30 +76,17 @@ var ztreeStatusCookieKey ='ztree-log-status-gps1s';
 $.cookie.defaults.path = '/';
 var zTreeObj;
 //zTree 的参数配置，深入使用请参考 API 文档（setting 配置详解）
-var zTreeSetting = { callback:{onExpand:logStatus,onCollapse:logStatus}, data:{key:{name:"title"} } };
+var zTreeSetting = { callback:{onExpand:logStatus,onCollapse:logStatus},
+		data:{key:{name:"title"} },
+		view:{addDiyDom: addDiyDom} };
 var zNodes;
 var map;
-var bdpoints = new Array();
-$(document).ready(function(){
 
-    
+$(document).ready(function(){
 	checkSize();
 	map = new BMap.Map("map",{mapType: BMAP_HYBRID_MAP});
 	map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
 	map.setDefaultCursor("default");
-
-    $('#updatepoints').click(function() {
-        $.get($(this).attr("ajax-url"), function (data) {
-            zNodes = $.parseJSON(data).ztree;
-            reloadzTree();
-            reloadOverlay();
-		});
-    });
-
-    $('#updatepoints').click();
-    $('#allpoints').click(function() {
-        map.setViewport(bdpoints,{zoomFactor:-1});
-    });
     map.addEventListener("mousemove",function(e){
         $('#mouse_pos_bd09').val(e.point.lng+","+e.point.lat);
         p=bd2wgs(e.point);
@@ -108,7 +94,20 @@ $(document).ready(function(){
         p.lat=Math.round(p.lat*1000000)/1000000;
         $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
     });
+    
+    $('#reloadAll').click(reloadAll);
+    $('#viewAll').click(function() {setCurLocation(zNodes);});
+    reloadAll();
+
 });
+
+function reloadAll(){
+    $.get("{{ path('category_hierarchy') }}", function (data) {
+        zNodes = $.parseJSON(data).ztree;
+        reloadzTree();
+        reloadOverlay();
+	});
+}
 function reloadzTree(){
     zTreeObj = $.fn.zTree.init($("#jsonTree"), zTreeSetting, zNodes);
     var opennodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
@@ -140,7 +139,6 @@ function checkSize() {
 
 function addMarker(point){ 
     p = new BMap.Point(point.lng,point.lat);
-    bdpoints.push(p);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
     var marker = new BMap.Marker(p);  
     var infoWindow = new BMap.InfoWindow(content);   
@@ -157,6 +155,27 @@ function addMarker(point){
     label.addEventListener("click", function(){            
         this.hide();  
     });
+}
+function addDiyDom(treeId, treeNode) {
+	if (treeNode.children.length == 0) return;
+	var aObj = $("#" + treeNode.tId + "_a");
+	var editStr = "<input type='button' id='diyBtn_" + treeNode.id
+		+ "' value='当前位置' onfocus='this.blur();' />";
+	aObj.after(editStr);
+	var btn = $("#diyBtn_"+treeNode.id);
+	if (btn) btn.bind("click", function(){setCurLocation(treeNode)});
+};
+function setCurLocation(treeNode){
+    var nodes = zTreeObj.transformToArray(treeNode);
+    var bdpoints = new Array();
+    Object.keys(nodes).forEach(function(key) {
+        if(nodes[key].lat*nodes[key].lng !=0){
+            p = new BMap.Point(nodes[key].lng,nodes[key].lat);
+            bdpoints.push(p);
+        }
+    });
+    if (bdpoints.length>0)
+    	map.setViewport(bdpoints,{zoomFactor:-1});
 }
 function logStatus(event, treeId, treeNode)
 {

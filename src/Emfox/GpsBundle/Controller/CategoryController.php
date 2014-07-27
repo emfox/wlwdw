@@ -86,7 +86,7 @@ class CategoryController extends Controller
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-        	$entity->setUpdatetime(new \DateTime('1980-01-01'));
+        	$entity->setUpdatetime(new \DateTime());
         	$entity->setLat('0');
         	$entity->setLng('0');
             $em = $this->getDoctrine()->getManager();
