@@ -19,8 +19,10 @@ use Emfox\GpsBundle\Form\CategoryType;
 class CategoryController extends Controller
 {
 	/**
-	 * List Category hierarchy tree
-	 * @Template("EmfoxGpsBundle:Category:hierarchy.html.twig")
+	 * Lists all Category entities via ajax.
+	 *
+	 * @Route("/hierarchy", name="category_hierarchy")
+	 * @Method("GET")
 	 */
 	public function hierarchyAction($root = null)
 	{
@@ -28,9 +30,8 @@ class CategoryController extends Controller
 		$repo = $em->getRepository('EmfoxGpsBundle:Category');
 		$repo->setChildrenIndex('children');
 		$arrayTree = $repo->childrenHierarchy();
-		return array(
-				'jsonTree' => json_encode($arrayTree)
-		);
+		$response = array("code" => 100, "success" => true, "ztree" => $arrayTree);
+		return new Response(json_encode($response));
 	}
 	/**
 	 * Lists all Category entities via ajax.

@@ -3,6 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <title>物流定位监控系统</title>
+<link rel="stylesheet"
+	href="{{ asset('bundles/emfoxgps/css/zTreeStyle/zTreeStyle.css') }}"
+	type="text/css">
 <style type="text/css">
 html {
 	height: 100%;
@@ -41,6 +44,10 @@ body {
 <script type="text/javascript"
 	src="{{ asset('bundles/emfoxgps/js/jquery-1.4.4.min.js') }}"></script>
 <script type="text/javascript"
+	src="{{ asset('bundles/emfoxgps/js/jquery.cookie.js') }}"></script>
+<script type="text/javascript"
+	src="{{ asset('bundles/emfoxgps/js/jquery.ztree.all-3.5.min.js') }}"></script>
+<script type="text/javascript"
 	src="{{ asset('bundles/emfoxgps/js/coords_trans.js') }}"></script>
 <script type="text/javascript"
 	src="http://api.map.baidu.com/api?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
@@ -52,20 +59,31 @@ body {
 	</div>
 	<div id="main">
 		<div id="aside">
-			单位列表 {{
-			render(controller('EmfoxGpsBundle:Category:hierarchy',{'root':0})) }}
-			<input type="button" value="手动刷新" id="updatepoints" ajax-url="{{ path('category_ajax') }}" />
-			<input type="button" value="当前位置" id="allpoints" />
-			<div>百度加密坐标<input type="text" id="mouse_pos_bd09" />
-			GPS真实坐标<input type="text" id="mouse_pos_wgs84" /></div>
+			单位列表
+			<div id="jsonTree" class="ztree"></div>
+			<input type="button" value="手动刷新" id="updatepoints"
+				ajax-url="{{ path('category_hierarchy') }}" /> <input type="button"
+				value="当前位置" id="allpoints" />
+			<div>
+				百度加密坐标<input type="text" id="mouse_pos_bd09" /> GPS真实坐标<input
+					type="text" id="mouse_pos_wgs84" />
+			</div>
 		</div>
 		<div id="map"></div>
 	</div>
 </body>
 <script type="text/javascript">
+var ztreeStatusCookieKey ='ztree-log-status-gps1s';
+$.cookie.defaults.path = '/';
+var zTreeObj;
+//zTree 的参数配置，深入使用请参考 API 文档（setting 配置详解）
+var zTreeSetting = { callback:{onExpand:logStatus,onCollapse:logStatus}, data:{key:{name:"title"} } };
+var zNodes;
 var map;
 var bdpoints = new Array();
 $(document).ready(function(){
+
+    
 	checkSize();
 	map = new BMap.Map("map",{mapType: BMAP_HYBRID_MAP});
 	map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
@@ -73,15 +91,13 @@ $(document).ready(function(){
 
     $('#updatepoints').click(function() {
         $.get($(this).attr("ajax-url"), function (data) {
-            points = $.parseJSON(data).points;
-            map.clearOverlays();
-            Object.keys(points).forEach(function(key) {
-                if(points[key].lat*points[key].lng !=0)
-                	addMarker(points[key]);
-            });
+            zNodes = $.parseJSON(data).ztree;
+            reloadzTree();
+            reloadOverlay();
 		});
     });
 
+    $('#updatepoints').click();
     $('#allpoints').click(function() {
         map.setViewport(bdpoints,{zoomFactor:-1});
     });
@@ -93,6 +109,29 @@ $(document).ready(function(){
         $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
     });
 });
+function reloadzTree(){
+    zTreeObj = $.fn.zTree.init($("#jsonTree"), zTreeSetting, zNodes);
+    var opennodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+
+	if(opennodes !== null && opennodes.length !== 0)
+	{
+		for ( i in opennodes){
+			the_node = zTreeObj.getNodeByParam("id",opennodes[i])
+			if(the_node)
+				the_node.open = true;
+		}
+	}
+	zTreeObj.refresh();
+}
+
+function reloadOverlay(){
+    map.clearOverlays();
+    var nodes = zTreeObj.transformToArray(zTreeObj.getNodes());
+    Object.keys(nodes).forEach(function(key) {
+        if(nodes[key].lat*nodes[key].lng !=0)
+        	addMarker(nodes[key]);
+    });
+}
 function checkSize() {
 	var h = document.documentElement.clientHeight;
 	document.getElementById('aside').style.height = h - 80 + "px";
@@ -102,7 +141,7 @@ function checkSize() {
 function addMarker(point){ 
     p = new BMap.Point(point.lng,point.lat);
     bdpoints.push(p);
-    content = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
+    content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
     var marker = new BMap.Marker(p);  
     var infoWindow = new BMap.InfoWindow(content);   
     map.addOverlay(marker);  
@@ -119,7 +158,23 @@ function addMarker(point){
         this.hide();  
     });
 }
+function logStatus(event, treeId, treeNode)
+{
 
+	var _nodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+	var _index = $.inArray(treeNode.id + '', _nodes);
+
+	if(treeNode.open && _index === -1)
+	{
+		_nodes.push(treeNode.id);
+	}	
+	else
+	{
+		_nodes.splice(_index, 1);
+	}
+
+	$.cookie(ztreeStatusCookieKey, _nodes.join(','));
+}
 
 </script>
 </html>
