@@ -10,6 +10,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Emfox\GpsBundle\Entity\Category;
 use Emfox\GpsBundle\Form\CategoryType;
+use Emfox\GpsBundle\Entity\Trail;
 
 /**
  * Category controller.
@@ -91,6 +92,16 @@ class CategoryController extends Controller
         	$entity->setLng('0');
             $em = $this->getDoctrine()->getManager();
             $em->persist($entity);
+            $em->flush();
+            for($i=1;$i<=30;$i++)
+            {
+            	$trail = new Trail();
+            	$trail->setCatid($entity->getId());
+            	$trail->setLat('0');
+            	$trail->setLng('0');
+            	$trail->setTime(new \DateTime());
+            	$em->persist($trail);
+            }
             $em->flush();
 
             return $this->redirect($this->generateUrl('category_show', array('id' => $entity->getId())));

@@ -21,6 +21,10 @@ class Category
     private $id;
 
     /**
+     * @ORM\Column(name="devid", type="string", length=24)
+     */
+    private $devid;
+    /**
      * @ORM\Column(name="title", type="string", length=64)
      */
     private $title;
@@ -312,5 +316,28 @@ class Category
     			html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8'),
     			($this->getLvl() + 1) * 3
     	) . $this->getTitle();
+    }
+
+    /**
+     * Set devid
+     *
+     * @param string $devid
+     * @return Category
+     */
+    public function setDevid($devid)
+    {
+        $this->devid = $devid;
+
+        return $this;
+    }
+
+    /**
+     * Get devid
+     *
+     * @return string 
+     */
+    public function getDevid()
+    {
+        return $this->devid;
     }
 }

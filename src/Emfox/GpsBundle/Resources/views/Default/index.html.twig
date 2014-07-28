@@ -76,7 +76,7 @@ var ztreeStatusCookieKey ='ztree-log-status-gps1s';
 $.cookie.defaults.path = '/';
 var zTreeObj;
 //zTree 的参数配置，深入使用请参考 API 文档（setting 配置详解）
-var zTreeSetting = { callback:{onExpand:logStatus,onCollapse:logStatus},
+var zTreeSetting = { callback:{onClick:zTreeOnClick,onExpand:logStatus,onCollapse:logStatus},
 		data:{key:{name:"title"} },
 		view:{addDiyDom: addDiyDom} };
 var zNodes;
@@ -128,7 +128,7 @@ function reloadOverlay(){
     var nodes = zTreeObj.transformToArray(zTreeObj.getNodes());
     Object.keys(nodes).forEach(function(key) {
         if(nodes[key].lat*nodes[key].lng !=0)
-        	addMarker(nodes[key]);
+        	addMarker_p(nodes[key]);
     });
 }
 function checkSize() {
@@ -137,10 +137,12 @@ function checkSize() {
 	document.getElementById('map').style.height = h - 80 + "px";
 	}
 
-function addMarker(point){ 
+function addMarker_p(point){ 
     p = new BMap.Point(point.lng,point.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
-    var marker = new BMap.Marker(p);  
+    var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Point.png') }}",
+    	    new BMap.Size(32, 32), {offset: new BMap.Size(16, 32)});
+    var marker = new BMap.Marker(p, {icon: myIcon});  
     var infoWindow = new BMap.InfoWindow(content);   
     map.addOverlay(marker);  
     marker.addEventListener("click", function(){            
@@ -156,6 +158,31 @@ function addMarker(point){
         this.hide();  
     });
 }
+function addMarker_t(point){ 
+    p = new BMap.Point(point.lng,point.lat);
+    content = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
+    var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Pin.png') }}",
+    	    new BMap.Size(32, 32), {offset: new BMap.Size(16, 32)});
+    var marker = new BMap.Marker(p, {icon: myIcon});  
+    var infoWindow = new BMap.InfoWindow(content);   
+    map.addOverlay(marker);  
+    marker.addEventListener("click", function(){            
+        this.openInfoWindow(infoWindow);  
+    });
+}
+function zTreeOnClick(event, treeId, treeNode) {
+	//FIXME: 12377 is just a placeholder,
+	//FIXME: Better to use FOSJsRoutingBundle for exporting Symfony Routes to Javascript.
+    $.get("{{ path('trail_list',{'catid':12377}) }}".replace(/12377/,treeNode.id), function (data) {
+        trail = $.parseJSON(data).trail;
+        reloadOverlay();
+        Object.keys(trail).forEach(function(key) {
+            if(trail[key].lat*trail[key].lng !=0)
+                trail[key].title=treeNode.title;
+            	addMarker_t(trail[key]);
+        });
+	});
+};
 function addDiyDom(treeId, treeNode) {
 	if (treeNode.children.length == 0) return;
 	var aObj = $("#" + treeNode.tId + "_a");
