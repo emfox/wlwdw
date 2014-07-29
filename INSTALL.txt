@@ -1,0 +1,4 @@
+0. (if clone from git) php composer.phar install
+1. cp app/config/parameters.yml.dist paramerters.yml, edit database_*
+2. php app/console doctrine:database:create
+3. php app/console doctrine:schema:update --force
