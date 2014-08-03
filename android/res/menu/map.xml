@@ -1,0 +1,23 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gps1s="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="org.rpwt.gps1s.MainActivity" >
+
+            <item
+        android:id="@+id/action_current_location"
+        android:icon="@drawable/ic_action_location_found"
+        gps1s:showAsAction="ifRoom"
+        android:title="@string/action_current_location"/>
+        <item
+        android:id="@+id/action_back_to_cui"
+        android:icon="@drawable/ic_action_undo"
+        gps1s:showAsAction="ifRoom"
+        android:title="@string/action_back_to_cui"/>
+        
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        gps1s:showAsAction="never"/>
+
+</menu>
