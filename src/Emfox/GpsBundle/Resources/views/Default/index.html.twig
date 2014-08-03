@@ -75,12 +75,13 @@ body {
 var ztreeStatusCookieKey ='ztree-log-status-gps1s';
 $.cookie.defaults.path = '/';
 var zTreeObj;
-//zTree 的参数配置，深入使用请参考 API 文档（setting 配置详解）
+//zTree 的参数配置
 var zTreeSetting = { callback:{onClick:zTreeOnClick,onExpand:logStatus,onCollapse:logStatus},
 		data:{key:{name:"title"} },
 		view:{addDiyDom: addDiyDom} };
 var zNodes;
 var map;
+var labelPos;
 
 $(document).ready(function(){
 	checkSize();
@@ -88,11 +89,25 @@ $(document).ready(function(){
 	map.centerAndZoom(new BMap.Point(116.384, 39.925), 15);
 	map.setDefaultCursor("default");
     map.addEventListener("mousemove",function(e){
-        $('#mouse_pos_bd09').val(e.point.lng+","+e.point.lat);
         p=bd2wgs(e.point);
         p.lng=Math.round(p.lng*1000000)/1000000;
         p.lat=Math.round(p.lat*1000000)/1000000;
+        var c = "百度坐标："+e.point.lng+","+e.point.lat + "<br />GPS坐标：" + p.lng + "," + p.lat;
+        labelPos.setContent(c);
+        labelPos.setPosition(new BMap.Point(e.point.lng,e.point.lat));
+    });
+    map.addEventListener("click",function(e){
+        p=bd2wgs(e.point);
+        p.lng=Math.round(p.lng*1000000)/1000000;
+        p.lat=Math.round(p.lat*1000000)/1000000;
+        $('#mouse_pos_bd09').val(e.point.lng+","+e.point.lat);
         $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
+    });
+    map.addEventListener("mouseover",function(e){
+		labelPos.show();
+    });
+    map.addEventListener("mouseout",function(e){
+		labelPos.hide();
     });
     
     $('#reloadAll').click(reloadAll);
@@ -130,6 +145,12 @@ function reloadOverlay(){
         if(nodes[key].lat*nodes[key].lng !=0)
         	addMarker_p(nodes[key]);
     });
+    opts = {
+    		  position : p,    // 指定文本标注所在的地理位置
+    		  offset   : new BMap.Size(12, -35)    //设置文本偏移量
+    		}
+  	labelPos = new BMap.Label("坐标：", opts);
+    map.addOverlay(labelPos);  
 }
 function checkSize() {
 	var h = document.documentElement.clientHeight;
