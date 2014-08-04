@@ -165,11 +165,11 @@ function reloadOverlay(){
         	addMarker_p(nodes[key]);
     });
     opts = {
-    		  position : p,    // 指定文本标注所在的地理位置
     		  offset   : new BMap.Size(12, -35)    //设置文本偏移量
     		}
   	labelPos = new BMap.Label("坐标：", opts);
-    map.addOverlay(labelPos);  
+    map.addOverlay(labelPos);
+    labelPos.hide();
 }
 function checkSize() {
 	var h = document.documentElement.clientHeight;
