@@ -61,8 +61,13 @@ body {
 		<div id="aside">
 			单位列表<input type="button" value="全局视图" id="viewAll" />
 			<div id="jsonTree" class="ztree"></div>
-			<input type="button" value="手动刷新" id="reloadAll"
-				ajax-url= />
+			<div>
+			<input type="radio" name="refresh_time" value="30">30秒自动刷新<br />
+			<input type="radio" name="refresh_time" value="60">1分钟自动刷新<br />
+			<input type="radio" name="refresh_time" value="120">2分钟自动刷新<br />
+			<input type="radio" name="refresh_time" value="0" checked="checked">
+			<input type="button" value="手动刷新" id="reloadAll"/>
+				</div>
 			<div>
 				百度加密坐标<input type="text" id="mouse_pos_bd09" /> GPS真实坐标<input
 					type="text" id="mouse_pos_wgs84" />
@@ -82,6 +87,7 @@ var zTreeSetting = { callback:{onClick:zTreeOnClick,onExpand:logStatus,onCollaps
 var zNodes;
 var map;
 var labelPos;
+var nextRefresh;
 
 $(document).ready(function(){
 	checkSize();
@@ -114,9 +120,20 @@ $(document).ready(function(){
     
     $('#reloadAll').click(reloadAll);
     $('#viewAll').click(function() {setCurLocation(zNodes);});
+    $('input[name=refresh_time]').change(timedReload);
     reloadAll();
 
 });
+
+function timedReload()
+{
+var interval = $("input[name=refresh_time]:checked").val();
+clearInterval(nextRefresh);
+if(interval > 0)
+{
+	nextRefresh=setInterval("reloadAll()",interval*1000);
+}
+}
 
 function reloadAll(){
     $.get("{{ path('category_hierarchy') }}", function (data) {
