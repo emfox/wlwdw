@@ -11,3 +11,11 @@ emfox_gps_trail:
     resource: "@EmfoxGpsBundle/Controller/TrailController.php"
     type: annotation
     prefix:   /
+    
+emfox_gps_user:
+    resource: "@EmfoxGpsBundle/Controller/UserController.php"
+    type: annotation
+    prefix:   /
+    
+fos_user_security:
+    resource: "@FOSUserBundle/Resources/config/routing/security.xml"
