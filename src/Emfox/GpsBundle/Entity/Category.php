@@ -310,7 +310,7 @@ class Category
         return $this->lng;
     }
     
-    public function getOptionLabel()
+    public function getIndentLabel()
     {
     	return str_repeat(
     			html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8'),
