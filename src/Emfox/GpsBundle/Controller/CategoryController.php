@@ -34,28 +34,7 @@ class CategoryController extends Controller
 		$response = array("code" => 100, "success" => true, "ztree" => $arrayTree);
 		return new Response(json_encode($response));
 	}
-	/**
-	 * Lists all Category entities via ajax.
-	 *
-	 * @Route("/ajax", name="category_ajax")
-	 * @Method("GET")
-	 */
-	public function ajaxAction()
-	{
-		$em = $this->getDoctrine()->getManager();
-	
-		$entities = $em->getRepository('EmfoxGpsBundle:Category')->findAll();
-		foreach($entities as $entity)
-		{
-			$id = $entity->getId();
-			$points[$id] = array("lng" => $entity->getLng(),
-					"lat" => $entity->getLat(),
-					"title" => $entity->getTitle(),
-					"time" => $entity->getUpdatetime()->format("Y-m-d H:i:s"));
-		}
-		$response = array("code" => 100, "success" => true, "points" => $points);
-		return new Response(json_encode($response));
-	}
+
     /**
      * Lists all Category entities.
      *
@@ -66,8 +45,19 @@ class CategoryController extends Controller
     public function indexAction()
     {
         $em = $this->getDoctrine()->getManager();
-
-        $entities = $em->getRepository('EmfoxGpsBundle:Category')->findAll();
+        $qb = $em->createQueryBuilder();
+        
+        $qb->select('c')
+        ->from('EmfoxGpsBundle:Category','c')
+        ->orderBy('c.root', 'ASC')
+        ->addOrderBy('c.lft', 'ASC');
+        
+        $query = $qb->getQuery();
+        $entities = $query->getResult();
+        
+        foreach($entities as $entity){
+        	$entity->indentLabel = $entity->getIndentLabel();
+        }
 
         return array(
             'entities' => $entities,
@@ -104,7 +94,7 @@ class CategoryController extends Controller
             }
             $em->flush();
 
-            return $this->redirect($this->generateUrl('category_show', array('id' => $entity->getId())));
+            return $this->redirect($this->generateUrl('category'));
         }
 
         return array(
@@ -127,7 +117,7 @@ class CategoryController extends Controller
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Create'));
+        $form->add('submit', 'submit', array('label' => '保存单位'));
 
         return $form;
     }
@@ -147,31 +137,6 @@ class CategoryController extends Controller
         return array(
             'entity' => $entity,
             'form'   => $form->createView(),
-        );
-    }
-
-    /**
-     * Finds and displays a Category entity.
-     *
-     * @Route("/{id}", name="category_show")
-     * @Method("GET")
-     * @Template()
-     */
-    public function showAction($id)
-    {
-        $em = $this->getDoctrine()->getManager();
-
-        $entity = $em->getRepository('EmfoxGpsBundle:Category')->find($id);
-
-        if (!$entity) {
-            throw $this->createNotFoundException('Unable to find Category entity.');
-        }
-
-        $deleteForm = $this->createDeleteForm($id);
-
-        return array(
-            'entity'      => $entity,
-            'delete_form' => $deleteForm->createView(),
         );
     }
 
@@ -216,7 +181,7 @@ class CategoryController extends Controller
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => 'Update'));
+        $form->add('submit', 'submit', array('label' => '确认修改'));
 
         return $form;
     }
@@ -244,7 +209,7 @@ class CategoryController extends Controller
         if ($editForm->isValid()) {
             $em->flush();
 
-            return $this->redirect($this->generateUrl('category_edit', array('id' => $id)));
+            return $this->redirect($this->generateUrl('category'));
         }
 
         return array(
@@ -280,6 +245,43 @@ class CategoryController extends Controller
     }
 
     /**
+     * Moves a Category entity.
+     *
+     * @Route("/{id}/move/{direction}", name="category_move")
+     */
+    public function moveAction(Request $request, $id, $direction)
+    {
+    	$em = $this->getDoctrine()->getManager();
+    	
+    	$repo = $em->getRepository('EmfoxGpsBundle:Category');
+    	$entity = $repo->find($id);
+    	
+    	if (!$entity) {
+    		throw $this->createNotFoundException('Unable to find Category entity.');
+    	}
+
+    	switch ($direction){
+    		case "up":
+    			$repo->moveUp($entity,1);
+    			break;
+    		case "down":
+    			$repo->moveDown($entity,1);
+    			break;
+    		case "top":
+    			$repo->moveUp($entity,TRUE);
+    			break;
+    		case "bottom":
+    			$repo->moveDown($entity,TRUE);
+    			break;
+    		default:
+    			throw $this->NotAllowedException('No method found');
+    	}
+    	
+    	$em->flush();
+
+    	return $this->redirect($this->generateUrl('category'));
+    }
+    /**
      * Creates a form to delete a Category entity by id.
      *
      * @param mixed $id The entity id
@@ -291,7 +293,7 @@ class CategoryController extends Controller
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('category_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => 'Delete'))
+            ->add('submit', 'submit', array('label' => '删除'))
             ->getForm()
         ;
     }
