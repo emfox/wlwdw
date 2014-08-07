@@ -1,4 +1,4 @@
-package org.rpwt.gps1s;
+package com.wlwdw.gps1s;
 
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
