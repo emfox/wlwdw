@@ -1,17 +1,15 @@
-package org.rpwt.gps1s;
+package com.wlwdw.gps1s;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
-
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -23,7 +21,7 @@ import android.util.Log;
 
 public class PollingService extends Service {  
 	  
-    public static final String ACTION = "org.rpwt.gps1s.PollingService";
+    public static final String ACTION = "com.wlwdw.gps1s.PollingService";
     public static String myDeviceId;
 	public MyLocationListener mMyLocationListener;
 	

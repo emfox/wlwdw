@@ -1,4 +1,4 @@
-package org.rpwt.gps1s;
+package com.wlwdw.gps1s;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
