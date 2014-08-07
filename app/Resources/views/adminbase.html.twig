@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>{% block title %}后台管理{% endblock %}</title>
+{% block stylesheets %}{% endblock %}
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+<style type="text/css">
+#left_panel {
+	float: left;
+	width: 200px;
+}
+#main_panel {
+	float: left;
+width: 600px;
+}
+</style>
+</head>
+<body>    <div id="left_panel">
+后台管理
+<ul>
+<li><a href="{{ path("user") }}">用户管理</a></li><br />
+<li><a href="{{ path("category") }}">单位管理</a></li>
+</ul>
+    
+    
+    </div>
+    <div id="main_panel">
+        {% block body %}{% endblock %}
+    </div>
+        {% block javascripts %}{% endblock %}
+</body>
+</html>
