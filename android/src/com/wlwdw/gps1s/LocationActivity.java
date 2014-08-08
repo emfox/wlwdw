@@ -8,6 +8,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
 import android.view.Menu;
@@ -29,7 +30,6 @@ public class LocationActivity extends ActionBarActivity{
 	private Button startLocation;
 	private Button onceLocate;
 	private RadioGroup selectMode,selectCoordinates;
-	private EditText frequence;
 	//默认2分钟定位间隔。 注意，该间隔与百度API的定位间隔span无关。
 	//采用 alarmManager 实现轮询，更好支持系统休眠时也能唤醒并定位，故不使用API提供的定时功能
 	private Integer interval=2; 
@@ -46,12 +46,11 @@ public class LocationActivity extends ActionBarActivity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.location);
 		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);  
-		sharedPref = this.getSharedPreferences(getString(R.string.preference_file_key),Context.MODE_MULTI_PROCESS);
+		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		sharedEditor = sharedPref.edit();
 		LocResult = (TextView)findViewById(R.id.LocResult);
 		ModeInfor= (TextView)findViewById(R.id.modeinfor);
 		ModeInfor.setText(getString(R.string.hight_accuracy_desc));
-		 frequence = (EditText)findViewById(R.id.frequence);
 		 checkGeoLocation = (CheckBox)findViewById(R.id.geolocation);
 		startLocation = (Button)findViewById(R.id.addfence);
 		onceLocate = (Button)findViewById(R.id.oncelocate);
@@ -61,7 +60,6 @@ public class LocationActivity extends ActionBarActivity{
 			
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
 				InitLocation();
 				
 				if(!sharedPref.getBoolean("isPolling", false)){
@@ -179,6 +177,10 @@ public class LocationActivity extends ActionBarActivity{
 	    		startActivity(intent);
 	    		//finish();
 	            return true;
+	        case R.id.action_settings:
+	    		Intent setting = new Intent(this, SettingsActivity.class);
+	    		startActivity(setting);
+	            return true;
 
 	        default:
 	            return super.onOptionsItemSelected(item);
@@ -197,11 +199,7 @@ public class LocationActivity extends ActionBarActivity{
 		sharedEditor.putInt("LocationMode", tempMode);
 		sharedEditor.putString("CoorType", tempcoor);
 				
-		try {
-			interval = Integer.valueOf(frequence.getText().toString());
-		} catch (Exception e) {
-			// TODO: handle exception
-		}
+		interval = Integer.parseInt(sharedPref.getString("sync_frequency", "2"));
 
 		sharedEditor.putBoolean("NeedAddr", checkGeoLocation.isChecked());
 		sharedEditor.apply();

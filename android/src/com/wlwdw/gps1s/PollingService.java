@@ -5,16 +5,19 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 import com.baidu.location.BDLocation;
 import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
+
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -39,7 +42,7 @@ public class PollingService extends Service {
     @Override  
     public void onCreate() {  
     	myDeviceId = ((TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-    	sharedPref = this.getSharedPreferences(getString(R.string.preference_file_key),Context.MODE_MULTI_PROCESS);
+    	sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
     	
     	mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
     	
@@ -147,9 +150,10 @@ public class PollingService extends Service {
 			 }
 		}
 
-    public static String readContentFromGet(double Longtitude, double Latitude) throws IOException {
+    public String readContentFromGet(double Longtitude, double Latitude) throws IOException {
         // 拼凑get请求的URL字串，使用URLEncoder.encode对特殊和不可见字符进行编码
-    	String GET_URL = "http://a.wlwdw.com/trail/new/" + myDeviceId + "/" + Double.toString(Longtitude) + "/" + Double.toString(Latitude);
+    	String GET_URL = "http://" + sharedPref.getString("custom_host","www.wlwdw.com") + "/trail/new/"
+    					+ myDeviceId + "/" + Double.toString(Longtitude) + "/" + Double.toString(Latitude);
         String getURL = GET_URL ;
         URL getUrl = new URL(getURL);
         // 根据拼凑的URL，打开连接，URL.openConnection函数会根据URL的类型，
