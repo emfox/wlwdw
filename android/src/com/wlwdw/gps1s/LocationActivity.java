@@ -90,13 +90,10 @@ public class LocationActivity extends ActionBarActivity{
 				// TODO Auto-generated method stub
 				InitLocation();
 				System.out.println("Start polling service...");  
-				PollingUtils.startPollingService(LocationActivity.this, interval*60, PollingService.class, PollingService.ACTION);
-				
-				if(!sharedPref.getBoolean("isPolling", false)){
-					PollingUtils.stopPollingService(LocationActivity.this, PollingService.class, PollingService.ACTION);
-					System.out.println("Stop polling service...");  
+				PollingUtils.startPollingService(LocationActivity.this, 0, PollingService.class, PollingService.ACTION);
+				if(sharedPref.getBoolean("isPolling", false)){
+					PollingUtils.startPollingService(LocationActivity.this, interval*60, PollingService.class, PollingService.ACTION);
 				}
-				
 				
 			}
 		});
