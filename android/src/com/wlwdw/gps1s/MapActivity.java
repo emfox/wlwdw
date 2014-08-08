@@ -19,6 +19,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -41,7 +42,7 @@ public class MapActivity extends ActionBarActivity {
 		super.onCreate(savedInstanceState);
 
 		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);  
-		sharedPref = this.getSharedPreferences(getString(R.string.preference_file_key),Context.MODE_MULTI_PROCESS);
+		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		sharedEditor = sharedPref.edit();
 		
 		SDKInitializer.initialize(getApplicationContext());

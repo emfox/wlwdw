@@ -9,9 +9,7 @@
     <string name="action_current_location">到当前定位点</string>
     <string name="action_switch_map">切换到地图界面</string>
     <string name="action_back_to_cui">回到文本定位界面</string>
-      <string name="preference_file_key">com.wlwdw.gps1s.preference</string>
-        <string name="startlocation">开启定位</string>
-        
+    <string name="startlocation">开启定位</string>
     <string name="stoplocation">停止定位</string>
     <string name="error_code_desc">错误码说明</string>
     <string name="qa_title">常见问题</string>
