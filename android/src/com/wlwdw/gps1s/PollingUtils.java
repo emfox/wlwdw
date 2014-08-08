@@ -22,10 +22,14 @@ public class PollingUtils {
           
         //触发服务的起始时间  
         long triggerAtTime = SystemClock.elapsedRealtime();  
-          
+        if(seconds>0){
         //使用AlarmManger的setRepeating方法设置定期执行的时间间隔（seconds秒）和需要执行的Service  
         manager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime,  
-                seconds * 1000, pendingIntent);  
+                seconds * 1000, pendingIntent);
+        }else{
+        	manager.set(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerAtTime+500,  
+                     pendingIntent);
+        }
     }  
   
     //停止轮询服务  
