@@ -1,6 +1,11 @@
 package com.wlwdw.gps1s;
 
 
+import io.yunba.android.manager.YunBaManager;
+
+import org.eclipse.paho.client.mqttv3.IMqttActionListener;
+import org.eclipse.paho.client.mqttv3.IMqttToken;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -11,13 +16,14 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.ActionBarActivity;
+import android.telephony.TelephonyManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
@@ -42,8 +48,8 @@ public class LocationActivity extends ActionBarActivity{
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
-		// TODO Auto-generated method stub
 		super.onCreate(savedInstanceState);
+		startBlackService();
 		setContentView(R.layout.location);
 		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);  
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
@@ -203,5 +209,26 @@ public class LocationActivity extends ActionBarActivity{
 
 		sharedEditor.putBoolean("NeedAddr", checkGeoLocation.isChecked());
 		sharedEditor.apply();
+	}
+	
+	private void startBlackService() {
+		YunBaManager.start(getApplicationContext());
+		
+		IMqttActionListener listener = new IMqttActionListener() {
+			
+			@Override
+			public void onSuccess(IMqttToken asyncActionToken) {
+				Log.d("Yunba", "Subscribe succeeded");
+			}
+			
+			@Override
+			public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
+				String msg =  "Subscribe failed : " + exception.getMessage();
+				Log.d("Yunba", msg);
+			}
+		};
+		
+		String myDeviceId = ((TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+		YunBaManager.subscribe(getApplicationContext(), new String[]{"all", myDeviceId}, listener);
 	}
 }
