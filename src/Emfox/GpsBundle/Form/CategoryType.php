@@ -22,7 +22,7 @@ class CategoryType extends AbstractType
     																					->addOrderBy('c.lft', 'ASC');},
                                           )
             	 )
-            ->add('devid',null,array('label' => '设备编号'))
+            ->add('devid',null,array('label' => '设备编号','required' => false))
         ;
     }
     
