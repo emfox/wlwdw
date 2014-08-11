@@ -267,7 +267,7 @@ function addMarker_p(point){
     p = new BMap.Point(point.lng,point.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Point.png') }}",
-    	    new BMap.Size(32, 32), {offset: new BMap.Size(16, 32)});
+    	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});  
     var infoWindow = new BMap.InfoWindow(content);   
     map.addOverlay(marker);  
@@ -288,7 +288,7 @@ function addMarker_t(point){
     p = new BMap.Point(point.lng,point.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Pin.png') }}",
-    	    new BMap.Size(32, 32), {offset: new BMap.Size(16, 32)});
+    	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});  
     var infoWindow = new BMap.InfoWindow(content);   
     map.addOverlay(marker);  
