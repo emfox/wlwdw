@@ -31,6 +31,11 @@ import android.widget.TextView;
 public class LocationActivity extends ActionBarActivity{
 	private SharedPreferences sharedPref;
 	private Editor sharedEditor;
+	private TextView LabelTime;
+	private TextView LabelErrcode;
+	private TextView LabelLatLng;
+	private TextView LabelGauss;
+	private TextView LabelRadius;
 	private TextView LocResult;
 	private TextView ModeInfor;
 	private Button startLocation;
@@ -38,6 +43,7 @@ public class LocationActivity extends ActionBarActivity{
 	private RadioGroup selectMode,selectCoordinates;
 	//默认2分钟定位间隔。 注意，该间隔与百度API的定位间隔span无关。
 	//采用 alarmManager 实现轮询，更好支持系统休眠时也能唤醒并定位，故不使用API提供的定时功能
+	private String errString;
 	private Integer interval=2; 
 	private Integer tempMode = 1;
 	private String tempcoor="bd09ll";
@@ -54,6 +60,11 @@ public class LocationActivity extends ActionBarActivity{
 		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);  
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		sharedEditor = sharedPref.edit();
+		LabelTime = (TextView)findViewById(R.id.LabelTime);
+		LabelErrcode = (TextView)findViewById(R.id.LabelErrcode);
+		LabelLatLng = (TextView)findViewById(R.id.LabelLatLng);
+		LabelGauss = (TextView)findViewById(R.id.LabelGauss);
+		LabelRadius = (TextView)findViewById(R.id.LabelRadius);
 		LocResult = (TextView)findViewById(R.id.LocResult);
 		ModeInfor= (TextView)findViewById(R.id.modeinfor);
 		ModeInfor.setText(getString(R.string.hight_accuracy_desc));
@@ -159,8 +170,33 @@ public class LocationActivity extends ActionBarActivity{
 		mReceiver = new BroadcastReceiver() {    
             @Override    
             public void onReceive(Context context, Intent intent) {    
-                if (intent.getAction().equals("LocationResult")) {    
+                if (intent.getAction().equals("LocationResult")) {
+                	LabelTime.setText(intent.getExtras().getString("Time"));
+                	switch(intent.getExtras().getInt("ErrCode")){
+                	case 61:
+                		errString = "成功。通过GPS定位";
+                		break;
+                	case 161:
+                		errString = "成功。通过基站或WIFI定位";
+                		break;
+                	case 63:
+                		errString = "定准失败。网络异常";
+                	case 68:
+                		errString = "成功。通过缓存获取定位信息";
+                		break;
+                	default:
+                		errString = "失败。错误代码" + intent.getExtras().getInt("ErrCode");
+                		break;
+                	}
+                	LabelErrcode.setText(errString);
+                	double lng = intent.getExtras().getDouble("Longitude");
+                	double lat = intent.getExtras().getDouble("Latitude");
+                	LabelLatLng.setText( lng + "," + lat);
+                	double gauss[] = CoordsTrans.ToGaussProj(lng, lat);
+                	LabelGauss.setText(Math.round(gauss[0]) + "," + Math.round(gauss[1]));
+                	LabelRadius.setText(Float.toString(intent.getExtras().getFloat("Radius")));
                 	LocResult.setText(intent.getExtras().getString("LocationResult"));
+
                 }   
             }    
         };    

@@ -11,6 +11,7 @@ import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
+import com.baidu.mapapi.model.LatLng;
 
 import android.app.Service;
 import android.content.Context;
@@ -98,38 +99,31 @@ public class PollingService extends Service {
 			//Receive Location 
 			mLocation = location;
 			StringBuffer sb = new StringBuffer(256);
-			sb.append("time : ");
-			sb.append(location.getTime());
-			sb.append("\nerror code : ");
-			sb.append(location.getLocType());
-			sb.append("\nlatitude : ");
-			sb.append(location.getLatitude());
-			sb.append("\nlontitude : ");
-			sb.append(location.getLongitude());
-			sb.append("\nradius : ");
-			sb.append(location.getRadius());
+
 			if (location.getLocType() == BDLocation.TypeGpsLocation){
-				sb.append("\nspeed : ");
+				sb.append("\n速度 : ");
 				sb.append(location.getSpeed());
-				sb.append("\nsatellite : ");
+				sb.append("\n卫星 : ");
 				sb.append(location.getSatelliteNumber());
-				sb.append("\ndirection : ");
+				sb.append("\n方向 : ");
 				sb.append(location.getDirection());
-				sb.append("\naddr : ");
+				sb.append("\n地址 : ");
 				sb.append(location.getAddrStr());
 
 			} else if (location.getLocType() == BDLocation.TypeNetWorkLocation){
-				sb.append("\naddr : ");
+				sb.append("\n地址 : ");
 				sb.append(location.getAddrStr());
-				//锟斤拷营锟斤拷锟斤拷息
-				sb.append("\noperationers : ");
+				sb.append("\n移动运营商 : ");
 				sb.append(location.getOperators());
 			}
 			Intent intent = new Intent();
 			intent.setAction("LocationResult");
+			LatLng wgs = CoordsTrans.bd2wgs(new LatLng(location.getLatitude(),location.getLongitude()));
 			intent.putExtra("LocationResult", sb.toString());
-			intent.putExtra("Longtitude", location.getLongitude());
-			intent.putExtra("Latitude", location.getLatitude());
+			intent.putExtra("ErrCode", location.getLocType());
+			intent.putExtra("Time", location.getTime());
+			intent.putExtra("Longitude", wgs.longitude);
+			intent.putExtra("Latitude", wgs.latitude);
 			intent.putExtra("Radius", location.getRadius());
 			mLocalBroadcastManager.sendBroadcast(intent);
 			Log.i("BaiduLocationOutput", sb.toString());
