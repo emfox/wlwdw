@@ -263,7 +263,7 @@ function checkSize() {
 	document.getElementById('map').style.height = h - 80 + "px";
 	}
 
-function addMarker_p(point){ 
+function addMarker_p(point){ //添加所有单位的当前点
     p = new BMap.Point(point.lng,point.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Point.png') }}",
@@ -284,17 +284,22 @@ function addMarker_p(point){
         this.hide();  
     });
 }
-function addMarker_t(point){ 
+function addMarker_t(point){ //添加某一单位的历史点
     p = new BMap.Point(point.lng,point.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Pin.png') }}",
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
-    var marker = new BMap.Marker(p, {icon: myIcon});  
-    var infoWindow = new BMap.InfoWindow(content);   
+    var marker = new BMap.Marker(p, {icon: myIcon});    
     map.addOverlay(marker);  
-    marker.addEventListener("click", function(){            
-        this.openInfoWindow(infoWindow);  
-    });
+    opts = {
+    		  position : p,    // 指定文本标注所在的地理位置
+    		  offset   : new BMap.Size(10, -5)    //设置文本偏移量
+    		}
+  	var label = new BMap.Label(new Date(point.time).toLocaleTimeString("en-US", {hour12: false}), opts);
+  	map.addOverlay(label);
+      label.addEventListener("click", function(){            
+          this.hide();  
+      });
 }
 function zTreeOnClick(event, treeId, treeNode) {
 	//FIXME: 12377 is just a placeholder,
