@@ -51,6 +51,8 @@ body {
 <script type="text/javascript"
 	src="{{ asset('bundles/emfoxgps/js/coords_trans.js') }}"></script>
 <script type="text/javascript"
+	src="{{ asset('bundles/emfoxgps/js/proj4.js') }}"></script>
+<script type="text/javascript"
 	src="http://api.map.baidu.com/api?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
 <script type="text/javascript"
 	src="{{ asset('bundles/emfoxgps/js/socket.io.js') }}"></script>
@@ -80,7 +82,7 @@ body {
 				<input type="button" value="手动刷新" id="reloadAll" />
 			</div>
 			<div>
-				百度加密坐标<input type="text" id="mouse_pos_bd09" /> GPS真实坐标<input
+				直角坐标<input type="text" id="mouse_pos_gauss" /> GPS坐标<input
 					type="text" id="mouse_pos_wgs84" />
 			</div>
 			<a href="{{ path("fos_user_security_logout") }}">注销当前用户</a>
@@ -114,7 +116,8 @@ $(document).ready(function(){
         p=bd2wgs(e.point);
         p.lng=Math.round(p.lng*1000000)/1000000;
         p.lat=Math.round(p.lat*1000000)/1000000;
-        var c = "百度坐标："+e.point.lng+","+e.point.lat + "<br />GPS坐标：" + p.lng + "," + p.lat;
+        gauss = toGaussProj(p.lng,p.lat);
+        var c = "直角坐标："+gauss.x+","+ gauss.y + "<br />GPS坐标：" + p.lng + "," + p.lat;
         labelPos.setContent(c);
         labelPos.setPosition(new BMap.Point(e.point.lng,e.point.lat));
     });
@@ -122,7 +125,8 @@ $(document).ready(function(){
         p=bd2wgs(e.point);
         p.lng=Math.round(p.lng*1000000)/1000000;
         p.lat=Math.round(p.lat*1000000)/1000000;
-        $('#mouse_pos_bd09').val(e.point.lng+","+e.point.lat);
+        gauss = toGaussProj(p.lng,p.lat);
+        $('#mouse_pos_gauss').val(gauss.x+","+gauss.y);
         $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
     });
     map.addEventListener("mouseover",function(e){
@@ -150,6 +154,14 @@ $(document).ready(function(){
 
 });
 
+function toGaussProj(lng,lat){
+	zone = Math.floor(lng/6)*6+3;
+    proj4.defs('WGS84tm', '+proj=tmerc +lat_0=0 +lon_0='+zone+' +x_0=500000 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
+    gauss = proj4('WGS84tm').forward({x:lng,y:lat});
+    gauss.x = Math.round(gauss.x);
+    gauss.y = Math.round(gauss.y);
+    return gauss;
+}
 function showSend(){
 	$('#divSend').show();
 	$('#showSend').hide();
