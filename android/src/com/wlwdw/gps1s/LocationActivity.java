@@ -71,7 +71,7 @@ public class LocationActivity extends ActionBarActivity{
 		 checkGeoLocation = (CheckBox)findViewById(R.id.geolocation);
 		startLocation = (Button)findViewById(R.id.addfence);
 		onceLocate = (Button)findViewById(R.id.oncelocate);
-		if(sharedPref.getBoolean("isPolling", false))
+		if(PollingService.isPolling)
 				startLocation.setText(getString(R.string.stoplocation));
 		startLocation.setOnClickListener(new OnClickListener() {
 			
@@ -79,19 +79,17 @@ public class LocationActivity extends ActionBarActivity{
 			public void onClick(View v) {
 				InitLocation();
 				
-				if(!sharedPref.getBoolean("isPolling", false)){
+				if(!PollingService.isPolling){
 
 					System.out.println("Start polling service...");  
-			        PollingUtils.startPollingService(LocationActivity.this, interval*60, PollingService.class, PollingService.ACTION);
-			        sharedEditor.putBoolean("isPolling",true);
-			        sharedEditor.apply();
+			        PollingUtils.startPollingService(LocationActivity.this, interval*60, PollingService.class);
+			        PollingService.isPolling = true;
 			        startLocation.setText(getString(R.string.stoplocation));
 				}else{
 
 					System.out.println("Stop polling service...");  
-			        PollingUtils.stopPollingService(LocationActivity.this, PollingService.class, PollingService.ACTION);
-			        sharedEditor.putBoolean("isPolling",false);
-			        sharedEditor.apply();
+			        PollingUtils.stopPollingService(LocationActivity.this, PollingService.class);
+			        PollingService.isPolling = false;
 					startLocation.setText(getString(R.string.startlocation));
 				}
 				
@@ -104,11 +102,8 @@ public class LocationActivity extends ActionBarActivity{
 			public void onClick(View v) {
 				// TODO Auto-generated method stub
 				InitLocation();
-				System.out.println("Start polling service...");  
-				PollingUtils.startPollingService(LocationActivity.this, 0, PollingService.class, PollingService.ACTION);
-				if(sharedPref.getBoolean("isPolling", false)){
-					PollingUtils.startPollingService(LocationActivity.this, interval*60, PollingService.class, PollingService.ACTION);
-				}
+				System.out.println("Start polling once");  
+				PollingUtils.PollingOnce(LocationActivity.this, PollingService.class);
 				
 			}
 		});
