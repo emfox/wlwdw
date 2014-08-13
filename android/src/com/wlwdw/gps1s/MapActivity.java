@@ -188,6 +188,11 @@ public class MapActivity extends ActionBarActivity {
         case R.id.action_current_location:
         	jumpCurLocation();
             return true;
+        case R.id.action_settings:
+    		Intent setting = new Intent(this, SettingsActivity.class);
+    		startActivity(setting);
+            return true;
+
         default:
             return super.onOptionsItemSelected(item);
             }

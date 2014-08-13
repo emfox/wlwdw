@@ -9,6 +9,7 @@
     <string name="action_current_location">到当前定位点</string>
     <string name="action_switch_map">切换到地图界面</string>
     <string name="action_back_to_cui">回到文本定位界面</string>
+    <string name="action_switch_message">显示消息列表</string>
     <string name="startlocation">开启定位</string>
     <string name="stoplocation">停止定位</string>
     <string name="error_code_desc">错误码说明</string>
@@ -30,4 +31,6 @@
 		601：key服务被开发者自己禁用\n
 		602：key mcode不匹配\n
 		501～700：key验证失败\n</string>
+    <string name="title_activity_message">消息</string>
+
 </resources>
