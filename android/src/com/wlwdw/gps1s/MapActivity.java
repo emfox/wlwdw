@@ -101,6 +101,8 @@ public class MapActivity extends ActionBarActivity {
 		};
 		Handler h = new Handler();
 		h.postDelayed(r, 1000);
+		
+		PollingUtils.PollingOnce(MapActivity.this, PollingService.class);
 	}
 
 	@Override
@@ -149,7 +151,7 @@ public class MapActivity extends ActionBarActivity {
             	    // 此处设置开发者获取到的方向信息，顺时针0-360  
             	    .direction(100)
             	    .latitude(intent.getExtras().getDouble("Latitude"))  
-            	    .longitude(intent.getExtras().getDouble("Longtitude")).build();
+            	    .longitude(intent.getExtras().getDouble("Longitude")).build();
                 	mBaiduMap.setMyLocationData(locData); 
                 }   
             }    

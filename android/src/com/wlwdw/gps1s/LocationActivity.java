@@ -6,6 +6,8 @@ import io.yunba.android.manager.YunBaManager;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
+import com.baidu.mapapi.model.LatLng;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -186,7 +188,8 @@ public class LocationActivity extends ActionBarActivity{
                 	LabelErrcode.setText(errString);
                 	double lng = intent.getExtras().getDouble("Longitude");
                 	double lat = intent.getExtras().getDouble("Latitude");
-                	LabelLatLng.setText( lng + "," + lat);
+                	LatLng wgs = CoordsTrans.bd2wgs(new LatLng(lat,lng));
+                	LabelLatLng.setText( wgs.longitude + "," + wgs.latitude);
                 	double gauss[] = CoordsTrans.ToGaussProj(lng, lat);
                 	LabelGauss.setText(Math.round(gauss[0]) + "," + Math.round(gauss[1]));
                 	LabelRadius.setText(Float.toString(intent.getExtras().getFloat("Radius")));
