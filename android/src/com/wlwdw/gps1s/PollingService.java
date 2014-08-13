@@ -11,7 +11,6 @@ import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
-import com.baidu.mapapi.model.LatLng;
 
 import android.app.Service;
 import android.content.Context;
@@ -137,12 +136,11 @@ public class PollingService extends Service {
 			}
 			Intent intent = new Intent();
 			intent.setAction("LocationResult");
-			LatLng wgs = CoordsTrans.bd2wgs(new LatLng(location.getLatitude(),location.getLongitude()));
 			intent.putExtra("LocationResult", sb.toString());
 			intent.putExtra("ErrCode", location.getLocType());
 			intent.putExtra("Time", location.getTime());
-			intent.putExtra("Longitude", wgs.longitude);
-			intent.putExtra("Latitude", wgs.latitude);
+			intent.putExtra("Longitude", location.getLongitude());
+			intent.putExtra("Latitude", location.getLatitude());
 			intent.putExtra("Radius", location.getRadius());
 			mLocalBroadcastManager.sendBroadcast(intent);
 			Log.i("BaiduLocationOutput", sb.toString());
