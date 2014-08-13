@@ -209,6 +209,11 @@ public class LocationActivity extends ActionBarActivity{
 	public boolean onOptionsItemSelected(MenuItem item) {
 	    // Handle presses on the action bar items
 	    switch (item.getItemId()) {
+	    	case R.id.action_switch_message:
+	    		Intent message = new Intent(this, MessageActivity.class);
+	    		startActivity(message);
+	    		//finish();
+	            return true;
 	        case R.id.action_switch_map:
 	    		Intent intent = new Intent(this, MapActivity.class);
 	    		startActivity(intent);

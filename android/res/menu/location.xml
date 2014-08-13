@@ -4,6 +4,11 @@
     tools:context="com.wlwdw.gps1s.MainActivity" >
 
     <item
+        android:id="@+id/action_switch_message"
+        android:icon="@drawable/ic_action_email"
+        gps1s:showAsAction="ifRoom"
+        android:title="@string/action_switch_message"/>
+    <item
         android:id="@+id/action_switch_map"
         android:icon="@drawable/ic_action_web_site"
         gps1s:showAsAction="ifRoom"
