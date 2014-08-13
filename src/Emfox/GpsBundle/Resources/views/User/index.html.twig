@@ -1,15 +1,15 @@
 {% extends '::adminbase.html.twig' %}
 
 {% block body -%}
-    <h1>User list</h1>
+    <h1>用户管理</h1>
 
     <table class="records_list">
         <thead>
             <tr>
-                <th>Id</th>
-                <th>username</th>
-                <th>email</th>
-                <th>Actions</th>
+                <th>编号</th>
+                <th>用户名</th>
+                <th>电子邮件</th>
+                <th>操作</th>
             </tr>
         </thead>
         <tbody>
@@ -21,7 +21,7 @@
                 <td>
                 <ul>
                     <li>
-                        <a href="{{ path('user_edit', { 'id': entity.id }) }}">edit</a>
+                        <a href="{{ path('user_edit', { 'id': entity.id }) }}">修改</a>
                     </li>
                 </ul>
                 </td>
@@ -33,7 +33,7 @@
         <ul>
         <li>
             <a href="{{ path('user_new') }}">
-                Create a new entry
+            	 新建用户
             </a>
         </li>
     </ul>
