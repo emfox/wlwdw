@@ -25,7 +25,10 @@ import android.util.Log;
 
 public class PollingService extends Service {  
 	  
-    public static final String ACTION = "com.wlwdw.gps1s.PollingService";
+    public static final String ACTION_ONCE = "com.wlwdw.gps1s.PollingOnce";
+    public static final String ACTION_START = "com.wlwdw.gps1s.StartPollingService";
+    public static final String ACTION_STOP = "com.wlwdw.gps1s.StopPollingService";
+    public static boolean isPolling = false;
     public static String myDeviceId;
 	public MyLocationListener mMyLocationListener;
 	
@@ -34,6 +37,8 @@ public class PollingService extends Service {
     private SharedPreferences sharedPref;
     private LocalBroadcastManager mLocalBroadcastManager;
     private BDLocation mLocation;
+    private static boolean should_stop = false;
+    
     
     @Override  
     public IBinder onBind(Intent intent) {  
@@ -58,9 +63,23 @@ public class PollingService extends Service {
       
     @Override  
     public void onStart(Intent intent, int startId) {  
+    	if(intent.getAction().equals(PollingService.ACTION_STOP)){
+    		System.out.println(intent.getAction());
+    		isPolling = false;
+    		stopSelf();
+    		return;
+    	}
     	setNewLocOption();
     	mLocationClient.requestLocation();
     	System.out.println("Polling...");  
+    	if(intent.getAction().equals(PollingService.ACTION_ONCE)){
+    		System.out.println(intent.getAction());
+    		if(!isPolling){
+    			should_stop = true;
+    		}
+    		return;
+    	}
+    	isPolling = true;
     }  
 
       
@@ -140,13 +159,19 @@ public class PollingService extends Service {
 					}
 			    }
 			}).start();
-			
-			 }
+			if(should_stop){
+				should_stop = false;
+				stopSelf();
+			}
+			}
 		}
 
     public String readContentFromGet(double Longtitude, double Latitude) throws IOException {
         // 拼凑get请求的URL字串，使用URLEncoder.encode对特殊和不可见字符进行编码
-    	String GET_URL = "http://" + sharedPref.getString("custom_host","www.wlwdw.com") + "/trail/new/"
+    	String custom_host = "wlwdw.com";
+    	if(sharedPref.getBoolean("enable_custom_host",false))
+    		custom_host = sharedPref.getString("custom_host","wlwdw.com");
+    	String GET_URL = "https://" + custom_host  + "/trail/new/"
     					+ myDeviceId + "/" + Double.toString(Longtitude) + "/" + Double.toString(Latitude);
         String getURL = GET_URL ;
         URL getUrl = new URL(getURL);
