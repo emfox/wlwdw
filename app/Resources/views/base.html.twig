@@ -1,13 +1,70 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8" />
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {% block stylesheets %}{% endblock %}
-        <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
-    </head>
-    <body>
-        {% block body %}{% endblock %}
-        {% block javascripts %}{% endblock %}
-    </body>
+<head>
+<meta charset="UTF-8" />
+<title>{% block title %}神奇定位{% endblock %}</title>
+<style type="text/css">
+html {
+	height: 100%;
+}
+
+body {
+	height: 100%;
+	margin: 0px;
+	padding: 0px;
+}
+
+#top {
+	width: 100%;
+	height: 79px;
+	line-height: 70px;
+	border-bottom: 1px solid #ccc;
+	background: #eee;
+}
+
+#top_content {
+	font-size: 30px;
+	text-align: center;
+}
+
+#main {
+	width: 100%;
+	position: absolute;
+	top: 80px;
+}
+
+#footer {
+	position: absolute;
+	bottom: 0;
+	width: 100%;
+	text-align:center;
+	height: 25px;/*脚部的高度*/
+	line-height: 25px;
+	background: #eee;
+	clear:both;
+}
+</style>
+{% block stylesheets %}{% endblock %} {% block javascripts %}
+
+{% endblock %}
+<link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}" />
+</head>
+
+<body>
+	<div id="top">
+		<div id="top_content">神奇定位</div>
+	</div>
+	<div id="main">{% block content %}{% endblock %}</div>    
+    <div id="footer">
+    	{% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
+    		{{ 'layout.logged_in_as'|trans({'%username%': app.user.username}, 'FOSUserBundle') }} |
+    		<a href="{{ path('fos_user_security_logout') }}">
+    		{{ 'layout.logout'|trans({}, 'FOSUserBundle') }}
+    		</a>
+    	{% else %}
+    		<a href="{{ path('fos_user_security_login') }}">{{ 'layout.login'|trans({}, 'FOSUserBundle') }}</a>
+    	{% endif %}
+    	&nbsp;版权所有© 2014, emfoxzhou@gmail.com 
+        <a href="http://www.miitbeian.gov.cn/">浙ICP备14028084号</a></div>
+</body>
 </html>
