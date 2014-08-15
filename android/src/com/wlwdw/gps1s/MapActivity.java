@@ -18,7 +18,6 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -84,24 +83,15 @@ public class MapActivity extends ActionBarActivity {
 		MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
 		mBaiduMap.setMapStatus(mMapStatusUpdate);
 		
-		//百度地图3.0的BUG，地图加载后不能马上叠加定位图层，要等个几百毫秒等加载完成才能叠加
-		//用 Runnable 和 Handler 实现延时 1200毫秒
-		Runnable r = new Runnable() {
-		    @Override
-		    public void run(){
-				//恢复当前坐 标
-		    	locData = new MyLocationData.Builder()  
-			    .accuracy(sharedPref.getFloat("LocRadius",1200))  
-			    // 此处设置开发者获取到的方向信息，顺时针0-360  
-			    .direction(100)
-			    .latitude(getDouble(sharedPref,"LocLat",30.26))  
-			    .longitude(getDouble(sharedPref,"LocLng",120.15)).build();
-		    	mBaiduMap.setMyLocationData(locData); 
-		    }
-		};
-		Handler h = new Handler();
-		h.postDelayed(r, 1000);
-		
+		//恢复当前坐标
+		locData = new MyLocationData.Builder()  
+	    .accuracy(sharedPref.getFloat("LocRadius",1200))  
+	    // 此处设置开发者获取到的方向信息，顺时针0-360  
+	    .direction(100)
+	    .latitude(getDouble(sharedPref,"LocLat",30.26))  
+	    .longitude(getDouble(sharedPref,"LocLng",120.15)).build();
+		mBaiduMap.setMyLocationData(locData); 
+
 		PollingUtils.PollingOnce(MapActivity.this, PollingService.class);
 	}
 
