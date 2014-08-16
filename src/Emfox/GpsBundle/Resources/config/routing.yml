@@ -1,7 +1,11 @@
 emfox_gps_homepage:
     path:     /
     defaults: { _controller: "EmfoxGpsBundle:Default:index" }
-
+emfox_gps_proxy:
+    path:     /proxy/{url}
+    defaults: { _controller: "EmfoxGpsBundle:Default:proxy" }
+    requirements:
+      url: .+
 emfox_gps_category:
     resource: "@EmfoxGpsBundle/Controller/CategoryController.php"
     type: annotation
