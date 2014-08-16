@@ -55,29 +55,6 @@ $(document).ready(function(){
 	map.setDefaultCursor("default");
 	map.addControl(new BMap.NavigationControl({type: BMAP_NAVIGATION_CONTROL_LARGE}));
 	map.addControl(new BMap.MapTypeControl({mapTypes: [BMAP_NORMAL_MAP,BMAP_SATELLITE_MAP,BMAP_HYBRID_MAP]}));
-    map.addEventListener("mousemove",function(e){
-        p=bd2wgs(e.point);
-        p.lng=Math.round(p.lng*1000000)/1000000;
-        p.lat=Math.round(p.lat*1000000)/1000000;
-        gauss = toGaussProj(p.lng,p.lat);
-        var c = "直角坐标："+gauss.x+","+ gauss.y + "<br />GPS坐标：" + p.lng + "," + p.lat;
-        labelPos.setContent(c);
-        labelPos.setPosition(new BMap.Point(e.point.lng,e.point.lat));
-    });
-    map.addEventListener("click",function(e){
-        p=bd2wgs(e.point);
-        p.lng=Math.round(p.lng*1000000)/1000000;
-        p.lat=Math.round(p.lat*1000000)/1000000;
-        gauss = toGaussProj(p.lng,p.lat);
-        $('#mouse_pos_gauss').val(gauss.x+","+gauss.y);
-        $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
-    });
-    map.addEventListener("mouseover",function(e){
-		labelPos.show();
-    });
-    map.addEventListener("mouseout",function(e){
-		labelPos.hide();
-    });
 
     $(window).resize(checkSize);
     $('#reloadAll').click(reloadAll);
@@ -200,6 +177,29 @@ function reloadOverlay(){
   	labelPos = new BMap.Label("坐标：", opts);
     map.addOverlay(labelPos);
     labelPos.hide();
+    map.addEventListener("mousemove",function(e){
+        p=bd2wgs(e.point);
+        p.lng=Math.round(p.lng*1000000)/1000000;
+        p.lat=Math.round(p.lat*1000000)/1000000;
+        gauss = toGaussProj(p.lng,p.lat);
+        var c = "直角坐标："+gauss.x+","+ gauss.y + "<br />GPS坐标：" + p.lng + "," + p.lat;
+        labelPos.setContent(c);
+        labelPos.setPosition(new BMap.Point(e.point.lng,e.point.lat));
+    });
+    map.addEventListener("click",function(e){
+        p=bd2wgs(e.point);
+        p.lng=Math.round(p.lng*1000000)/1000000;
+        p.lat=Math.round(p.lat*1000000)/1000000;
+        gauss = toGaussProj(p.lng,p.lat);
+        $('#mouse_pos_gauss').val(gauss.x+","+gauss.y);
+        $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
+    });
+    map.addEventListener("mouseover",function(e){
+		labelPos.show();
+    });
+    map.addEventListener("mouseout",function(e){
+		labelPos.hide();
+    });
 }
 function checkSize() {
 	var h = document.documentElement.clientHeight - $('#main').offset().top - $('#footer').height();
