@@ -166,6 +166,8 @@ class UserController extends Controller
         if (!$entity) {
             throw $this->createNotFoundException('Unable to find User entity.');
         }
+        $userManager = $this->get('fos_user.user_manager');
+        $user = $userManager->findUserByUserName($entity->getUsername());
 
         $deleteForm = $this->createDeleteForm($id);
         $editForm = $this->createEditForm($entity);
@@ -174,9 +176,11 @@ class UserController extends Controller
         if ($editForm->isValid()) {
         	$password = $editForm->get('password')->getData();
         	if(strlen($password)>0)
-        		$entity->setPlainPassword($password);
-        	$entity->setEmail($entity->getUsername() . "@user.wlwdw.com");
-            $em->flush();
+        	{
+        		$user->setPlainPassword($password);
+        	}
+        	$user->setEmail($entity->getUsername() . "@user.wlwdw.com");
+        	$userManager->updateUser($user);
 
             return $this->redirect($this->generateUrl('user'));
         }
