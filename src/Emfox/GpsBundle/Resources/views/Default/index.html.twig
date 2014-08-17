@@ -18,7 +18,7 @@
 </style>
 {% endblock %} {% block javascripts %}
 <script type="text/javascript"
-	src="{{ asset('bundles/emfoxgps/js/jquery-1.4.4.min.js') }}"></script>
+	src="{{ asset('bundles/emfoxgps/js/jquery-1.5.2.min.js') }}"></script>
 <script type="text/javascript"
 	src="{{ asset('bundles/emfoxgps/js/jquery.cookie.js') }}"></script>
 <script type="text/javascript"
@@ -43,6 +43,7 @@ var zTreeSetting = { callback:{onClick:zTreeOnClick,onExpand:logStatus,onCollaps
 		data:{key:{name:"title"} },
 		view:{addDiyDom: addDiyDom} };
 var zNodes;
+var anchorNodes;
 var map;
 var labelPos;
 var nextRefresh;
@@ -143,11 +144,17 @@ if(interval > 0)
 }
 
 function reloadAll(){
-    $.get("{{ path('category_hierarchy') }}", function (data) {
-        zNodes = $.parseJSON(data).ztree;
-        reloadzTree();
-        reloadOverlay();
-	});
+	$.when(
+		$.get("{{ path('anchor_list') }}", function (data) {
+			anchorNodes = $.parseJSON(data).anchor;
+		}),
+    	$.get("{{ path('category_hierarchy') }}", function (data) {
+        	zNodes = $.parseJSON(data).ztree;
+        })
+).then(function(){
+    reloadzTree();
+    reloadOverlay();
+})
 }
 function reloadzTree(){
     zTreeObj = $.fn.zTree.init($("#jsonTree"), zTreeSetting, zNodes);
@@ -166,6 +173,15 @@ function reloadzTree(){
 
 function reloadOverlay(){
     map.clearOverlays();
+    Object.keys(anchorNodes).forEach(function(key) {
+        if(anchorNodes[key].lat*anchorNodes[key].lng !=0){
+            p=wgs2bd(anchorNodes[key]);
+            p.title=anchorNodes[key].title;
+            p.icon=anchorNodes[key].icon;
+            addMarker_a(p);
+        }
+
+    });
     var nodes = zTreeObj.transformToArray(zTreeObj.getNodes());
     Object.keys(nodes).forEach(function(key) {
         if(nodes[key].lat*nodes[key].lng !=0)
@@ -232,7 +248,6 @@ function addMarker_p(point){ //添加所有单位的当前点
 }
 function addMarker_t(point){ //添加某一单位的历史点
     p = new BMap.Point(point.lng,point.lat);
-    content = "<p>单位："+point.title+"</p><p>更新时间："+ point.time+"</p>";
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Pin.png') }}",
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});    
@@ -242,6 +257,22 @@ function addMarker_t(point){ //添加某一单位的历史点
     		  offset   : new BMap.Size(10, -5)    //设置文本偏移量
     		}
   	var label = new BMap.Label(new Date(point.time).toLocaleTimeString("en-US", {hour12: false}), opts);
+  	map.addOverlay(label);
+      label.addEventListener("click", function(){            
+          this.hide();  
+      });
+}
+function addMarker_a(point){ //添加某一单位的历史点
+    p = new BMap.Point(point.lng,point.lat);
+    var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/anchors/12337') }}".replace(/12337/,point.icon),
+    	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
+    var marker = new BMap.Marker(p, {icon: myIcon});    
+    map.addOverlay(marker);  
+    opts = {
+    		  position : p,    // 指定文本标注所在的地理位置
+    		  offset   : new BMap.Size(10, -5)    //设置文本偏移量
+    		}
+  	var label = new BMap.Label(point.title, opts);
   	map.addOverlay(label);
       label.addEventListener("click", function(){            
           this.hide();  
