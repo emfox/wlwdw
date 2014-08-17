@@ -14,15 +14,15 @@ class LoadUserData implements FixtureInterface
 	public function load(ObjectManager $manager)
 	{
 		
-		$userAdmin = new User();
-		$userAdmin->setUsername('admin');
-		$userAdmin->setEmail('admin@user.wlwdw.com');
-		$userAdmin->setPlainPassword('admin');
-		$userAdmin->setEnabled(true);
-		$userAdmin->addRole('ROLE_ADMIN');
+// 		$userAdmin = new User();
+// 		$userAdmin->setUsername('admin');
+// 		$userAdmin->setEmail('admin@user.wlwdw.com');
+// 		$userAdmin->setPlainPassword('admin');
+// 		$userAdmin->setEnabled(true);
+// 		$userAdmin->addRole('ROLE_ADMIN');
 
-		$manager->persist($userAdmin);
+// 		$manager->persist($userAdmin);
 		
-		$manager->flush();
+// 		$manager->flush();
 	}
 }
