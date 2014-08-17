@@ -10,7 +10,10 @@ emfox_gps_category:
     resource: "@EmfoxGpsBundle/Controller/CategoryController.php"
     type: annotation
     prefix:   /
-    
+emfox_gps_anchor:
+    resource: "@EmfoxGpsBundle/Controller/AnchorController.php"
+    type: annotation
+    prefix:   /
 emfox_gps_trail:
     resource: "@EmfoxGpsBundle/Controller/TrailController.php"
     type: annotation
