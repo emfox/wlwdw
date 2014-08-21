@@ -3,6 +3,7 @@ package com.wlwdw.gps1s;
 import java.io.IOException;
 //import java.text.SimpleDateFormat;
 
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
@@ -10,6 +11,7 @@ import org.json.JSONTokener;
 import com.wlwdw.gps1s.MsgdbHelper;
 
 import io.yunba.android.manager.YunBaManager;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -81,7 +83,8 @@ public class YunbaReceiver extends BroadcastReceiver {
 		     			        .setSmallIcon(android.R.drawable.ic_dialog_info)
 		     			        .setContentTitle("定位服务器发来消息")
 		     			        .setContentText(msg)
-		     			        .setVibrate(new long[]{100,500,100,500})
+		     			        //.setVibrate(new long[]{100,500,100,500})
+		     			        .setDefaults(Notification.DEFAULT_ALL) // default vibrate sound and light
 		     			        .setAutoCancel(true);
 		     			// Creates an explicit intent for an Activity in your app
 		     			Intent resultIntent = new Intent(YunbaContext, MessageActivity.class);
