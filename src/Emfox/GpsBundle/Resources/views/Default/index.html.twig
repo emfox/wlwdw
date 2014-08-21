@@ -29,10 +29,6 @@
 	src="{{ asset('bundles/emfoxgps/js/proj4.js') }}"></script>
 <script type="text/javascript"
 	src="/proxy/http://api.map.baidu.com/api?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
-<script type="text/javascript"
-	src="{{ asset('bundles/emfoxgps/js/socket.io.js') }}"></script>
-<script type="text/javascript"
-	src="{{ asset('bundles/emfoxgps/js/yunba-1.0.1.js') }}"></script>
 <script type="text/javascript">
 var ztreeStatusCookieKey ='ztree-log-status-gps1s';
 $.cookie.defaults.path = '/';
@@ -47,7 +43,6 @@ var anchorNodes;
 var map;
 var labelPos;
 var nextRefresh;
-var yunba;
 
 $(document).ready(function(){
 	checkSize();
@@ -66,14 +61,6 @@ $(document).ready(function(){
     $('#showSend').click(showSend);
     $('#divSend').hide();
     reloadAll();
-
-    yunba = new Yunba({server: 'sock.yunba.io', port: 3000, appkey: '53e491034e9f46851d5a573a'});
-    yunba.init(function(success){
-		if(success){
-			console.log('你已连接上socket '+yunba.socket.socket.sessionid);
-		}
-	});
-
 });
 
 function toGaussProj(lng,lat){
@@ -89,13 +76,6 @@ function showSend(){
 	$('#showSend').hide();
 	zTreeSetting.check.enable = true;
 	reloadzTree();
-	yunba.connect(function(success,msg){
-	    if(success){
-	        console.log('你已成功连接到消息服务器');
-	    }else{
-	        console.log(msg);
-	    }
-	});
 }
 function hideSend(){
 	$('#divSend').hide();
@@ -115,21 +95,17 @@ function sendMsg()
 		alert("请先填写消息内容");
 		return 0;
 	}
-	var topic;
+	var topics = '';
     Object.keys(nodes).forEach(function(key) {
         topic = nodes[key].devid;
         if(topic != ""){
             
-	        yunba.publish(
-	        	    {topic:topic,msg:msg},
-	        	    function(success){
-	        	        if(success){
-	        	        console.log('消息发布成功！');
-	        	        }
-	        	    }
-	        	);
+			topics += topic + ',';
         }
     });
+    $.post("{{ path('message_send') }}",{topics:topics,msg:msg},function(result){
+        alert('消息"' + result + '"已发送。' );
+        });
     hideSend();
 }
 
