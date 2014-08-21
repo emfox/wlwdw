@@ -95,12 +95,14 @@ function sendMsg()
 		alert("请先填写消息内容");
 		return 0;
 	}
-	var topics = '';
+	var topics = "";
     Object.keys(nodes).forEach(function(key) {
         topic = nodes[key].devid;
         if(topic != ""){
-            
-			topics += topic + ',';
+        	if(topics != ""){
+        		topics += ',';
+        	}
+			topics += topic;
         }
     });
     $.post("{{ path('message_send') }}",{topics:topics,msg:msg},function(result){

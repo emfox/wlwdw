@@ -148,9 +148,14 @@ public class PollingService extends Service {
 			new Thread(new Runnable(){
 			    @Override
 			    public void run() {
-			        //do network action in this function
+			        // 拼凑get请求的URL字串，使用URLEncoder.encode对特殊和不可见字符进行编码
+			    	String custom_host = "www.wlwdw.com";
+			    	if(sharedPref.getBoolean("enable_custom_host",false))
+			    		custom_host = sharedPref.getString("custom_host","www.wlwdw.com");
+			    	String GET_URL = "https://" + custom_host  + "/trail/new/" + myDeviceId + "/"
+			    			+ Double.toString(mLocation.getLongitude()) + "/" + Double.toString(mLocation.getLatitude());
 			    	try {
-						readContentFromGet(mLocation.getLongitude(),mLocation.getLatitude());
+						readContentFromGet(GET_URL);
 					} catch (IOException e) {
 						// TODO 自动生成的 catch 块
 						e.printStackTrace();
@@ -164,14 +169,7 @@ public class PollingService extends Service {
 			}
 		}
 
-    public String readContentFromGet(double Longtitude, double Latitude) throws IOException {
-        // 拼凑get请求的URL字串，使用URLEncoder.encode对特殊和不可见字符进行编码
-    	String custom_host = "wlwdw.com";
-    	if(sharedPref.getBoolean("enable_custom_host",false))
-    		custom_host = sharedPref.getString("custom_host","wlwdw.com");
-    	String GET_URL = "https://" + custom_host  + "/trail/new/"
-    					+ myDeviceId + "/" + Double.toString(Longtitude) + "/" + Double.toString(Latitude);
-        String getURL = GET_URL ;
+    public static String readContentFromGet(String getURL) throws IOException {
         URL getUrl = new URL(getURL);
         // 根据拼凑的URL，打开连接，URL.openConnection函数会根据URL的类型，
         // 返回不同的URLConnection子类的对象，这里URL是一个http，因此实际返回的是HttpURLConnection

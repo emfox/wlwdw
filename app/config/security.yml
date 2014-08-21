@@ -31,6 +31,8 @@ security:
         - { path: ^/anchor/, role: ROLE_ADMIN }
         - { path: ^/trail/new, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/trail/, role: ROLE_USER }
+        - { path: ^/message/send, role: ROLE_USER }
+        - { path: ^/message, role: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/_wdt/, role: IS_AUTHENTICATED_ANONYMOUSLY } #unprotect dev-toolbar so to redirect to right page.
         - { path: ^/, role: ROLE_USER }
         #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }
