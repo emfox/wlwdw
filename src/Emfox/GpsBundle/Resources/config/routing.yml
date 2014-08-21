@@ -18,7 +18,10 @@ emfox_gps_trail:
     resource: "@EmfoxGpsBundle/Controller/TrailController.php"
     type: annotation
     prefix:   /
-    
+emfox_gps_message:
+    resource: "@EmfoxGpsBundle/Controller/MessageController.php"
+    type: annotation
+    prefix:   /
 emfox_gps_user:
     resource: "@EmfoxGpsBundle/Controller/UserController.php"
     type: annotation
