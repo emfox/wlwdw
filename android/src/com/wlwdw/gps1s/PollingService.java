@@ -11,6 +11,7 @@ import com.baidu.location.BDLocationListener;
 import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.location.LocationClientOption.LocationMode;
+import com.baidu.mapapi.model.LatLng;
 
 import android.app.Service;
 import android.content.Context;
@@ -36,6 +37,7 @@ public class PollingService extends Service {
     private SharedPreferences sharedPref;
     private LocalBroadcastManager mLocalBroadcastManager;
     private BDLocation mLocation;
+    private LatLng wgs;
     private static boolean should_stop = false;
     
     
@@ -139,8 +141,11 @@ public class PollingService extends Service {
 			intent.putExtra("LocationResult", sb.toString());
 			intent.putExtra("ErrCode", location.getLocType());
 			intent.putExtra("Time", location.getTime());
-			intent.putExtra("Longitude", location.getLongitude());
-			intent.putExtra("Latitude", location.getLatitude());
+			intent.putExtra("BaiduLongitude", location.getLongitude());
+			intent.putExtra("BaiduLatitude", location.getLatitude());
+			wgs = CoordsTrans.bd2wgs(new LatLng(location.getLatitude(),location.getLongitude()));
+			intent.putExtra("Longitude", wgs.longitude);
+			intent.putExtra("Latitude", wgs.latitude);
 			intent.putExtra("Radius", location.getRadius());
 			mLocalBroadcastManager.sendBroadcast(intent);
 			Log.i("BaiduLocationOutput", sb.toString());
@@ -153,7 +158,7 @@ public class PollingService extends Service {
 			    	if(sharedPref.getBoolean("enable_custom_host",false))
 			    		custom_host = sharedPref.getString("custom_host","www.wlwdw.com");
 			    	String GET_URL = "https://" + custom_host  + "/trail/new/" + myDeviceId + "/"
-			    			+ Double.toString(mLocation.getLongitude()) + "/" + Double.toString(mLocation.getLatitude());
+			    			+ Double.toString(wgs.longitude) + "/" + Double.toString(wgs.latitude);
 			    	try {
 						readContentFromGet(GET_URL);
 					} catch (IOException e) {
