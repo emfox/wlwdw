@@ -140,8 +140,8 @@ public class MapActivity extends ActionBarActivity {
             	    .accuracy(intent.getExtras().getFloat("Radius"))  
             	    // 此处设置开发者获取到的方向信息，顺时针0-360  
             	    .direction(100)
-            	    .latitude(intent.getExtras().getDouble("Latitude"))  
-            	    .longitude(intent.getExtras().getDouble("Longitude")).build();
+            	    .latitude(intent.getExtras().getDouble("BaiduLatitude"))  
+            	    .longitude(intent.getExtras().getDouble("BaiduLongitude")).build();
                 	mBaiduMap.setMyLocationData(locData); 
                 }   
             }    

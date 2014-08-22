@@ -188,8 +188,7 @@ public class LocationActivity extends ActionBarActivity{
                 	LabelErrcode.setText(errString);
                 	double lng = intent.getExtras().getDouble("Longitude");
                 	double lat = intent.getExtras().getDouble("Latitude");
-                	LatLng wgs = CoordsTrans.bd2wgs(new LatLng(lat,lng));
-                	LabelLatLng.setText( wgs.longitude + "," + wgs.latitude);
+                	LabelLatLng.setText( lng + "," + lat );
                 	double gauss[] = CoordsTrans.ToGaussProj(lng, lat);
                 	LabelGauss.setText(Math.round(gauss[0]) + "," + Math.round(gauss[1]));
                 	LabelRadius.setText(Float.toString(intent.getExtras().getFloat("Radius")));

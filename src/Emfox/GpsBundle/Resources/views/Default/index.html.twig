@@ -153,10 +153,7 @@ function reloadOverlay(){
     map.clearOverlays();
     Object.keys(anchorNodes).forEach(function(key) {
         if(anchorNodes[key].lat*anchorNodes[key].lng !=0){
-            p=wgs2bd(anchorNodes[key]);
-            p.title=anchorNodes[key].title;
-            p.icon=anchorNodes[key].icon;
-            addMarker_a(p);
+            addMarker_a(anchorNodes[key]);
         }
 
     });
@@ -204,7 +201,8 @@ function checkSize() {
 	}
 
 function addMarker_p(point){ //添加所有单位的当前点
-    p = new BMap.Point(point.lng,point.lat);
+    bdpoint=wgs2bd(point);
+    p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Point.png') }}",
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
@@ -225,7 +223,8 @@ function addMarker_p(point){ //添加所有单位的当前点
     });
 }
 function addMarker_t(point){ //添加某一单位的历史点
-    p = new BMap.Point(point.lng,point.lat);
+    bdpoint=wgs2bd(point);
+    p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/Marker_Pin.png') }}",
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});    
@@ -240,8 +239,9 @@ function addMarker_t(point){ //添加某一单位的历史点
           this.hide();  
       });
 }
-function addMarker_a(point){ //添加某一单位的历史点
-    p = new BMap.Point(point.lng,point.lat);
+function addMarker_a(point){ //添加固定参考点
+    bdpoint=wgs2bd(point);
+    p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     var myIcon = new BMap.Icon("{{ asset('bundles/emfoxgps/images/anchors/12337') }}".replace(/12337/,point.icon),
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});    
@@ -283,7 +283,8 @@ function setCurLocation(treeNode){
     var bdpoints = new Array();
     Object.keys(nodes).forEach(function(key) {
         if(nodes[key].lat*nodes[key].lng !=0){
-            p = new BMap.Point(nodes[key].lng,nodes[key].lat);
+            bdpoint = wgs2bd(nodes[key]);
+            p = new BMap.Point(bdpoint.lng,bdpoint.lat);
             bdpoints.push(p);
         }
     });
