@@ -31,6 +31,10 @@ class TrailController extends Controller
 			$response = array("code" => 403, "success" => false, "message"=>"Device Unauthorized");
 			return new Response(json_encode($response));
 		}
+		if($lat<0.01 or $lng<0.01){
+			$response = array("code" => 403, "success" => false, "message"=>"Invalid Coordinates");
+			return new Response(json_encode($response));
+		}
 		$trail = $em->getRepository('EmfoxGpsBundle:Trail')->findOneBy(
 				array('catid'=>$category->getId()),
 				array('time'=>'ASC')
