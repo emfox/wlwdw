@@ -8,9 +8,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class DefaultController extends Controller
 {
-    public function indexAction()
+    public function mainAction($maptype)
     {
-        return $this->render('EmfoxGpsBundle:Default:index.html.twig');
+        return $this->render('EmfoxGpsBundle:Default:index.html.twig',array('maptype' => $maptype));
     }
 
 	public function proxyAction(Request $request, $url)

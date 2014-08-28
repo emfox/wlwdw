@@ -1,6 +1,12 @@
-emfox_gps_homepage:
-    path:     /
-    defaults: { _controller: "EmfoxGpsBundle:Default:index" }
+emfox_gps_index:
+    path: /
+    defaults:
+        _controller: FrameworkBundle:Redirect:urlRedirect
+        path: /main/google
+        permanent: true
+emfox_gps_main:
+    path:     /main/{maptype}
+    defaults: { _controller: "EmfoxGpsBundle:Default:main", maptype: "google" }
 emfox_gps_proxy:
     path:     /proxy/{url}
     defaults: { _controller: "EmfoxGpsBundle:Default:proxy" }
