@@ -12,11 +12,29 @@
 #main_panel {
 	float: left;
 	width: 600px;
+	overflow: auto;
 }
 </style>
 {% endblock %}
 
-{% block javascripts %}{% endblock %}
+{% block javascripts %}
+<script type="text/javascript"
+	src="{{ asset('bundles/emfoxgps/js/jquery-1.5.2.min.js') }}"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	checkSize();
+    $(window).resize(checkSize);
+});
+
+function checkSize() {
+	var h = document.documentElement.clientHeight - $('#main').offset().top - $('#footer').height();
+	var w = document.documentElement.clientWidth - $('#left_panel').width() -1;
+	document.getElementById('left_panel').style.height = h + "px";
+	document.getElementById('main_panel').style.height = h + "px";
+	document.getElementById('main_panel').style.width = w + "px";
+	}
+</script>
+{% endblock %}
 
 {% block content %}
 <div id="left_panel">
