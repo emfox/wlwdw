@@ -41,6 +41,9 @@ class MessageController extends Controller {
 			}
 		} );
 		
+		//Should really wait until fully connected with yunba server
+		sleep(1);
+		
 		$msg = $request->request->get('msg');
 		$topics = explode(',', $request->request->get('topics'));
 		$em = $this->getDoctrine()->getManager();
