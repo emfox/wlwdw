@@ -28,30 +28,30 @@ function locLabel(){
   		}
 	labelPos = new BMap.Label("坐标：", opts);
   map.addOverlay(labelPos);
-  labelPos.hide();
   map.addEventListener("mousemove",function(e){
-      p=bd2wgs(e.point);
+      labelPos.setPosition(e.point);
+      var p=bd2wgs(e.point);
       p.lng=Math.round(p.lng*1000000)/1000000;
       p.lat=Math.round(p.lat*1000000)/1000000;
       gauss = toGaussProj(p.lng,p.lat);
       var c = "直角坐标："+gauss.x+","+ gauss.y + "<br />GPS坐标：" + p.lng + "," + p.lat;
       labelPos.setContent(c);
-      labelPos.setPosition(new BMap.Point(e.point.lng,e.point.lat));
   });
   map.addEventListener("click",function(e){
-      p=bd2wgs(e.point);
+      var p=bd2wgs(e.point);
       p.lng=Math.round(p.lng*1000000)/1000000;
       p.lat=Math.round(p.lat*1000000)/1000000;
       gauss = toGaussProj(p.lng,p.lat);
       $('#mouse_pos_gauss').val(gauss.x+","+gauss.y);
       $('#mouse_pos_wgs84').val(p.lng+","+p.lat);
   });
-  map.addEventListener("mouseover",function(e){
-		labelPos.show();
-  });
-  map.addEventListener("mouseout",function(e){
-		labelPos.hide();
-  });
+// temp disable hide labelPos, cause the bug of mouseover not triggered if map has polylines.
+//  map.addEventListener("mouseover",function(e){
+//		labelPos.show();
+//  });
+//  map.addEventListener("mouseout",function(e){
+//		labelPos.hide();
+//  });
 }
 
 function setCurLocation(treeNode){
@@ -70,30 +70,42 @@ function setCurLocation(treeNode){
 
 function addMarker_p(point){ //添加所有单位的当前点
     bdpoint=wgs2bd(point);
-    p = new BMap.Point(bdpoint.lng,bdpoint.lat);
+    var p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
     var myIcon = new BMap.Icon(Marker_Pointer,
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});  
     var infoWindow = new BMap.InfoWindow(content);   
-    map.addOverlay(marker);  
+    map.addOverlay(marker);
     marker.addEventListener("click", function(){            
-        this.openInfoWindow(infoWindow);  
+        this.openInfoWindow(infoWindow);
     });
+    marker.setZIndex(0);
     opts = {
-  		  position : p,    // 指定文本标注所在的地理位置
-  		  offset   : new BMap.Size(10, -15)    //设置文本偏移量
+  		  offset   : new BMap.Size(16, 9),
+  		  icon: new BMap.Icon(Marker_Blank,
+  				  new BMap.Size(32, 18),
+  				  {imageSize:BMap.Size(32, 18)})
   		}
-	var label = new BMap.Label(point.title, opts);
-	map.addOverlay(label);
-    label.addEventListener("click", function(){            
-        this.hide();  
+	var label = new BMap.Marker(p, opts);
+    map.addOverlay(label);
+    label.enableDragging();
+    label.setLabel(new BMap.Label(point.title));
+    label.setZIndex(1);
+
+    label.addEventListener("click", function(){
+    	label.openInfoWindow(infoWindow);
+    });
+    var line = new BMap.Polyline([p,p], {strokeColor:"red", strokeWeight:1, strokeOpacity:0.8});
+    map.addOverlay(line);
+    label.addEventListener("dragend", function(e){
+    	line.setPositionAt(0,e.point);
     });
 }
 
 function addMarker_t(point){ //添加某一单位的历史点
     bdpoint=wgs2bd(point);
-    p = new BMap.Point(bdpoint.lng,bdpoint.lat);
+    var p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     var myIcon = new BMap.Icon(Marker_Pin,
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});    
@@ -111,7 +123,7 @@ function addMarker_t(point){ //添加某一单位的历史点
 
 function addMarker_a(point){ //添加固定参考点
     bdpoint=wgs2bd(point);
-    p = new BMap.Point(bdpoint.lng,bdpoint.lat);
+    var p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     var myIcon = new BMap.Icon(Anchor_Path + point.icon,
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
     var marker = new BMap.Marker(p, {icon: myIcon});    
