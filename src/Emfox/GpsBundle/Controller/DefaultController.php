@@ -23,7 +23,7 @@ class DefaultController extends Controller
 				$type = $matches[1];
 				$response->headers->set('Content-Type', $type);
 				if (preg_match('/javascript/i', $type)) {
-					$content = preg_replace('@http://@', '/proxy/http://', $content);
+					$content = preg_replace('@(http://)(?!www\.w3\.org)@', '/proxy/$1', $content);
 				}
 			}
 		}
