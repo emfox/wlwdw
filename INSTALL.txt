@@ -3,3 +3,8 @@
 2. php app/console doctrine:database:create
 3. php app/console doctrine:schema:update --force
 4. (append admin user) php app/console fos:user:create admin admin@wlwdw.com admin --super-admin
+
+static files modified:
+    php app/console assets:install
+rebuild cache:
+    php app/console cache:clear --env=prod
