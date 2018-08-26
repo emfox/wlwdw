@@ -7,11 +7,6 @@ emfox_gps_index:
 emfox_gps_main:
     path:     /main/{maptype}
     defaults: { _controller: "EmfoxGpsBundle:Default:main", maptype: "google" }
-emfox_gps_proxy:
-    path:     /proxy/{url}
-    defaults: { _controller: "EmfoxGpsBundle:Default:proxy" }
-    requirements:
-      url: .+
 emfox_gps_category:
     resource: "@EmfoxGpsBundle/Controller/CategoryController.php"
     type: annotation

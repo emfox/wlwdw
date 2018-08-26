@@ -46,8 +46,9 @@
 <script type="text/javascript"
 	src="{{ asset('bundles/emfoxgps/js/specs_google.js') }}"></script>
 {% else %}
+<script type="text/javascript"> window.HOST_TYPE = '2'; </script>
 <script type="text/javascript"
-	src="/proxy/http://api.map.baidu.com/api?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
+	src="https://api.map.baidu.com/getscript?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
 <script type="text/javascript"
 	src="{{ asset('bundles/emfoxgps/js/specs_baidu.js') }}"></script>
 {% endif %}
