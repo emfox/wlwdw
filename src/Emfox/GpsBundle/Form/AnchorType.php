@@ -5,6 +5,7 @@ namespace Emfox\GpsBundle\Form;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 
 class AnchorType extends AbstractType
 {
@@ -19,7 +20,7 @@ class AnchorType extends AbstractType
             ->add('enabled',null,array('label' => '是否启用','data' => true))
             ->add('lng',null,array('label' => '经度'))
             ->add('lat',null,array('label' => '纬度'))
-            ->add('icon','choice',array('choices' =>  $this->getIconChoices(),'label' => '图标','expanded'=>true))
+            ->add('icon',ChoiceType::class,array('choices' =>  $this->getIconChoices(),'label' => '图标','expanded'=>true))
         ;
     }
     public function getIconChoices()
@@ -29,7 +30,7 @@ class AnchorType extends AbstractType
     	$dh  = opendir($icon_path);
     	while (false !== ($filename = readdir($dh))) {
     		if($filename != '.' && $filename != '..')
-    		$icons_choices[$filename] = '<img src="' . $icon_asset_path . $filename . '" />';
+                $icons_choices['<img src="' . $icon_asset_path . $filename . '" />'] = $filename;
     	}
     	return $icons_choices;
     }

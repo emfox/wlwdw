@@ -10,6 +10,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Emfox\GpsBundle\Entity\Anchor;
 use Emfox\GpsBundle\Form\AnchorType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Anchor controller.
@@ -30,7 +31,7 @@ class AnchorController extends Controller
 				array('enabled'=>true),
 				array('id'=>'ASC')
 		);
-		$anchor = '';
+		$anchor = array();
 		foreach($entities as $entity)
 		{
 			$id = $entity->getId();
@@ -47,7 +48,7 @@ class AnchorController extends Controller
      *
      * @Route("/", name="anchor")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:Anchor:index.html.twig")
      */
     public function indexAction()
     {
@@ -95,12 +96,12 @@ class AnchorController extends Controller
      */
     private function createCreateForm(Anchor $entity)
     {
-        $form = $this->createForm(new AnchorType(), $entity, array(
+        $form = $this->createForm(AnchorType::class, $entity, array(
             'action' => $this->generateUrl('anchor_create'),
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => '保存参考点'));
+        $form->add('submit', SubmitType::class, array('label' => '保存参考点'));
 
         return $form;
     }
@@ -110,7 +111,7 @@ class AnchorController extends Controller
      *
      * @Route("/new", name="anchor_new")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:Anchor:new.html.twig")
      */
     public function newAction()
     {
@@ -128,7 +129,7 @@ class AnchorController extends Controller
      *
      * @Route("/{id}/edit", name="anchor_edit")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:Anchor:edit.html.twig")
      */
     public function editAction($id)
     {
@@ -159,12 +160,12 @@ class AnchorController extends Controller
     */
     private function createEditForm(Anchor $entity)
     {
-        $form = $this->createForm(new AnchorType(), $entity, array(
+        $form = $this->createForm(AnchorType::class, $entity, array(
             'action' => $this->generateUrl('anchor_update', array('id' => $entity->getId())),
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => '确认修改'));
+        $form->add('submit', SubmitType::class, array('label' => '确认修改'));
 
         return $form;
     }
@@ -239,7 +240,7 @@ class AnchorController extends Controller
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('anchor_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => '删除该参考点'))
+            ->add('submit', SubmitType::class, array('label' => '删除该参考点'))
             ->getForm()
         ;
     }
