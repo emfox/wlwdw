@@ -9,6 +9,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Emfox\GpsBundle\Entity\User;
 use Emfox\GpsBundle\Form\UserType;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * User controller.
@@ -23,7 +24,7 @@ class UserController extends Controller
      *
      * @Route("/", name="user")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:User:index.html.twig")
      */
     public function indexAction()
     {
@@ -77,12 +78,12 @@ class UserController extends Controller
      */
     private function createCreateForm(User $entity)
     {
-        $form = $this->createForm(new UserType(), $entity, array(
+        $form = $this->createForm(UserType::class, $entity, array(
             'action' => $this->generateUrl('user_create'),
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => '保存用户'));
+        $form->add('submit', SubmitType::class, array('label' => '保存用户'));
 
         return $form;
     }
@@ -92,7 +93,7 @@ class UserController extends Controller
      *
      * @Route("/new", name="user_new")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:User:new.html.twig")
      */
     public function newAction()
     {
@@ -110,7 +111,7 @@ class UserController extends Controller
      *
      * @Route("/{id}/edit", name="user_edit")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:User:edit.html.twig")
      */
     public function editAction($id)
     {
@@ -141,12 +142,12 @@ class UserController extends Controller
     */
     private function createEditForm(User $entity)
     {
-        $form = $this->createForm(new UserType(), $entity, array(
+        $form = $this->createForm(UserType::class, $entity, array(
             'action' => $this->generateUrl('user_update', array('id' => $entity->getId())),
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => '确认修改'));
+        $form->add('submit', SubmitType::class, array('label' => '确认修改'));
 
         return $form;
     }
@@ -229,7 +230,7 @@ class UserController extends Controller
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('user_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => '删除该用户'))
+            ->add('submit', SubmitType::class, array('label' => '删除该用户'))
             ->getForm()
         ;
     }

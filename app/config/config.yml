@@ -73,3 +73,6 @@ fos_user:
     db_driver: orm # other valid values are 'mongodb', 'couchdb' and 'propel'
     firewall_name: main
     user_class: Emfox\GpsBundle\Entity\User
+    from_email:
+        address: "emfox@wlwdw.com"
+        sender_name: "No Reply"

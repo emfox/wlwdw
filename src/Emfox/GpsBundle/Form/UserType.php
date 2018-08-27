@@ -4,6 +4,7 @@ namespace Emfox\GpsBundle\Form;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
 class UserType extends AbstractType
@@ -16,7 +17,7 @@ class UserType extends AbstractType
 	{
 		$builder
             ->add('username',null,array('label' => '用户名'))
-            ->add('password','text',array('mapped' => false,'required' => false,'label' => '密码  '))
+            ->add('password',TextType::class,array('mapped' => false,'required' => false,'label' => '密码  '))
 		;
 	}
     /**

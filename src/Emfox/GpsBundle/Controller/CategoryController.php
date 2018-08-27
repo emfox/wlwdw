@@ -11,6 +11,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Emfox\GpsBundle\Entity\Category;
 use Emfox\GpsBundle\Form\CategoryType;
 use Emfox\GpsBundle\Entity\Trail;
+use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Category controller.
@@ -40,7 +41,7 @@ class CategoryController extends Controller
      *
      * @Route("/", name="category")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:Category:index.html.twig")
      */
     public function indexAction()
     {
@@ -112,12 +113,12 @@ class CategoryController extends Controller
      */
     private function createCreateForm(Category $entity)
     {
-        $form = $this->createForm(new CategoryType(), $entity, array(
+        $form = $this->createForm(CategoryType::class, $entity, array(
             'action' => $this->generateUrl('category_create'),
             'method' => 'POST',
         ));
 
-        $form->add('submit', 'submit', array('label' => '保存单位'));
+        $form->add('submit', SubmitType::class, array('label' => '保存单位'));
 
         return $form;
     }
@@ -127,7 +128,7 @@ class CategoryController extends Controller
      *
      * @Route("/new", name="category_new")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:Category:new.html.twig")
      */
     public function newAction()
     {
@@ -145,7 +146,7 @@ class CategoryController extends Controller
      *
      * @Route("/{id}/edit", name="category_edit")
      * @Method("GET")
-     * @Template()
+     * @Template("EmfoxGpsBundle:Category:edit.html.twig")
      */
     public function editAction($id)
     {
@@ -176,12 +177,12 @@ class CategoryController extends Controller
     */
     private function createEditForm(Category $entity)
     {
-        $form = $this->createForm(new CategoryType(), $entity, array(
+        $form = $this->createForm(CategoryType::class, $entity, array(
             'action' => $this->generateUrl('category_update', array('id' => $entity->getId())),
             'method' => 'PUT',
         ));
 
-        $form->add('submit', 'submit', array('label' => '确认修改'));
+        $form->add('submit', SubmitType::class, array('label' => '确认修改'));
 
         return $form;
     }
@@ -293,7 +294,7 @@ class CategoryController extends Controller
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('category_delete', array('id' => $id)))
             ->setMethod('DELETE')
-            ->add('submit', 'submit', array('label' => '删除该单位'))
+            ->add('submit', SubmitType::class, array('label' => '删除该单位'))
             ->getForm()
         ;
     }
