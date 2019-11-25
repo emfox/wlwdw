@@ -5,8 +5,7 @@ namespace Emfox\GpsBundle\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Emfox\GpsBundle\Entity\Anchor;
 use Emfox\GpsBundle\Form\AnchorType;
@@ -46,8 +45,7 @@ class AnchorController extends Controller
     /**
      * Lists all Anchor entities.
      *
-     * @Route("/", name="anchor")
-     * @Method("GET")
+     * @Route("/", name="anchor", methods={"GET"})
      * @Template("EmfoxGpsBundle:Anchor:index.html.twig")
      */
     public function indexAction()
@@ -63,8 +61,7 @@ class AnchorController extends Controller
     /**
      * Creates a new Anchor entity.
      *
-     * @Route("/", name="anchor_create")
-     * @Method("POST")
+     * @Route("/", name="anchor_create", methods={"POST"})
      * @Template("EmfoxGpsBundle:Anchor:new.html.twig")
      */
     public function createAction(Request $request)
@@ -109,8 +106,7 @@ class AnchorController extends Controller
     /**
      * Displays a form to create a new Anchor entity.
      *
-     * @Route("/new", name="anchor_new")
-     * @Method("GET")
+     * @Route("/new", name="anchor_new", methods={"GET"})
      * @Template("EmfoxGpsBundle:Anchor:new.html.twig")
      */
     public function newAction()
@@ -127,8 +123,7 @@ class AnchorController extends Controller
     /**
      * Displays a form to edit an existing Anchor entity.
      *
-     * @Route("/{id}/edit", name="anchor_edit")
-     * @Method("GET")
+     * @Route("/{id}/edit", name="anchor_edit", methods={"GET"})
      * @Template("EmfoxGpsBundle:Anchor:edit.html.twig")
      */
     public function editAction($id)
@@ -172,8 +167,7 @@ class AnchorController extends Controller
     /**
      * Edits an existing Anchor entity.
      *
-     * @Route("/{id}", name="anchor_update")
-     * @Method("PUT")
+     * @Route("/{id}", name="anchor_update", methods={"PUT"})
      * @Template("EmfoxGpsBundle:Anchor:edit.html.twig")
      */
     public function updateAction(Request $request, $id)
@@ -205,8 +199,7 @@ class AnchorController extends Controller
     /**
      * Deletes a Anchor entity.
      *
-     * @Route("/{id}", name="anchor_delete")
-     * @Method("DELETE")
+     * @Route("/{id}", name="anchor_delete", methods={"DELETE"})
      */
     public function deleteAction(Request $request, $id)
     {

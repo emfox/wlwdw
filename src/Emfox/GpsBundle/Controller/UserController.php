@@ -4,9 +4,8 @@ namespace Emfox\GpsBundle\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
+use Symfony\Component\Routing\Annotation\Route;
 use Emfox\GpsBundle\Entity\User;
 use Emfox\GpsBundle\Form\UserType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -22,8 +21,7 @@ class UserController extends Controller
     /**
      * Lists all User entities.
      *
-     * @Route("/", name="user")
-     * @Method("GET")
+     * @Route("/", name="user", methods={"GET"})
      * @Template("EmfoxGpsBundle:User:index.html.twig")
      */
     public function indexAction()
@@ -39,8 +37,7 @@ class UserController extends Controller
     /**
      * Creates a new User entity.
      *
-     * @Route("/", name="user_create")
-     * @Method("POST")
+     * @Route("/", name="user_create", methods={"POST"})
      * @Template("EmfoxGpsBundle:User:new.html.twig")
      */
     public function createAction(Request $request)
@@ -91,8 +88,7 @@ class UserController extends Controller
     /**
      * Displays a form to create a new User entity.
      *
-     * @Route("/new", name="user_new")
-     * @Method("GET")
+     * @Route("/new", name="user_new", methods={"GET"})
      * @Template("EmfoxGpsBundle:User:new.html.twig")
      */
     public function newAction()
@@ -109,8 +105,7 @@ class UserController extends Controller
     /**
      * Displays a form to edit an existing User entity.
      *
-     * @Route("/{id}/edit", name="user_edit")
-     * @Method("GET")
+     * @Route("/{id}/edit", name="user_edit", methods={"GET"})
      * @Template("EmfoxGpsBundle:User:edit.html.twig")
      */
     public function editAction($id)
@@ -154,8 +149,7 @@ class UserController extends Controller
     /**
      * Edits an existing User entity.
      *
-     * @Route("/{id}", name="user_update")
-     * @Method("PUT")
+     * @Route("/{id}", name="user_update", methods={"PUT"})
      * @Template("EmfoxGpsBundle:User:edit.html.twig")
      */
     public function updateAction(Request $request, $id)
@@ -195,8 +189,7 @@ class UserController extends Controller
     /**
      * Deletes a User entity.
      *
-     * @Route("/{id}", name="user_delete")
-     * @Method("DELETE")
+     * @Route("/{id}", name="user_delete", methods={"DELETE"})
      */
     public function deleteAction(Request $request, $id)
     {
