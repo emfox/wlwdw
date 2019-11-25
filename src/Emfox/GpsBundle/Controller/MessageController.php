@@ -2,6 +2,7 @@
 
 namespace Emfox\GpsBundle\Controller;
 
+use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -52,7 +53,7 @@ class MessageController extends Controller {
 			
 			$message = new Message();
 			$message->setRecipient($topic);
-			$message->setTime(new \DateTime());
+			$message->setTime(new DateTime());
 			$message->setContent($msg);
 			
 			$em->persist($message);
@@ -83,11 +84,11 @@ class MessageController extends Controller {
 		//direct authenticate user via devid
 		if($message->getRecipient() != $devid){
 			$response = array("code" => 403, "success" => false, "message"=>"Device Unauthorized");
-			return new Response(json_encode($response));
+			return new Response(json_encode($response, JSON_THROW_ON_ERROR));
 		}
 		$response = array("code" => 100, "success" => true, "message" => array("time" => $message->getTime()->format("Y-m-d H:i:s"),
 																				"content" => $message->getContent()
 		));
-		return new Response(json_encode($response));
+		return new Response(json_encode($response, JSON_THROW_ON_ERROR));
 	}
 }

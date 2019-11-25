@@ -2,6 +2,7 @@
 
 namespace Emfox\GpsBundle\Controller;
 
+use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -33,7 +34,7 @@ class CategoryController extends Controller
 		$repo->setChildrenIndex('children');
 		$arrayTree = $repo->childrenHierarchy();
 		$response = array("code" => 100, "success" => true, "ztree" => $arrayTree);
-		return new Response(json_encode($response));
+		return new Response(json_encode($response, JSON_THROW_ON_ERROR));
 	}
 
     /**
@@ -78,7 +79,7 @@ class CategoryController extends Controller
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-        	$entity->setUpdatetime(new \DateTime());
+        	$entity->setUpdatetime(new DateTime());
         	$entity->setLat('0');
         	$entity->setLng('0');
             $em = $this->getDoctrine()->getManager();
@@ -90,7 +91,7 @@ class CategoryController extends Controller
             	$trail->setCatid($entity->getId());
             	$trail->setLat('0');
             	$trail->setLng('0');
-            	$trail->setTime(new \DateTime());
+            	$trail->setTime(new DateTime());
             	$em->persist($trail);
             }
             $em->flush();
