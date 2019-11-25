@@ -6,8 +6,7 @@ use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
+use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Emfox\GpsBundle\Entity\Category;
 use Emfox\GpsBundle\Form\CategoryType;
@@ -24,8 +23,7 @@ class CategoryController extends Controller
 	/**
 	 * Lists all Category entities via ajax.
 	 *
-	 * @Route("/hierarchy", name="category_hierarchy")
-	 * @Method("GET")
+	 * @Route("/hierarchy", name="category_hierarchy", methods={"GET"})
 	 */
 	public function hierarchyAction($root = null)
 	{
@@ -40,8 +38,7 @@ class CategoryController extends Controller
     /**
      * Lists all Category entities.
      *
-     * @Route("/", name="category")
-     * @Method("GET")
+     * @Route("/", name="category", methods={"GET"})
      * @Template("EmfoxGpsBundle:Category:index.html.twig")
      */
     public function indexAction()
@@ -68,8 +65,7 @@ class CategoryController extends Controller
     /**
      * Creates a new Category entity.
      *
-     * @Route("/", name="category_create")
-     * @Method("POST")
+     * @Route("/", name="category_create", methods={"POST"})
      * @Template("EmfoxGpsBundle:Category:new.html.twig")
      */
     public function createAction(Request $request)
@@ -127,8 +123,7 @@ class CategoryController extends Controller
     /**
      * Displays a form to create a new Category entity.
      *
-     * @Route("/new", name="category_new")
-     * @Method("GET")
+     * @Route("/new", name="category_new", methods={"GET"})
      * @Template("EmfoxGpsBundle:Category:new.html.twig")
      */
     public function newAction()
@@ -145,8 +140,7 @@ class CategoryController extends Controller
     /**
      * Displays a form to edit an existing Category entity.
      *
-     * @Route("/{id}/edit", name="category_edit")
-     * @Method("GET")
+     * @Route("/{id}/edit", name="category_edit", methods={"GET"})
      * @Template("EmfoxGpsBundle:Category:edit.html.twig")
      */
     public function editAction($id)
@@ -190,8 +184,7 @@ class CategoryController extends Controller
     /**
      * Edits an existing Category entity.
      *
-     * @Route("/{id}", name="category_update")
-     * @Method("PUT")
+     * @Route("/{id}", name="category_update", methods={"PUT"})
      * @Template("EmfoxGpsBundle:Category:edit.html.twig")
      */
     public function updateAction(Request $request, $id)
@@ -223,8 +216,7 @@ class CategoryController extends Controller
     /**
      * Deletes a Category entity.
      *
-     * @Route("/{id}", name="category_delete")
-     * @Method("DELETE")
+     * @Route("/{id}", name="category_delete", methods={"DELETE"})
      */
     public function deleteAction(Request $request, $id)
     {
