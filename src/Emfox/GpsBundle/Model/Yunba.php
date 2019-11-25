@@ -94,7 +94,7 @@ class ElephantIOClient {
 			if (( int ) $sess [0] === self::TYPE_EVENT) {
 				unset ( $sess [0], $sess [1], $sess [2] );
 				
-				$response = json_decode ( implode ( ':', $sess ), true );
+				$response = json_decode ( implode ( ':', $sess ), true, 512, JSON_THROW_ON_ERROR );
 				$name = $response ['name'];
 				$data = $response ['args'] [0];
 				
@@ -227,7 +227,7 @@ class ElephantIOClient {
 		return $this->send ( self::TYPE_EVENT, $emitId, $endpoint, json_encode ( array (
 				'name' => $event,
 				'args' => $args 
-		) ) );
+		), JSON_THROW_ON_ERROR ) );
 	}
 	
 	/**
@@ -258,7 +258,7 @@ class ElephantIOClient {
 		if (! defined ( 'STDOUT' ) || ! $this->debug) {
 			return false;
 		}
-		
+
 		$typeMap = array (
 				'debug' => array (
 						36,
@@ -277,11 +277,11 @@ class ElephantIOClient {
 						'- ok    -' 
 				) 
 		);
-		
+
 		if (! array_key_exists ( $type, $typeMap )) {
 			throw new InvalidArgumentException ( 'ElephantIOClient::stdout $type parameter must be debug, info, error or success. Got ' . $type );
 		}
-		
+
 		fwrite ( STDOUT, "[" . $typeMap [$type] [0] . " " . $typeMap [$type] [1] . "  " . $message . "\r\n" );
 		//fwrite ( STDOUT, "\033[" . $typeMap [$type] [0] . "m" . $typeMap [$type] [1] . "\033[37m  " . $message . "\r\n" );
 	}

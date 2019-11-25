@@ -41,7 +41,7 @@ class AnchorController extends Controller
 					"icon" => $entity->getIcon());
 		}
 		$response = array("code" => 100, "success" => true, "anchor" => $anchor);
-		return new Response(json_encode($response));
+		return new Response(json_encode($response, JSON_THROW_ON_ERROR));
 	}
     /**
      * Lists all Anchor entities.
