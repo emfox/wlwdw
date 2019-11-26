@@ -1,0 +1,243 @@
+{% extends 'base.html.twig' %} {% block stylesheets %}
+<link rel="stylesheet"
+	href="{{ asset('css/zTreeStyle/zTreeStyle.css') }}"
+	type="text/css">
+<style type="text/css">
+#aside {
+	float: left;
+	width: 179px;
+	border-right: 1px solid #bbb;
+	background: #ddd;
+	overflow-y: scroll;
+}
+
+#map {
+	float: left;
+	top: 0px;
+}
+.labels {
+	color: black;
+	background-color: white;
+	font-family: "Lucida Grande", "Arial", sans-serif;
+	font-size: 10px;
+	font-weight: normal;
+	text-align: center;
+	border: 1px solid red;
+	white-space: nowrap;
+}
+</style>
+{% endblock %} {% block javascripts %}
+<script type="text/javascript"
+	src="{{ asset('js/jquery-1.5.2.min.js') }}"></script>
+<script type="text/javascript"
+	src="{{ asset('js/jquery.cookie.js') }}"></script>
+<script type="text/javascript"
+	src="{{ asset('js/jquery.ztree.all-3.5.min.js') }}"></script>
+<script type="text/javascript"
+	src="{{ asset('js/coords_trans.js') }}"></script>
+<script type="text/javascript"
+	src="{{ asset('js/proj4.js') }}"></script>
+
+{% if maptype == 'google' %}
+<script type="text/javascript"
+	src="https://maps.googleapis.com/maps/api/js?&sensor=false"></script>
+<script type="text/javascript"
+	src="{{ asset('js/markerwithlabel_packed.js') }}"></script>
+<script type="text/javascript"
+	src="{{ asset('js/specs_google.js') }}"></script>
+{% else %}
+<script type="text/javascript"> window.HOST_TYPE = '2'; </script>
+<script type="text/javascript"
+	src="https://api.map.baidu.com/getscript?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
+<script type="text/javascript"
+	src="{{ asset('js/specs_baidu.js') }}"></script>
+{% endif %}
+<script type="text/javascript">
+var Marker_Pointer = "{{ asset('images/Marker_Point.png') }}";
+var Marker_Blank = "{{ asset('images/Marker_Blank.png') }}";
+var Marker_Pin = "{{ asset('images/Marker_Pin.png') }}";
+var Anchor_Path = "{{ asset('images/anchors/') }}";
+var ztreeStatusCookieKey ='ztree-log-status-gps1s';
+$.cookie.defaults.path = '/';
+var zTreeObj;
+//zTree 的参数配置
+var zTreeSetting = { callback:{onClick:zTreeOnClick,onExpand:logStatus,onCollapse:logStatus},
+		check:{enable:false,chkboxType:{ "Y" : "s", "N" : "" }},
+		data:{key:{name:"title"} },
+		view:{addDiyDom: addDiyDom} };
+var zNodes;
+var anchorNodes;
+var map;
+var labelPos;
+var nextRefresh;
+
+$(document).ready(function(){
+	checkSize();
+	initMap();
+    $(window).resize(checkSize);
+    $('#reloadAll').click(reloadAll);
+    $('#viewAll').click(function() {setCurLocation(zNodes);});
+    $('input[name=refresh_time]').change(timedReload);
+    $('#sendMsg').click(sendMsg);
+    $('#abortMsg').click(hideSend);
+    $('#showSend').click(showSend);
+    $('#divSend').hide();
+    reloadAll();
+});
+
+function toGaussProj(lng,lat){
+	zone = Math.floor(lng/6)*6+3;
+    proj4.defs('WGS84tm', '+proj=tmerc +lat_0=0 +lon_0='+zone+' +x_0=500000 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs');
+    gauss = proj4('WGS84tm').forward({x:lng,y:lat});
+    gauss.x = Math.round(gauss.x*100)/100;
+    gauss.y = Math.round(gauss.y*100)/100;
+    return gauss;
+}
+function showSend(){
+	$('#divSend').show();
+	$('#showSend').hide();
+	zTreeSetting.check.enable = true;
+	reloadzTree();
+}
+function hideSend(){
+	$('#divSend').hide();
+	$('#showSend').show();
+	zTreeSetting.check.enable = false;
+	reloadzTree();
+}
+function sendMsg()
+{
+	nodes = zTreeObj.getCheckedNodes(true);
+	if (nodes.length == 0){
+		alert("请先勾选发送单位");
+		return 0;
+	}
+	var msg = $('#msgContent').val();
+	if (msg == ""){
+		alert("请先填写消息内容");
+		return 0;
+	}
+	var topics = "";
+    Object.keys(nodes).forEach(function(key) {
+        topic = nodes[key].devid;
+        if(topic != ""){
+        	if(topics != ""){
+        		topics += ',';
+        	}
+			topics += topic;
+        }
+    });
+    $.post("{{ path('message_send') }}",{topics:topics,msg:msg},function(result){
+        alert('消息"' + result + '"已发送。' );
+        });
+    hideSend();
+}
+
+function timedReload()
+{
+var interval = $("input[name=refresh_time]:checked").val();
+clearInterval(nextRefresh);
+if(interval > 0)
+{
+	nextRefresh=setInterval("reloadAll()",interval*1000);
+}
+}
+
+function reloadAll(){
+	$.when(
+		$.get("{{ path('anchor_list') }}", function (data) {
+			anchorNodes = $.parseJSON(data).anchor;
+		}),
+    	$.get("{{ path('category_hierarchy') }}", function (data) {
+        	zNodes = $.parseJSON(data).ztree;
+        })
+).then(function(){
+    reloadzTree();
+    reloadOverlay();
+})
+}
+function reloadzTree(){
+    zTreeObj = $.fn.zTree.init($("#jsonTree"), zTreeSetting, zNodes);
+    var opennodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+
+	if(opennodes !== null && opennodes.length !== 0)
+	{
+		for ( i in opennodes){
+			the_node = zTreeObj.getNodeByParam("id",opennodes[i])
+			if(the_node)
+				the_node.open = true;
+		}
+	}
+	zTreeObj.refresh();
+}
+
+function checkSize() {
+	var h = document.documentElement.clientHeight - $('#main').offset().top - $('#footer').height();
+	var w = document.documentElement.clientWidth - $('#aside').width() -1;
+	document.getElementById('aside').style.height = h + "px";
+	document.getElementById('map').style.height = h + "px";
+	document.getElementById('map').style.width = w + "px";
+	}
+
+function zTreeOnClick(event, treeId, treeNode) {
+	//FIXME: 12377 is just a placeholder,
+	//FIXME: Better to use FOSJsRoutingBundle for exporting Symfony Routes to Javascript.
+    $.get("{{ path('trail_list',{'catid':12377}) }}".replace(/12377/,treeNode.id), function (data) {
+    	addTrail($.parseJSON(data).trail);
+	});
+};
+
+
+function addDiyDom(treeId, treeNode) {
+	if (treeNode.children.length == 0) return;
+	var aObj = $("#" + treeNode.tId + "_a");
+	var editStr = "<input type='button' id='diyBtn_" + treeNode.id
+		+ "' value='当前位置' onfocus='this.blur();' />";
+	aObj.after(editStr);
+	var btn = $("#diyBtn_"+treeNode.id);
+	if (btn) btn.bind("click", function(){setCurLocation(treeNode)});
+};
+
+function logStatus(event, treeId, treeNode)
+{
+
+	var _nodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+	var _index = $.inArray(treeNode.id + '', _nodes);
+
+	if(treeNode.open && _index === -1)
+	{
+		_nodes.push(treeNode.id);
+	}	
+	else
+	{
+		_nodes.splice(_index, 1);
+	}
+
+	$.cookie(ztreeStatusCookieKey, _nodes.join(','));
+}
+
+</script>
+{% endblock %} {% block content %}
+<div id="aside">
+	单位列表<input type="button" value="全局视图" id="viewAll" />
+	<div id="jsonTree" class="ztree"></div>
+	<div id="divSend">
+		<textarea id="msgContent" rows="3" cols="18"></textarea>
+		<input type="button" value="发送" id="sendMsg" /> <input type="button"
+			value="取消" id="abortMsg" />
+	</div>
+	<input type="button" value="发消息" id="showSend" />
+	<div>
+		<input type="radio" name="refresh_time" value="30">30秒自动刷新<br /> <input
+			type="radio" name="refresh_time" value="60">1分钟自动刷新<br /> <input
+			type="radio" name="refresh_time" value="120">2分钟自动刷新<br /> <input
+			type="radio" name="refresh_time" value="0" checked="checked"> <input
+			type="button" value="手动刷新" id="reloadAll" />
+	</div>
+	<div>
+		直角坐标<input type="text" id="mouse_pos_gauss" /> GPS坐标<input type="text"
+			id="mouse_pos_wgs84" />
+	</div>
+</div>
+<div id="map"></div>
+{% endblock %}
