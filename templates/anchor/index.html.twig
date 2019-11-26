@@ -1,0 +1,40 @@
+{% extends 'adminbase.html.twig' %}
+
+{% block body -%}
+    <h1>参考点列表</h1>
+
+    <table class="records_list">
+        <thead>
+            <tr>
+                <th>编号</th>
+                <th>名称</th>
+                <th>已启用</th>
+                <th>经度</th>
+                <th>纬度</th>
+                <th>图标</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for entity in entities %}
+            <tr>
+                <td>{{ entity.id }}</td>
+                <td>{{ entity.title }}</td>
+                <td>{{ entity.enabled }}</td>
+                <td>{{ entity.lng }}</td>
+                <td>{{ entity.lat }}</td>
+                <td><img src="{{ asset('images/anchors/') ~ entity.icon}}" /></td>
+                <td><a href="{{ path('anchor_edit', { 'id': entity.id }) }}">修改</a></td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+        <ul>
+        <li>
+            <a href="{{ path('anchor_new') }}">
+                	创建参考点
+            </a>
+        </li>
+    </ul>
+    {% endblock %}

@@ -1,0 +1,40 @@
+{% extends 'adminbase.html.twig' %}
+
+{% block body -%}
+    <h1>单位管理</h1>
+
+    <table class="records_list">
+        <thead>
+            <tr>
+                <th>编号</th>
+                <th>单位名</th>
+                <th>设备标识号</th>
+                <th>各类操作</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for entity in entities %}
+            <tr>
+                <td>{{ entity.id }}</td>
+                <td>{{ entity.indentLabel }}</td>
+                <td>{{ entity.devid }}</td>
+                <td>
+                <a href="{{ path('category_move', { 'id': entity.id, 'direction' :'up' }) }}">上移</a>
+                <a href="{{ path('category_move', { 'id': entity.id, 'direction' :'down' }) }}">下移</a>
+                <a href="{{ path('category_move', { 'id': entity.id, 'direction' :'top' }) }}">移顶</a>
+                <a href="{{ path('category_move', { 'id': entity.id, 'direction' :'bottom' }) }}">移底</a>
+                <a href="{{ path('category_edit', { 'id': entity.id }) }}">修改</a>
+                </td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+        <ul>
+        <li>
+            <a href="{{ path('category_new') }}">
+                新建单位
+            </a>
+        </li>
+    </ul>
+    {% endblock %}

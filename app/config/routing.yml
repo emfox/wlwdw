@@ -1,4 +1,0 @@
-emfox_gps:
-    resource: "@EmfoxGpsBundle/Resources/config/routing.yml"
-    prefix:   /
-
