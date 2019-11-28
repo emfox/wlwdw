@@ -5,7 +5,7 @@ namespace App\Controller;
 use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use App\Model\Yunba;
@@ -16,7 +16,7 @@ use App\Entity\Message;
  *
  * @Route("/message")
  */
-class MessageController extends Controller {
+class MessageController extends AbstractController {
 	/**
 	 * Send Message direct to clients.
 	 *
