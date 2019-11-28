@@ -5,7 +5,7 @@ namespace App\Controller;
 use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use App\Entity\Trail;
@@ -15,7 +15,7 @@ use App\Entity\Trail;
  *
  * @Route("/trail")
  */
-class TrailController extends Controller
+class TrailController extends AbstractController
 {
 	/**
 	 * Add a new Trail point entities via ajax.
