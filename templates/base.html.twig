@@ -57,13 +57,10 @@ body {
 	</div>
 	<div id="main">{% block content %}{% endblock %}</div>    
     <div id="footer">
-    	{% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
-    		{{ 'layout.logged_in_as'|trans({'%username%': app.user.username}, 'FOSUserBundle') }} |
-    		<a href="{{ path('fos_user_security_logout') }}">
-    		{{ 'layout.logout'|trans({}, 'FOSUserBundle') }}
-    		</a>
+        {% if is_granted("IS_AUTHENTICATED_REMEMBERED") %}
+            You are logged in as {{ app.user.username }}, <a href="{{ path('app_logout') }}">Logout</a>
     	{% else %}
-    		<a href="{{ path('fos_user_security_login') }}">{{ 'layout.login'|trans({}, 'FOSUserBundle') }}</a>
+            <a href="{{ path('app_login') }}">Login</a>
     	{% endif %}
     	&nbsp;版权所有© 2014, emfoxzhou@gmail.com 
         <a href="http://www.miitbeian.gov.cn/">浙ICP备14028084号</a></div>
