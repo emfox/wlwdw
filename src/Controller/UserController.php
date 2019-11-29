@@ -9,6 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\User;
 use App\Form\UserType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
  * User controller.
@@ -40,7 +41,7 @@ class UserController extends AbstractController
      * @Route("/", name="user_create", methods={"POST"})
      * @Template("user/new.html.twig")
      */
-    public function createAction(Request $request)
+    public function createAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $entity = new User();
         $form = $this->createCreateForm($entity);
@@ -50,7 +51,8 @@ class UserController extends AbstractController
         	$password = $form->get('password')->getData();
         	if(strlen($password)==0)
         		$password='000000';
-        	$entity->setPlainPassword($password);
+                $encoded = $encoder->encodePassword($entity, $password);
+                $entity->setPassword($encoded);
         	$entity->setEmail($entity->getUsername() . "@user.wlwdw.com");
         	$entity->setEnabled(TRUE);
             $em = $this->getDoctrine()->getManager();
