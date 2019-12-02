@@ -3,3 +3,6 @@ twig:
     debug: '%kernel.debug%'
     strict_variables: '%kernel.debug%'
     exception_controller: null
+    globals:
+        google_map_api_key: '%env(GOOGLE_MAP_API_KEY)%'
+        baidu_map_api_key: '%env(BAIDU_MAP_API_KEY)%'
