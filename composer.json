@@ -1,8 +1,8 @@
 {
 	"name" : "emfox/wlwdw",
-	"license" : "MIT",
+	"license" : "GPL-3.0-or-later",
 	"type" : "project",
-	"description" : "The \"Symfony Standard Edition\" distribution",
+	"description" : "Wlwdw device location recoder and viewer",
 	"require" : {
 		"php": "^7.1.3",
 		"ext-ctype": "*",
