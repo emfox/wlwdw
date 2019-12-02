@@ -40,15 +40,14 @@
 
 {% if maptype == 'google' %}
 <script type="text/javascript"
-	src="https://maps.googleapis.com/maps/api/js?&sensor=false"></script>
+	src="https://maps.googleapis.com/maps/api/js?key={{ google_map_api_key }}&sensor=false"></script>
 <script type="text/javascript"
 	src="{{ asset('js/markerwithlabel_packed.js') }}"></script>
 <script type="text/javascript"
 	src="{{ asset('js/specs_google.js') }}"></script>
 {% else %}
-<script type="text/javascript"> window.HOST_TYPE = '2'; </script>
 <script type="text/javascript"
-	src="https://api.map.baidu.com/getscript?v=2.0&ak=vnqN3eXrBMk2YTtYZsWL1Qru"></script>
+	src="https://api.map.baidu.com/api?v=3.0&ak={{ baidu_map_api_key }}"></script>
 <script type="text/javascript"
 	src="{{ asset('js/specs_baidu.js') }}"></script>
 {% endif %}
