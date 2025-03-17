@@ -15,17 +15,15 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Category controller.
- *
- * @Route("/category")
  */
+#[Route(path: '/category')]
 class CategoryController extends AbstractController
 {
 	/**
-	 * Lists all Category entities via ajax.
-	 *
-	 * @Route("/hierarchy", name="category_hierarchy", methods={"GET"})
-	 */
-	public function hierarchyAction($root = null)
+     * Lists all Category entities via ajax.
+     */
+    #[Route(path: '/hierarchy', name: 'category_hierarchy', methods: ['GET'])]
+    public function hierarchyAction($root = null)
 	{
 		$em = $this->getDoctrine()->getManager();
 		$repo = $em->getRepository('App\Entity\Category');
@@ -37,10 +35,9 @@ class CategoryController extends AbstractController
 
     /**
      * Lists all Category entities.
-     *
-     * @Route("/", name="category", methods={"GET"})
-     * @Template("category/index.html.twig")
      */
+    #[Route(path: '/', name: 'category', methods: ['GET'])]
+    #[Template('category/index.html.twig')]
     public function indexAction()
     {
         $em = $this->getDoctrine()->getManager();
@@ -64,10 +61,9 @@ class CategoryController extends AbstractController
     }
     /**
      * Creates a new Category entity.
-     *
-     * @Route("/", name="category_create", methods={"POST"})
-     * @Template("category/new.html.twig")
      */
+    #[Route(path: '/', name: 'category_create', methods: ['POST'])]
+    #[Template('category/new.html.twig')]
     public function createAction(Request $request)
     {
         $entity = new Category();
@@ -122,10 +118,9 @@ class CategoryController extends AbstractController
 
     /**
      * Displays a form to create a new Category entity.
-     *
-     * @Route("/new", name="category_new", methods={"GET"})
-     * @Template("category/new.html.twig")
      */
+    #[Route(path: '/new', name: 'category_new', methods: ['GET'])]
+    #[Template('category/new.html.twig')]
     public function newAction()
     {
         $entity = new Category();
@@ -139,10 +134,9 @@ class CategoryController extends AbstractController
 
     /**
      * Displays a form to edit an existing Category entity.
-     *
-     * @Route("/{id}/edit", name="category_edit", methods={"GET"})
-     * @Template("category/edit.html.twig")
      */
+    #[Route(path: '/{id}/edit', name: 'category_edit', methods: ['GET'])]
+    #[Template('category/edit.html.twig')]
     public function editAction($id)
     {
         $em = $this->getDoctrine()->getManager();
@@ -183,10 +177,9 @@ class CategoryController extends AbstractController
     }
     /**
      * Edits an existing Category entity.
-     *
-     * @Route("/{id}", name="category_update", methods={"PUT"})
-     * @Template("category/edit.html.twig")
      */
+    #[Route(path: '/{id}', name: 'category_update', methods: ['PUT'])]
+    #[Template('category/edit.html.twig')]
     public function updateAction(Request $request, $id)
     {
         $em = $this->getDoctrine()->getManager();
@@ -215,9 +208,8 @@ class CategoryController extends AbstractController
     }
     /**
      * Deletes a Category entity.
-     *
-     * @Route("/{id}", name="category_delete", methods={"DELETE"})
      */
+    #[Route(path: '/{id}', name: 'category_delete', methods: ['DELETE'])]
     public function deleteAction(Request $request, $id)
     {
         $form = $this->createDeleteForm($id);
@@ -240,9 +232,8 @@ class CategoryController extends AbstractController
 
     /**
      * Moves a Category entity.
-     *
-     * @Route("/{id}/move/{direction}", name="category_move")
      */
+    #[Route(path: '/{id}/move/{direction}', name: 'category_move')]
     public function moveAction(Request $request, $id, $direction)
     {
     	$em = $this->getDoctrine()->getManager();

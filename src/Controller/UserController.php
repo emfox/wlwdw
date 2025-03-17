@@ -13,18 +13,16 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 /**
  * User controller.
- *
- * @Route("/user")
  */
+#[Route(path: '/user')]
 class UserController extends AbstractController
 {
 
     /**
      * Lists all User entities.
-     *
-     * @Route("/", name="user", methods={"GET"})
-     * @Template("user/index.html.twig")
      */
+    #[Route(path: '/', name: 'user', methods: ['GET'])]
+    #[Template('user/index.html.twig')]
     public function indexAction()
     {
         $em = $this->getDoctrine()->getManager();
@@ -37,10 +35,9 @@ class UserController extends AbstractController
     }
     /**
      * Creates a new User entity.
-     *
-     * @Route("/", name="user_create", methods={"POST"})
-     * @Template("user/new.html.twig")
      */
+    #[Route(path: '/', name: 'user_create', methods: ['POST'])]
+    #[Template('user/new.html.twig')]
     public function createAction(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $entity = new User();
@@ -89,10 +86,9 @@ class UserController extends AbstractController
 
     /**
      * Displays a form to create a new User entity.
-     *
-     * @Route("/new", name="user_new", methods={"GET"})
-     * @Template("user/new.html.twig")
      */
+    #[Route(path: '/new', name: 'user_new', methods: ['GET'])]
+    #[Template('user/new.html.twig')]
     public function newAction()
     {
         $entity = new User();
@@ -106,10 +102,9 @@ class UserController extends AbstractController
 
     /**
      * Displays a form to edit an existing User entity.
-     *
-     * @Route("/{id}/edit", name="user_edit", methods={"GET"})
-     * @Template("user/edit.html.twig")
      */
+    #[Route(path: '/{id}/edit', name: 'user_edit', methods: ['GET'])]
+    #[Template('user/edit.html.twig')]
     public function editAction($id)
     {
         $em = $this->getDoctrine()->getManager();
@@ -150,10 +145,9 @@ class UserController extends AbstractController
     }
     /**
      * Edits an existing User entity.
-     *
-     * @Route("/{id}", name="user_update", methods={"PUT"})
-     * @Template("user/edit.html.twig")
      */
+    #[Route(path: '/{id}', name: 'user_update', methods: ['PUT'])]
+    #[Template('user/edit.html.twig')]
     public function updateAction(Request $request, $id, UserPasswordEncoderInterface $encoder)
     {
         $em = $this->getDoctrine()->getManager();
@@ -187,9 +181,8 @@ class UserController extends AbstractController
     }
     /**
      * Deletes a User entity.
-     *
-     * @Route("/{id}", name="user_delete", methods={"DELETE"})
      */
+    #[Route(path: '/{id}', name: 'user_delete', methods: ['DELETE'])]
     public function deleteAction(Request $request, $id)
     {
         $form = $this->createDeleteForm($id);

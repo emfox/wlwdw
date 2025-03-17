@@ -13,17 +13,15 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Anchor controller.
- *
- * @Route("/anchor")
  */
+#[Route(path: '/anchor')]
 class AnchorController extends AbstractController
 {
 	/**
-	 * Lists all Anchor entities via ajax.
-	 *
-	 * @Route("/list", name="anchor_list")
-	 */
-	public function listAction()
+     * Lists all Anchor entities via ajax.
+     */
+    #[Route(path: '/list', name: 'anchor_list')]
+    public function listAction()
 	{
 		$em = $this->getDoctrine()->getManager();
 		$entities = $em->getRepository('App\Entity\Anchor')->findBy(
@@ -44,10 +42,9 @@ class AnchorController extends AbstractController
 	}
     /**
      * Lists all Anchor entities.
-     *
-     * @Route("/", name="anchor", methods={"GET"})
-     * @Template("anchor/index.html.twig")
      */
+    #[Route(path: '/', name: 'anchor', methods: ['GET'])]
+    #[Template('anchor/index.html.twig')]
     public function indexAction()
     {
         $em = $this->getDoctrine()->getManager();
@@ -60,10 +57,9 @@ class AnchorController extends AbstractController
     }
     /**
      * Creates a new Anchor entity.
-     *
-     * @Route("/", name="anchor_create", methods={"POST"})
-     * @Template("anchor/new.html.twig")
      */
+    #[Route(path: '/', name: 'anchor_create', methods: ['POST'])]
+    #[Template('anchor/new.html.twig')]
     public function createAction(Request $request)
     {
         $entity = new Anchor();
@@ -105,10 +101,9 @@ class AnchorController extends AbstractController
 
     /**
      * Displays a form to create a new Anchor entity.
-     *
-     * @Route("/new", name="anchor_new", methods={"GET"})
-     * @Template("anchor/new.html.twig")
      */
+    #[Route(path: '/new', name: 'anchor_new', methods: ['GET'])]
+    #[Template('anchor/new.html.twig')]
     public function newAction()
     {
         $entity = new Anchor();
@@ -122,10 +117,9 @@ class AnchorController extends AbstractController
 
     /**
      * Displays a form to edit an existing Anchor entity.
-     *
-     * @Route("/{id}/edit", name="anchor_edit", methods={"GET"})
-     * @Template("anchor/edit.html.twig")
      */
+    #[Route(path: '/{id}/edit', name: 'anchor_edit', methods: ['GET'])]
+    #[Template('anchor/edit.html.twig')]
     public function editAction($id)
     {
         $em = $this->getDoctrine()->getManager();
@@ -166,10 +160,9 @@ class AnchorController extends AbstractController
     }
     /**
      * Edits an existing Anchor entity.
-     *
-     * @Route("/{id}", name="anchor_update", methods={"PUT"})
-     * @Template("anchor/edit.html.twig")
      */
+    #[Route(path: '/{id}', name: 'anchor_update', methods: ['PUT'])]
+    #[Template('anchor/edit.html.twig')]
     public function updateAction(Request $request, $id)
     {
         $em = $this->getDoctrine()->getManager();
@@ -198,9 +191,8 @@ class AnchorController extends AbstractController
     }
     /**
      * Deletes a Anchor entity.
-     *
-     * @Route("/{id}", name="anchor_delete", methods={"DELETE"})
      */
+    #[Route(path: '/{id}', name: 'anchor_delete', methods: ['DELETE'])]
     public function deleteAction(Request $request, $id)
     {
         $form = $this->createDeleteForm($id);

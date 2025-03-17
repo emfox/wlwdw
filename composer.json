@@ -24,12 +24,12 @@
 		"symfony/security-csrf": "*",
 		"symfony/swiftmailer-bundle": "*",
 		"symfony/translation": "*",
-		"symfony/twig-bundle": "5.0.*",
+		"symfony/twig-bundle": "*",
 		"symfony/validator": "*",
 		"symfony/yaml": "*",
 		"twig/extensions": "~1.0",
 		"twig/extra-bundle": "^2.12|^3.0",
-		"twig/twig": "^1.0||^2.0"
+		"twig/twig": "^3.0||^2.0"
 	},
 	"require-dev" : {
 		"doctrine/doctrine-fixtures-bundle": "^3.3",
@@ -76,7 +76,7 @@
 	"extra": {
 		"symfony": {
 			"allow-contrib": false,
-			"require": "5.0.*"
+			"require": "5.2.*"
 		}
 	}
 }

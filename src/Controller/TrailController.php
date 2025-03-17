@@ -12,17 +12,15 @@ use App\Entity\Trail;
 
 /**
  * Trail controller.
- *
- * @Route("/trail")
  */
+#[Route(path: '/trail')]
 class TrailController extends AbstractController
 {
 	/**
-	 * Add a new Trail point entities via ajax.
-	 *
-	 * @Route("/new/{devid}/{lng}/{lat}", name="trail_new")
-	 */
-	public function newAction($devid,$lng,$lat)
+     * Add a new Trail point entities via ajax.
+     */
+    #[Route(path: '/new/{devid}/{lng}/{lat}', name: 'trail_new')]
+    public function newAction($devid,$lng,$lat)
 	{
 		$em = $this->getDoctrine()->getManager();
 		$category = $em->getRepository('App\Entity\Category')->findOneByDevid($devid);
@@ -53,11 +51,10 @@ class TrailController extends AbstractController
 		return new Response(json_encode($response, JSON_THROW_ON_ERROR));
 	}
 	/**
-	 * Lists all Trail entities of an specified category via ajax.
-	 *
-	 * @Route("/list/{catid}", name="trail_list")
-	 */
-	public function listAction($catid)
+     * Lists all Trail entities of an specified category via ajax.
+     */
+    #[Route(path: '/list/{catid}', name: 'trail_list')]
+    public function listAction($catid)
 	{
 		$em = $this->getDoctrine()->getManager();
 		$entities = $em->getRepository('App\Entity\Trail')->findBy(

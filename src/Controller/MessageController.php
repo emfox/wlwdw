@@ -13,16 +13,14 @@ use App\Entity\Message;
 
 /**
  * Message controller.
- *
- * @Route("/message")
  */
+#[Route(path: '/message')]
 class MessageController extends AbstractController {
 	/**
-	 * Send Message direct to clients.
-	 *
-	 * @Route("/send", name="message_send")
-	 */
-	public function SendAction(Request $request) {
+     * Send Message direct to clients.
+     */
+    #[Route(path: '/send', name: 'message_send')]
+    public function SendAction(Request $request) {
 
 		$yunba = new Yunba ( array (
 				"appkey" => "53e491034e9f46851d5a573a" 
@@ -72,11 +70,10 @@ class MessageController extends AbstractController {
 	}
 	
 	/**
-	 * show specific Message.
-	 *
-	 * @Route("/{id}/{devid}", name="message_show")
-	 */
-	public function showAction($id,$devid){
+     * show specific Message.
+     */
+    #[Route(path: '/{id}/{devid}', name: 'message_show')]
+    public function showAction($id,$devid){
 		$em = $this->getDoctrine()->getManager();
 		$message = $em->getRepository('App\Entity\Message')->find($id);
 		
