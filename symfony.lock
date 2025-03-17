@@ -339,9 +339,6 @@
     "symfony/polyfill-php73": {
         "version": "v1.12.0"
     },
-    "symfony/process": {
-        "version": "v4.4.0"
-    },
     "symfony/property-access": {
         "version": "v4.4.0"
     },
