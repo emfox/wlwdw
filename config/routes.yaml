@@ -1,7 +1,7 @@
 emfox_gps_index:
     path: /
     defaults:
-        _controller: FrameworkBundle:Redirect:urlRedirect
+        _controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
         path: /main/google
         permanent: true
 emfox_gps_main:
