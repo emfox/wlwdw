@@ -154,7 +154,7 @@ class UserController extends AbstractController
      * @Route("/{id}", name="user_update", methods={"PUT"})
      * @Template("user/edit.html.twig")
      */
-    public function updateAction(Request $request, $id)
+    public function updateAction(Request $request, $id, UserPasswordEncoderInterface $encoder)
     {
         $em = $this->getDoctrine()->getManager();
 
@@ -163,21 +163,18 @@ class UserController extends AbstractController
         if (!$entity) {
             throw $this->createNotFoundException('Unable to find User entity.');
         }
-        $userManager = $this->get('fos_user.user_manager');
-        $user = $userManager->findUserByUserName($entity->getUsername());
-
         $deleteForm = $this->createDeleteForm($id);
         $editForm = $this->createEditForm($entity);
         $editForm->handleRequest($request);
 
         if ($editForm->isValid()) {
-        	$password = $editForm->get('password')->getData();
-        	if(strlen($password)>0)
-        	{
-        		$user->setPlainPassword($password);
-        	}
-        	$user->setEmail($entity->getUsername() . "@user.wlwdw.com");
-        	$userManager->updateUser($user);
+            $password = $editForm->get('password')->getData();
+            if (strlen($password)>0) {
+                    $entity->setPassword($encoder->encodePassword($entity, $password));
+            }
+            $entity->setEmail($entity->getUsername() . "@user.wlwdw.com");
+            $em->persist($entity);
+            $em->flush();
 
             return $this->redirect($this->generateUrl('user'));
         }
