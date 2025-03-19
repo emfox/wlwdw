@@ -6,12 +6,12 @@
         "version": "1.4.0"
     },
     "doctrine/annotations": {
-        "version": "1.0",
+        "version": "1.14",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
+            "branch": "main",
             "version": "1.0",
-            "ref": "cb4152ebcadbe620ea2261da1a1c5a9b8cea7672"
+            "ref": "a2759dd6123694c8d901d0ec80006e044c2e6457"
         },
         "files": [
             "config/routes/annotations.yaml"
@@ -33,16 +33,17 @@
         "version": "v2.10.0"
     },
     "doctrine/doctrine-bundle": {
-        "version": "1.6",
+        "version": "2.3",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "1.6",
-            "ref": "86137e3d03fce0d2f48c4b5ff8233412655e5e71"
+            "branch": "main",
+            "version": "2.3",
+            "ref": "06cff6e09c2f454bf6d8fca915ee25e1bb4d04cd"
         },
         "files": [
             "config/packages/doctrine.yaml",
             "config/packages/prod/doctrine.yaml",
+            "config/packages/test/doctrine.yaml",
             "src/Entity/.gitignore",
             "src/Repository/.gitignore"
         ]
@@ -63,16 +64,16 @@
         ]
     },
     "doctrine/doctrine-migrations-bundle": {
-        "version": "1.2",
+        "version": "2.2",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "1.2",
-            "ref": "c1431086fec31f17fbcfe6d6d7e92059458facc1"
+            "branch": "main",
+            "version": "2.2",
+            "ref": "baaa439e3e3179e69e3da84b671f0a3e4a2f56ad"
         },
         "files": [
             "config/packages/doctrine_migrations.yaml",
-            "src/Migrations/.gitignore"
+            "migrations/.gitignore"
         ]
     },
     "doctrine/event-manager": {
@@ -196,16 +197,15 @@
         "version": "v4.4.0"
     },
     "symfony/console": {
-        "version": "4.4",
+        "version": "5.4",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "4.4",
-            "ref": "59d8cc5a923274e552412fcd51e284bba02982de"
+            "branch": "main",
+            "version": "5.3",
+            "ref": "1781ff40d8a17d87cf53f8d4cf0c8346ed2bb461"
         },
         "files": [
-            "bin/console",
-            "config/bootstrap.php"
+            "bin/console"
         ]
     },
     "symfony/contracts": {
@@ -233,12 +233,12 @@
         "version": "v4.4.0"
     },
     "symfony/flex": {
-        "version": "1.0",
+        "version": "1.22",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
+            "branch": "main",
             "version": "1.0",
-            "ref": "19fa03bacd9a6619583d1e4939da4388df22984d"
+            "ref": "146251ae39e06a95be0fe3d13c807bcf3938b172"
         },
         "files": [
             ".env"
@@ -248,20 +248,18 @@
         "version": "v4.4.0"
     },
     "symfony/framework-bundle": {
-        "version": "4.4",
+        "version": "5.4",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "4.4",
-            "ref": "9b91ef29da037baeec4c3715cf55bea2a165c902"
+            "branch": "main",
+            "version": "5.4",
+            "ref": "3cd216a4d007b78d8554d44a5b1c0a446dab24fb"
         },
         "files": [
-            "config/bootstrap.php",
             "config/packages/cache.yaml",
             "config/packages/framework.yaml",
-            "config/packages/test/framework.yaml",
-            "config/routes/dev/framework.yaml",
-            "config/secrets/prod/.gitignore",
+            "config/preload.php",
+            "config/routes/framework.yaml",
             "config/services.yaml",
             "public/index.php",
             "src/Controller/.gitignore",
@@ -325,15 +323,14 @@
         "version": "v4.4.0"
     },
     "symfony/routing": {
-        "version": "4.2",
+        "version": "5.4",
         "recipe": {
             "repo": "github.com/symfony/recipes",
-            "branch": "master",
-            "version": "4.2",
-            "ref": "683dcb08707ba8d41b7e34adb0344bfd68d248a7"
+            "branch": "main",
+            "version": "5.3",
+            "ref": "85de1d8ae45b284c3c84b668171d2615049e698f"
         },
         "files": [
-            "config/packages/prod/routing.yaml",
             "config/packages/routing.yaml",
             "config/routes.yaml"
         ]
