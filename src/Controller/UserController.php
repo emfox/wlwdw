@@ -9,7 +9,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\User;
 use App\Form\UserType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * User controller.
@@ -154,7 +154,7 @@ class UserController extends AbstractController
      * @Route("/{id}", name="user_update", methods={"PUT"})
      * @Template("user/edit.html.twig")
      */
-    public function updateAction(Request $request, $id, UserPasswordEncoderInterface $encoder)
+    public function updateAction(Request $request, $id, UserPasswordHasherInterface $encoder)
     {
         $em = $this->getDoctrine()->getManager();
 

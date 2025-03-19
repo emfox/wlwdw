@@ -97,9 +97,6 @@
     "doctrine/persistence": {
         "version": "1.2.0"
     },
-    "doctrine/reflection": {
-        "version": "v1.0.0"
-    },
     "gedmo/doctrine-extensions": {
         "version": "v2.4.37"
     },
