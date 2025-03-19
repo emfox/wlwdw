@@ -12,7 +12,7 @@
 		"gedmo/doctrine-extensions": "^2.4",
 		"incenteev/composer-parameter-handler": "~2.0",
 		"monolog/monolog": "^1.22",
-		"sensio/framework-extra-bundle": "^5.0.0",
+		"sensio/framework-extra-bundle": "*",
 		"symfony/asset": "*",
 		"symfony/console": "*",
 		"symfony/dotenv": "*",
@@ -23,7 +23,7 @@
 		"symfony/security-bundle": "*",
 		"symfony/security-csrf": "*",
 		"symfony/translation": "*",
-		"symfony/twig-bundle": "5.0.*",
+		"symfony/twig-bundle": "*",
 		"symfony/validator": "*",
 		"symfony/yaml": "*",
 		"twig/extra-bundle": "^2.12|^3.0",
@@ -34,8 +34,8 @@
 		"doctrine/doctrine-migrations-bundle": "^2.1",
 		"rector/rector": "^2.0",
 		"symfony/maker-bundle": "*",
-		"symfony/stopwatch": "5.0.*",
-		"symfony/web-profiler-bundle": "5.0.*"
+		"symfony/stopwatch": "*",
+		"symfony/web-profiler-bundle": "*"
 	},
 	"config": {
 		"preferred-install": {
@@ -74,7 +74,7 @@
 	"extra": {
 		"symfony": {
 			"allow-contrib": false,
-			"require": "5.0.*"
+			"require": "5.*"
 		}
 	}
 }
