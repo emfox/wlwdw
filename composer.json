@@ -22,12 +22,10 @@
 		"symfony/monolog-bundle": "*",
 		"symfony/security-bundle": "*",
 		"symfony/security-csrf": "*",
-		"symfony/swiftmailer-bundle": "*",
 		"symfony/translation": "*",
 		"symfony/twig-bundle": "5.0.*",
 		"symfony/validator": "*",
 		"symfony/yaml": "*",
-		"twig/extensions": "~1.0",
 		"twig/extra-bundle": "^2.12|^3.0",
 		"twig/twig": "^1.0||^2.0"
 	},
