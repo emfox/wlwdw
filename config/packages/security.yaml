@@ -1,8 +1,9 @@
 security:
-    encoders:
-        App\Entity\User:
-            algorithm: auto
-
+    enable_authenticator_manager: true
+    # https://symfony.com/doc/current/security.html#registering-the-user-hashing-passwords
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+    # https://symfony.com/doc/current/security.html#where-do-users-come-from-user-providers
 
     role_hierarchy:
         ROLE_ADMIN:       ROLE_USER
@@ -13,20 +14,25 @@ security:
             entity:
                 class: App\Entity\User
                 property: username
+        # used to reload user from session & other features (e.g. switch_user)
 
     firewalls:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
         main:
-            guard:
-                authenticators:
-                    - App\Security\LoginFormAuthenticator
+            lazy: true
+#            guard:
+#                authenticators:
+#                    - App\Security\LoginFormAuthenticator
+            form_login:
+                # "app_login" is the name of the route created previously
+                login_path: app_login
+                check_path: app_login
             logout:
                 path: app_logout
                 # where to redirect after logout
                 # target: app_any_route
-            anonymous:    true
 
 
     access_control:
