@@ -30,7 +30,7 @@ class CategoryController extends AbstractController
      * Lists all Category entities via ajax.
      */
     #[Route(path: '/category/hierarchy', name: 'category_hierarchy', methods: ['GET'])]
-    public function hierarchy($root = null): \Symfony\Component\HttpFoundation\Response
+    public function hierarchy($root = null): Response
 	{
 		$em = $this->managerRegistry->getManager();
 		$repo = $em->getRepository('App\Entity\Category');
@@ -42,11 +42,9 @@ class CategoryController extends AbstractController
 
     /**
      * Lists all Category entities.
-     *
-     * @Template("category/index.html.twig")
      */
     #[Route(path: '/category/', name: 'category', methods: ['GET'])]
-    public function index(): array
+    public function index(): Response
     {
         $em = $this->managerRegistry->getManager();
         $qb = $em->createQueryBuilder();
@@ -63,17 +61,15 @@ class CategoryController extends AbstractController
         	$entity->indentLabel = $entity->getIndentLabel();
         }
 
-        return array(
+        return $this->render('category/index.html.twig', array(
             'entities' => $entities,
-        );
+        ));
     }
     /**
      * Creates a new Category entity.
-     *
-     * @Template("category/new.html.twig")
      */
     #[Route(path: '/category/', name: 'category_create', methods: ['POST'])]
-    public function create(Request $request)
+    public function create(Request $request): Response
     {
         $entity = new Category();
         $form = $this->createCreateForm($entity);
@@ -100,10 +96,10 @@ class CategoryController extends AbstractController
             return $this->redirectToRoute('category');
         }
 
-        return array(
+        return $this->render('category/new.html.twig', array(
             'entity' => $entity,
             'form'   => $form->createView(),
-        );
+        ));
     }
 
     /**
@@ -127,28 +123,24 @@ class CategoryController extends AbstractController
 
     /**
      * Displays a form to create a new Category entity.
-     *
-     * @Template("category/new.html.twig")
      */
     #[Route(path: '/category/new', name: 'category_new', methods: ['GET'])]
-    public function new(): array
+    public function new(): Response
     {
         $entity = new Category();
         $form   = $this->createCreateForm($entity);
 
-        return array(
+        return $this->render('category/new.html.twig', array(
             'entity' => $entity,
             'form'   => $form->createView(),
-        );
+        ));
     }
 
     /**
      * Displays a form to edit an existing Category entity.
-     *
-     * @Template("category/edit.html.twig")
      */
     #[Route(path: '/category/{id}/edit', name: 'category_edit', methods: ['GET'])]
-    public function edit($id): array
+    public function edit($id): Response
     {
         $em = $this->managerRegistry->getManager();
 
@@ -161,11 +153,11 @@ class CategoryController extends AbstractController
         $editForm = $this->createEditForm($entity);
         $deleteForm = $this->createDeleteForm($id);
 
-        return array(
+        return $this->render('category/edit.html.twig', array(
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-        );
+        ));
     }
 
     /**
@@ -188,11 +180,9 @@ class CategoryController extends AbstractController
     }
     /**
      * Edits an existing Category entity.
-     *
-     * @Template("category/edit.html.twig")
      */
     #[Route(path: '/category/{id}', name: 'category_update', methods: ['PUT'])]
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): Response
     {
         $em = $this->managerRegistry->getManager();
 
@@ -212,11 +202,11 @@ class CategoryController extends AbstractController
             return $this->redirectToRoute('category');
         }
 
-        return array(
+        return $this->render('category/edit.html.twig', array(
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-        );
+        ));
     }
     /**
      * Deletes a Category entity.
@@ -289,7 +279,7 @@ class CategoryController extends AbstractController
     {
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('category_delete', array('id' => $id)))
-            ->setMethod(\Symfony\Component\HttpFoundation\Request::METHOD_DELETE)
+            ->setMethod(Request::METHOD_DELETE)
             ->add('submit', SubmitType::class, array('label' => '删除该单位'))
             ->getForm()
         ;

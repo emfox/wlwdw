@@ -27,7 +27,7 @@ class TrailController extends AbstractController
      * Add a new Trail point entities via ajax.
      */
     #[Route(path: '/trail/new/{devid}/{lng}/{lat}', name: 'trail_new')]
-    public function new($devid,$lng,$lat): \Symfony\Component\HttpFoundation\Response
+    public function new($devid,$lng,$lat): Response
 	{
 		$em = $this->managerRegistry->getManager();
 		$category = $em->getRepository('App\Entity\Category')->findOneByDevid($devid);
@@ -61,7 +61,7 @@ class TrailController extends AbstractController
      * Lists all Trail entities of an specified category via ajax.
      */
     #[Route(path: '/trail/list/{catid}', name: 'trail_list')]
-    public function list($catid): \Symfony\Component\HttpFoundation\Response
+    public function list($catid): Response
 	{
 		$em = $this->managerRegistry->getManager();
 		$entities = $em->getRepository('App\Entity\Trail')->findBy(
@@ -84,5 +84,4 @@ class TrailController extends AbstractController
 		$response = array("code" => 100, "success" => true, "trail" => $trail);
 		return new Response(json_encode($response, JSON_THROW_ON_ERROR));
 	}
-	
 }

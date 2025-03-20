@@ -7,5 +7,5 @@ emfox_gps_index:
 emfox_gps_main:
     path:     /main/{maptype}
     defaults:
-        _controller: "App\\Controller\\DefaultController::mainAction"
+        _controller: "App\\Controller\\DefaultController::main"
         maptype: "google"
