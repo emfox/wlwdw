@@ -13,27 +13,33 @@ use App\Entity\Message;
 
 /**
  * Message controller.
- *
- * @Route("/message")
  */
 class MessageController extends AbstractController {
 	/**
-	 * Send Message direct to clients.
-	 *
-	 * @Route("/send", name="message_send")
-	 */
-	public function SendAction(Request $request) {
+     * @var \Doctrine\Persistence\ManagerRegistry
+     */
+    private $managerRegistry;
+    public function __construct(\Doctrine\Persistence\ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
+    }
+    /**
+     * Send Message direct to clients.
+     *
+     * @Route("/message/send", name="message_send")
+     */
+    public function Send(Request $request): \Symfony\Component\HttpFoundation\Response {
 
 		$yunba = new Yunba ( array (
 				"appkey" => "53e491034e9f46851d5a573a" 
 		) );
 		// 初始化
-		$yunba->init ( function ($success) {
+		$yunba->init ( function ($success): void {
 			echo "[YunBa]init " . ($success ? "success" : "fail") . "\n";
 		} );
 		
 		// 连接
-		$yunba->connect ( function ($success) {
+		$yunba->connect ( function ($success): void {
 			if ($success) {
 				echo "[YunBa]connect success\n";
 			} else {
@@ -46,7 +52,7 @@ class MessageController extends AbstractController {
 		
 		$msg = $request->request->get('msg');
 		$topics = explode(',', $request->request->get('topics'));
-		$em = $this->getDoctrine()->getManager();
+		$em = $this->managerRegistry->getManager();
 
 		foreach($topics as $topic){
 			
@@ -61,7 +67,7 @@ class MessageController extends AbstractController {
 					"topic" => $topic,
 					"qos" => 2,
 					"msg" => strval($message->getId())
-			), function ($success) {
+			), function ($success): void {
 				echo "[YunBa]publish1 " . ($success ? "success" : "fail") . "\n";
 			});
 		}
@@ -72,12 +78,12 @@ class MessageController extends AbstractController {
 	}
 	
 	/**
-	 * show specific Message.
-	 *
-	 * @Route("/{id}/{devid}", name="message_show")
-	 */
-	public function showAction($id,$devid){
-		$em = $this->getDoctrine()->getManager();
+     * show specific Message.
+     *
+     * @Route("/message/{id}/{devid}", name="message_show")
+     */
+    public function show($id,$devid): \Symfony\Component\HttpFoundation\Response{
+		$em = $this->managerRegistry->getManager();
 		$message = $em->getRepository('App\Entity\Message')->find($id);
 		
 		//direct authenticate user via devid

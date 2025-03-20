@@ -12,19 +12,25 @@ use App\Entity\Trail;
 
 /**
  * Trail controller.
- *
- * @Route("/trail")
  */
 class TrailController extends AbstractController
 {
 	/**
-	 * Add a new Trail point entities via ajax.
-	 *
-	 * @Route("/new/{devid}/{lng}/{lat}", name="trail_new")
-	 */
-	public function newAction($devid,$lng,$lat)
+     * @var \Doctrine\Persistence\ManagerRegistry
+     */
+    private $managerRegistry;
+    public function __construct(\Doctrine\Persistence\ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
+    }
+    /**
+     * Add a new Trail point entities via ajax.
+     *
+     * @Route("/trail/new/{devid}/{lng}/{lat}", name="trail_new")
+     */
+    public function new($devid,$lng,$lat): \Symfony\Component\HttpFoundation\Response
 	{
-		$em = $this->getDoctrine()->getManager();
+		$em = $this->managerRegistry->getManager();
 		$category = $em->getRepository('App\Entity\Category')->findOneByDevid($devid);
 		if(!$category)
 		{
@@ -53,13 +59,13 @@ class TrailController extends AbstractController
 		return new Response(json_encode($response, JSON_THROW_ON_ERROR));
 	}
 	/**
-	 * Lists all Trail entities of an specified category via ajax.
-	 *
-	 * @Route("/list/{catid}", name="trail_list")
-	 */
-	public function listAction($catid)
+     * Lists all Trail entities of an specified category via ajax.
+     *
+     * @Route("/trail/list/{catid}", name="trail_list")
+     */
+    public function list($catid): \Symfony\Component\HttpFoundation\Response
 	{
-		$em = $this->getDoctrine()->getManager();
+		$em = $this->managerRegistry->getManager();
 		$entities = $em->getRepository('App\Entity\Trail')->findBy(
 				array('catid'=>$catid),
 				array('time'=>'DESC'),

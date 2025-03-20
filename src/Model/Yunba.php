@@ -579,7 +579,7 @@ class ElephantIOPayload
 			$data = $this->getPayload();
 		}
 
-		$payload = $payload.$data;
+		$payload .= $data;
 
 		return $payload;
 	}
