@@ -12,7 +12,7 @@
 		"doctrine/orm": "^2.7",
 		"gedmo/doctrine-extensions": "^3.2",
 		"incenteev/composer-parameter-handler": "~2.0",
-		"monolog/monolog": "^1.22",
+		"monolog/monolog": "*",
 		"stof/doctrine-extensions-bundle": "*",
 		"symfony/asset": "*",
 		"symfony/console": "*",
@@ -29,7 +29,7 @@
 		"symfony/validator": "*",
 		"symfony/yaml": "*",
 		"twig/extra-bundle": "^2.12|^3.0",
-		"twig/twig": "^1.0||^2.0"
+		"twig/twig": "^3.0"
 	},
 	"require-dev" : {
 		"doctrine/doctrine-fixtures-bundle": "^3.3",
@@ -77,7 +77,7 @@
 	"extra": {
 		"symfony": {
 			"allow-contrib": false,
-			"require": "6.*"
+			"require": "7.2.*"
 		}
 	}
 }
