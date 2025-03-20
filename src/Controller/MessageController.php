@@ -27,7 +27,7 @@ class MessageController extends AbstractController {
      * Send Message direct to clients.
      */
     #[Route(path: '/message/send', name: 'message_send')]
-    public function Send(Request $request): \Symfony\Component\HttpFoundation\Response {
+    public function Send(Request $request): Response {
 
 		$yunba = new Yunba ( array (
 				"appkey" => "53e491034e9f46851d5a573a" 
@@ -80,7 +80,7 @@ class MessageController extends AbstractController {
      * show specific Message.
      */
     #[Route(path: '/message/{id}/{devid}', name: 'message_show')]
-    public function show($id,$devid): \Symfony\Component\HttpFoundation\Response{
+    public function show($id,$devid): Response{
 		$em = $this->managerRegistry->getManager();
 		$message = $em->getRepository('App\Entity\Message')->find($id);
 		

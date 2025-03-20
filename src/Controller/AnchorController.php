@@ -28,7 +28,7 @@ class AnchorController extends AbstractController
      * Lists all Anchor entities via ajax.
      */
     #[Route(path: '/anchor/list', name: 'anchor_list')]
-    public function list(): \Symfony\Component\HttpFoundation\Response
+    public function list(): Response
 	{
 		$em = $this->managerRegistry->getManager();
 		$entities = $em->getRepository('App\Entity\Anchor')->findBy(
@@ -49,27 +49,23 @@ class AnchorController extends AbstractController
 	}
     /**
      * Lists all Anchor entities.
-     *
-     * @Template("anchor/index.html.twig")
      */
     #[Route(path: '/anchor/', name: 'anchor', methods: ['GET'])]
-    public function index(): array
+    public function index(): \Symfony\Component\HttpFoundation\Response
     {
         $em = $this->managerRegistry->getManager();
 
         $entities = $em->getRepository('App\Entity\Anchor')->findAll();
 
-        return array(
+        return $this->render('anchor/index.html.twig', array(
             'entities' => $entities,
-        );
+        ));
     }
     /**
      * Creates a new Anchor entity.
-     *
-     * @Template("anchor/new.html.twig")
      */
     #[Route(path: '/anchor/', name: 'anchor_create', methods: ['POST'])]
-    public function create(Request $request)
+    public function create(Request $request): Response
     {
         $entity = new Anchor();
         $form = $this->createCreateForm($entity);
@@ -83,10 +79,10 @@ class AnchorController extends AbstractController
             return $this->redirectToRoute('anchor');
         }
 
-        return array(
+        return $this->render('anchor/new.html.twig', array(
             'entity' => $entity,
             'form'   => $form->createView(),
-        );
+        ));
     }
 
     /**
@@ -110,28 +106,24 @@ class AnchorController extends AbstractController
 
     /**
      * Displays a form to create a new Anchor entity.
-     *
-     * @Template("anchor/new.html.twig")
      */
     #[Route(path: '/anchor/new', name: 'anchor_new', methods: ['GET'])]
-    public function new(): array
+    public function new(): Response
     {
         $entity = new Anchor();
         $form   = $this->createCreateForm($entity);
 
-        return array(
+        return $this->render('anchor/new.html.twig', array(
             'entity' => $entity,
             'form'   => $form->createView(),
-        );
+        ));
     }
 
     /**
      * Displays a form to edit an existing Anchor entity.
-     *
-     * @Template("anchor/edit.html.twig")
      */
     #[Route(path: '/anchor/{id}/edit', name: 'anchor_edit', methods: ['GET'])]
-    public function edit($id): array
+    public function edit($id): Response
     {
         $em = $this->managerRegistry->getManager();
 
@@ -144,11 +136,11 @@ class AnchorController extends AbstractController
         $editForm = $this->createEditForm($entity);
         $deleteForm = $this->createDeleteForm($id);
 
-        return array(
+        return $this->render('anchor/edit.html.twig', array(
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-        );
+        ));
     }
 
     /**
@@ -171,11 +163,9 @@ class AnchorController extends AbstractController
     }
     /**
      * Edits an existing Anchor entity.
-     *
-     * @Template("anchor/edit.html.twig")
      */
     #[Route(path: '/anchor/{id}', name: 'anchor_update', methods: ['PUT'])]
-    public function update(Request $request, $id)
+    public function update(Request $request, $id): Response
     {
         $em = $this->managerRegistry->getManager();
 
@@ -195,11 +185,11 @@ class AnchorController extends AbstractController
             return $this->redirectToRoute('anchor');
         }
 
-        return array(
+        return $this->render('anchor/edit.html.twig', array(
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-        );
+        ));
     }
     /**
      * Deletes a Anchor entity.

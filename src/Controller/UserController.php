@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use Symfony\Component\Routing\Attribute\Route;
@@ -27,27 +28,23 @@ class UserController extends AbstractController
     }
     /**
      * Lists all User entities.
-     *
-     * @Template("user/index.html.twig")
      */
     #[Route(path: '/user/', name: 'user', methods: ['GET'])]
-    public function index(): array
+    public function index(): Response
     {
         $em = $this->managerRegistry->getManager();
 
         $entities = $em->getRepository('App\Entity\User')->findAll();
 
-        return array(
+        return $this->render('user/index.html.twig', array(
             'entities' => $entities,
-        );
+        ));
     }
     /**
      * Creates a new User entity.
-     *
-     * @Template("user/new.html.twig")
      */
     #[Route(path: '/user/', name: 'user_create', methods: ['POST'])]
-    public function create(Request $request, UserPasswordEncoderInterface $encoder)
+    public function create(Request $request, UserPasswordHasherInterface $hasher): Response
     {
         $entity = new User();
         $form = $this->createCreateForm($entity);
@@ -57,8 +54,8 @@ class UserController extends AbstractController
         	$password = $form->get('password')->getData();
         	if(strlen($password)==0)
         		$password='000000';
-                $encoded = $encoder->encodePassword($entity, $password);
-                $entity->setPassword($encoded);
+                $hashed = $hasher->hashPassword($entity, $password);
+                $entity->setPassword($hashed);
         	$entity->setEmail($entity->getUsername() . "@user.wlwdw.com");
         	$entity->setEnabled(TRUE);
             $em = $this->managerRegistry->getManager();
@@ -68,10 +65,10 @@ class UserController extends AbstractController
             return $this->redirectToRoute('user');
         }
 
-        return array(
+        return $this->render('user/new.html.twig', array(
             'entity' => $entity,
             'form'   => $form->createView(),
-        );
+        ));
     }
 
     /**
@@ -95,28 +92,24 @@ class UserController extends AbstractController
 
     /**
      * Displays a form to create a new User entity.
-     *
-     * @Template("user/new.html.twig")
      */
     #[Route(path: '/user/new', name: 'user_new', methods: ['GET'])]
-    public function new(): array
+    public function new(): Response
     {
         $entity = new User();
         $form   = $this->createCreateForm($entity);
 
-        return array(
+        return $this->render('user/new.html.twig', array(
             'entity' => $entity,
             'form'   => $form->createView(),
-        );
+        ));
     }
 
     /**
      * Displays a form to edit an existing User entity.
-     *
-     * @Template("user/edit.html.twig")
      */
     #[Route(path: '/user/{id}/edit', name: 'user_edit', methods: ['GET'])]
-    public function edit($id): array
+    public function edit($id): Response
     {
         $em = $this->managerRegistry->getManager();
 
@@ -129,11 +122,11 @@ class UserController extends AbstractController
         $editForm = $this->createEditForm($entity);
         $deleteForm = $this->createDeleteForm($id);
 
-        return array(
+        return $this->render('user/edit.html.twig', array(
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-        );
+        ));
     }
 
     /**
@@ -156,11 +149,9 @@ class UserController extends AbstractController
     }
     /**
      * Edits an existing User entity.
-     *
-     * @Template("user/edit.html.twig")
      */
     #[Route(path: '/user/{id}', name: 'user_update', methods: ['PUT'])]
-    public function update(Request $request, $id, UserPasswordHasherInterface $encoder)
+    public function update(Request $request, $id, UserPasswordHasherInterface $hasher): Response
     {
         $em = $this->managerRegistry->getManager();
 
@@ -176,7 +167,7 @@ class UserController extends AbstractController
         if ($editForm->isValid()) {
             $password = $editForm->get('password')->getData();
             if (strlen($password)>0) {
-                    $entity->setPassword($encoder->encodePassword($entity, $password));
+                    $entity->setPassword($hasher->hashPassword($entity, $password));
             }
             $entity->setEmail($entity->getUsername() . "@user.wlwdw.com");
             $em->persist($entity);
@@ -185,11 +176,11 @@ class UserController extends AbstractController
             return $this->redirectToRoute('user');
         }
 
-        return array(
+        return $this->render('user/edit.html.twig', array(
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-        );
+        ));
     }
     /**
      * Deletes a User entity.

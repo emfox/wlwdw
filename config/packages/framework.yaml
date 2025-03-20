@@ -1,10 +1,12 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
     csrf_protection: ~
 
     secret: '%env(APP_SECRET)%'
-    #csrf_protection: true
-    http_method_override: false
+    http_method_override: true
+    annotations: true
+    handle_all_throwables: true
 
     # Enables session support. Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.
@@ -12,7 +14,6 @@ framework:
         handler_id: ~
         cookie_secure: auto
         cookie_samesite: lax
-        storage_factory_id: session.storage.factory.native
 
     fragments: true
     php_errors:

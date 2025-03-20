@@ -7,12 +7,12 @@
 		"php": "^8.2",
 		"ext-ctype": "*",
 		"ext-iconv": "*",
+		"doctrine/annotations": "^2.0",
 		"doctrine/doctrine-bundle": "^2.0",
 		"doctrine/orm": "^2.7",
 		"gedmo/doctrine-extensions": "^3.2",
 		"incenteev/composer-parameter-handler": "~2.0",
 		"monolog/monolog": "^1.22",
-		"sensio/framework-extra-bundle": "*",
 		"symfony/asset": "*",
 		"symfony/console": "*",
 		"symfony/dotenv": "*",
@@ -76,7 +76,7 @@
 	"extra": {
 		"symfony": {
 			"allow-contrib": false,
-			"require": "6.0.*"
+			"require": "6.*"
 		}
 	}
 }
