@@ -16,7 +16,7 @@ class UserFixtures extends Fixture
         $this->encoder = $passwordEncoder;
     }
 
-    public function load(ObjectManager $manager)
+    public function load(ObjectManager $manager): void
     {
         $userAdmin = new User();
         $userAdmin->setUsername('admin');

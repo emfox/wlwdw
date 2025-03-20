@@ -5,7 +5,7 @@ namespace App\Controller;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use App\Entity\User;
 use App\Form\UserType;
 use Symfony\Component\Form\Extension\Core\Type\SubmitType;
@@ -28,9 +28,9 @@ class UserController extends AbstractController
     /**
      * Lists all User entities.
      *
-     * @Route("/user/", name="user", methods={"GET"})
      * @Template("user/index.html.twig")
      */
+    #[Route(path: '/user/', name: 'user', methods: ['GET'])]
     public function index(): array
     {
         $em = $this->managerRegistry->getManager();
@@ -44,9 +44,9 @@ class UserController extends AbstractController
     /**
      * Creates a new User entity.
      *
-     * @Route("/user/", name="user_create", methods={"POST"})
      * @Template("user/new.html.twig")
      */
+    #[Route(path: '/user/', name: 'user_create', methods: ['POST'])]
     public function create(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $entity = new User();
@@ -96,9 +96,9 @@ class UserController extends AbstractController
     /**
      * Displays a form to create a new User entity.
      *
-     * @Route("/user/new", name="user_new", methods={"GET"})
      * @Template("user/new.html.twig")
      */
+    #[Route(path: '/user/new', name: 'user_new', methods: ['GET'])]
     public function new(): array
     {
         $entity = new User();
@@ -113,9 +113,9 @@ class UserController extends AbstractController
     /**
      * Displays a form to edit an existing User entity.
      *
-     * @Route("/user/{id}/edit", name="user_edit", methods={"GET"})
      * @Template("user/edit.html.twig")
      */
+    #[Route(path: '/user/{id}/edit', name: 'user_edit', methods: ['GET'])]
     public function edit($id): array
     {
         $em = $this->managerRegistry->getManager();
@@ -157,9 +157,9 @@ class UserController extends AbstractController
     /**
      * Edits an existing User entity.
      *
-     * @Route("/user/{id}", name="user_update", methods={"PUT"})
      * @Template("user/edit.html.twig")
      */
+    #[Route(path: '/user/{id}', name: 'user_update', methods: ['PUT'])]
     public function update(Request $request, $id, UserPasswordHasherInterface $encoder)
     {
         $em = $this->managerRegistry->getManager();
@@ -193,9 +193,8 @@ class UserController extends AbstractController
     }
     /**
      * Deletes a User entity.
-     *
-     * @Route("/user/{id}", name="user_delete", methods={"DELETE"})
      */
+    #[Route(path: '/user/{id}', name: 'user_delete', methods: ['DELETE'])]
     public function delete(Request $request, $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $form = $this->createDeleteForm($id);
