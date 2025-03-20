@@ -56,7 +56,7 @@ class CategoryController extends AbstractController
         
         $query = $qb->getQuery();
         $entities = $query->getResult();
-        
+
         foreach($entities as $entity){
         	$entity->indentLabel = $entity->getIndentLabel();
         }

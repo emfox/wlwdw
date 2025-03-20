@@ -6,47 +6,41 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Trail
- *
- * @ORM\Table()
- * @ORM\Entity()
  */
+#[ORM\Entity]
+#[ORM\Table]
 class Trail
 {
     /**
      * @var integer
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
      */
+    #[ORM\Column(name: 'id', type: 'integer')]
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private $id;
 
     /**
      * @var integer
-     *
-     * @ORM\Column(name="catid", type="integer")
      */
+    #[ORM\Column(name: 'catid', type: 'integer')]
     private $catid;
 
     /**
      * @var \DateTime
-     *
-     * @ORM\Column(name="time", type="datetime")
      */
+    #[ORM\Column(name: 'time', type: 'datetime')]
     private $time;
 
     /**
      * @var float
-     *
-     * @ORM\Column(name="lat", type="float")
      */
+    #[ORM\Column(name: 'lat', type: 'float')]
     private $lat;
 
     /**
      * @var float
-     *
-     * @ORM\Column(name="lng", type="float")
      */
+    #[ORM\Column(name: 'lng', type: 'float')]
     private $lng;
 
 

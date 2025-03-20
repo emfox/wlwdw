@@ -6,78 +6,51 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Doctrine\ORM\Mapping as ORM;
 
-/**
- * @Gedmo\Tree(type="nested")
- * @ORM\Table(name="categories")
- * use repository for handy tree functions
- * @ORM\Entity(repositoryClass="Gedmo\Tree\Entity\Repository\NestedTreeRepository")
- */
+#[Gedmo\Tree(type: 'nested')]
+#[ORM\Entity(repositoryClass: \Gedmo\Tree\Entity\Repository\NestedTreeRepository::class)]
+#[ORM\Table(name: 'categories')]
 class Category
 {
-    /**
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue
-     */
+    #[ORM\Column(name: 'id', type: 'integer')]
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
     private $id;
 
-    /**
-     * @ORM\Column(name="devid", type="string", length=24)
-     */
+    #[ORM\Column(name: 'devid', type: 'string', length: 24)]
     private $devid;
-    /**
-     * @ORM\Column(name="title", type="string", length=64)
-     */
+    #[ORM\Column(name: 'title', type: 'string', length: 64)]
     private $title;
 
-    /**
-     * @ORM\Column(name="updatetime", type="datetime")
-     */
+    #[ORM\Column(name: 'updatetime', type: 'datetime')]
     private $updatetime;
-    /**
-     * @ORM\Column(name="lat", type="float")
-     */
+    #[ORM\Column(name: 'lat', type: 'float')]
     private $lat;
-    /**
-     * @ORM\Column(name="lng", type="float")
-     */
+    #[ORM\Column(name: 'lng', type: 'float')]
     private $lng;
     
-    /**
-     * @Gedmo\TreeLeft
-     * @ORM\Column(name="lft", type="integer")
-     */
+    #[Gedmo\TreeLeft]
+    #[ORM\Column(name: 'lft', type: 'integer')]
     private $lft;
 
-    /**
-     * @Gedmo\TreeLevel
-     * @ORM\Column(name="lvl", type="integer")
-     */
+    #[Gedmo\TreeLevel]
+    #[ORM\Column(name: 'lvl', type: 'integer')]
     private $lvl;
 
-    /**
-     * @Gedmo\TreeRight
-     * @ORM\Column(name="rgt", type="integer")
-     */
+    #[Gedmo\TreeRight]
+    #[ORM\Column(name: 'rgt', type: 'integer')]
     private $rgt;
 
-    /**
-     * @Gedmo\TreeRoot
-     * @ORM\Column(name="root", type="integer", nullable=true)
-     */
+    #[Gedmo\TreeRoot]
+    #[ORM\Column(name: 'root', type: 'integer', nullable: true)]
     private $root;
 
-    /**
-     * @Gedmo\TreeParent
-     * @ORM\ManyToOne(targetEntity="Category", inversedBy="children")
-     * @ORM\JoinColumn(name="parent_id", referencedColumnName="id", onDelete="CASCADE")
-     */
+    #[Gedmo\TreeParent]
+    #[ORM\ManyToOne(targetEntity: \Category::class, inversedBy: 'children')]
+    #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private $parent;
 
-    /**
-     * @ORM\OneToMany(targetEntity="Category", mappedBy="parent")
-     * @ORM\OrderBy({"lft" = "ASC"})
-     */
+    #[ORM\OneToMany(targetEntity: \Category::class, mappedBy: 'parent')]
+    #[ORM\OrderBy(['lft' => 'ASC'])]
     private $children;
 
     public function __toString()
