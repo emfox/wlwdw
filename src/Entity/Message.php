@@ -6,40 +6,35 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Message
- *
- * @ORM\Table()
- * @ORM\Entity
  */
+#[ORM\Entity]
+#[ORM\Table]
 class Message
 {
     /**
      * @var integer
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
      */
+    #[ORM\Column(name: 'id', type: 'integer')]
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private $id;
 
     /**
      * @var integer
-     *
-     * @ORM\Column(name="recipient", type="string", length=30)
      */
+    #[ORM\Column(name: 'recipient', type: 'string', length: 30)]
     private $recipient;
 
     /**
      * @var \DateTime
-     *
-     * @ORM\Column(name="time", type="datetime")
      */
+    #[ORM\Column(name: 'time', type: 'datetime')]
     private $time;
 
     /**
      * @var string
-     *
-     * @ORM\Column(name="content", type="string", length=255)
      */
+    #[ORM\Column(name: 'content', type: 'string', length: 255)]
     private $content;
 
 

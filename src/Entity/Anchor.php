@@ -6,54 +6,47 @@ use Doctrine\ORM\Mapping as ORM;
 
 /**
  * Anchor
- *
- * @ORM\Table()
- * @ORM\Entity
  */
+#[ORM\Entity]
+#[ORM\Table]
 class Anchor
 {
     /**
      * @var integer
-     *
-     * @ORM\Column(name="id", type="integer")
-     * @ORM\Id
-     * @ORM\GeneratedValue(strategy="AUTO")
      */
+    #[ORM\Column(name: 'id', type: 'integer')]
+    #[ORM\Id]
+    #[ORM\GeneratedValue(strategy: 'AUTO')]
     private $id;
 
     /**
      * @var string
-     *
-     * @ORM\Column(name="title", type="string", length=255)
      */
+    #[ORM\Column(name: 'title', type: 'string', length: 255)]
     private $title;
 
     /**
      * @var boolean
-     *
-     * @ORM\Column(name="enabled", type="boolean",nullable=true)
      */
+    #[ORM\Column(name: 'enabled', type: 'boolean', nullable: true)]
     private $enabled;
 
     /**
      * @var float
-     *
-     * @ORM\Column(name="lng", type="float")
      */
+    #[ORM\Column(name: 'lng', type: 'float')]
     private $lng;
 
     /**
      * @var float
-     *
-     * @ORM\Column(name="lat", type="float")
      */
+    #[ORM\Column(name: 'lat', type: 'float')]
     private $lat;
 
     /**
      * @var string
-     *
-     * @ORM\Column(name="icon", type="string", length=255)
      */
+    #[ORM\Column(name: 'icon', type: 'string', length: 255)]
     private $icon;
 
 
