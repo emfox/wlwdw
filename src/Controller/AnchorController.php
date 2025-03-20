@@ -13,19 +13,25 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Anchor controller.
- *
- * @Route("/anchor")
  */
 class AnchorController extends AbstractController
 {
 	/**
-	 * Lists all Anchor entities via ajax.
-	 *
-	 * @Route("/list", name="anchor_list")
-	 */
-	public function listAction()
+     * @var \Doctrine\Persistence\ManagerRegistry
+     */
+    private $managerRegistry;
+    public function __construct(\Doctrine\Persistence\ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
+    }
+    /**
+     * Lists all Anchor entities via ajax.
+     *
+     * @Route("/anchor/list", name="anchor_list")
+     */
+    public function list(): \Symfony\Component\HttpFoundation\Response
 	{
-		$em = $this->getDoctrine()->getManager();
+		$em = $this->managerRegistry->getManager();
 		$entities = $em->getRepository('App\Entity\Anchor')->findBy(
 				array('enabled'=>true),
 				array('id'=>'ASC')
@@ -45,12 +51,12 @@ class AnchorController extends AbstractController
     /**
      * Lists all Anchor entities.
      *
-     * @Route("/", name="anchor", methods={"GET"})
+     * @Route("/anchor/", name="anchor", methods={"GET"})
      * @Template("anchor/index.html.twig")
      */
-    public function indexAction()
+    public function index(): array
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entities = $em->getRepository('App\Entity\Anchor')->findAll();
 
@@ -61,21 +67,21 @@ class AnchorController extends AbstractController
     /**
      * Creates a new Anchor entity.
      *
-     * @Route("/", name="anchor_create", methods={"POST"})
+     * @Route("/anchor/", name="anchor_create", methods={"POST"})
      * @Template("anchor/new.html.twig")
      */
-    public function createAction(Request $request)
+    public function create(Request $request)
     {
         $entity = new Anchor();
         $form = $this->createCreateForm($entity);
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->managerRegistry->getManager();
             $em->persist($entity);
             $em->flush();
 
-            return $this->redirect($this->generateUrl('anchor'));
+            return $this->redirectToRoute('anchor');
         }
 
         return array(
@@ -106,10 +112,10 @@ class AnchorController extends AbstractController
     /**
      * Displays a form to create a new Anchor entity.
      *
-     * @Route("/new", name="anchor_new", methods={"GET"})
+     * @Route("/anchor/new", name="anchor_new", methods={"GET"})
      * @Template("anchor/new.html.twig")
      */
-    public function newAction()
+    public function new(): array
     {
         $entity = new Anchor();
         $form   = $this->createCreateForm($entity);
@@ -123,12 +129,12 @@ class AnchorController extends AbstractController
     /**
      * Displays a form to edit an existing Anchor entity.
      *
-     * @Route("/{id}/edit", name="anchor_edit", methods={"GET"})
+     * @Route("/anchor/{id}/edit", name="anchor_edit", methods={"GET"})
      * @Template("anchor/edit.html.twig")
      */
-    public function editAction($id)
+    public function edit($id): array
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entity = $em->getRepository('App\Entity\Anchor')->find($id);
 
@@ -167,12 +173,12 @@ class AnchorController extends AbstractController
     /**
      * Edits an existing Anchor entity.
      *
-     * @Route("/{id}", name="anchor_update", methods={"PUT"})
+     * @Route("/anchor/{id}", name="anchor_update", methods={"PUT"})
      * @Template("anchor/edit.html.twig")
      */
-    public function updateAction(Request $request, $id)
+    public function update(Request $request, $id)
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entity = $em->getRepository('App\Entity\Anchor')->find($id);
 
@@ -187,7 +193,7 @@ class AnchorController extends AbstractController
         if ($editForm->isValid()) {
             $em->flush();
 
-            return $this->redirect($this->generateUrl('anchor'));
+            return $this->redirectToRoute('anchor');
         }
 
         return array(
@@ -199,15 +205,15 @@ class AnchorController extends AbstractController
     /**
      * Deletes a Anchor entity.
      *
-     * @Route("/{id}", name="anchor_delete", methods={"DELETE"})
+     * @Route("/anchor/{id}", name="anchor_delete", methods={"DELETE"})
      */
-    public function deleteAction(Request $request, $id)
+    public function delete(Request $request, $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $form = $this->createDeleteForm($id);
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->managerRegistry->getManager();
             $entity = $em->getRepository('App\Entity\Anchor')->find($id);
 
             if (!$entity) {
@@ -218,7 +224,7 @@ class AnchorController extends AbstractController
             $em->flush();
         }
 
-        return $this->redirect($this->generateUrl('anchor'));
+        return $this->redirectToRoute('anchor');
     }
 
     /**
@@ -232,7 +238,7 @@ class AnchorController extends AbstractController
     {
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('anchor_delete', array('id' => $id)))
-            ->setMethod('DELETE')
+            ->setMethod(\Symfony\Component\HttpFoundation\Request::METHOD_DELETE)
             ->add('submit', SubmitType::class, array('label' => '删除该参考点'))
             ->getForm()
         ;

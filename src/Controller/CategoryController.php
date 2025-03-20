@@ -15,19 +15,25 @@ use Symfony\Component\Form\Extension\Core\Type\SubmitType;
 
 /**
  * Category controller.
- *
- * @Route("/category")
  */
 class CategoryController extends AbstractController
 {
 	/**
-	 * Lists all Category entities via ajax.
-	 *
-	 * @Route("/hierarchy", name="category_hierarchy", methods={"GET"})
-	 */
-	public function hierarchyAction($root = null)
+     * @var \Doctrine\Persistence\ManagerRegistry
+     */
+    private $managerRegistry;
+    public function __construct(\Doctrine\Persistence\ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
+    }
+    /**
+     * Lists all Category entities via ajax.
+     *
+     * @Route("/category/hierarchy", name="category_hierarchy", methods={"GET"})
+     */
+    public function hierarchy($root = null): \Symfony\Component\HttpFoundation\Response
 	{
-		$em = $this->getDoctrine()->getManager();
+		$em = $this->managerRegistry->getManager();
 		$repo = $em->getRepository('App\Entity\Category');
 		$repo->setChildrenIndex('children');
 		$arrayTree = $repo->childrenHierarchy();
@@ -38,12 +44,12 @@ class CategoryController extends AbstractController
     /**
      * Lists all Category entities.
      *
-     * @Route("/", name="category", methods={"GET"})
+     * @Route("/category/", name="category", methods={"GET"})
      * @Template("category/index.html.twig")
      */
-    public function indexAction()
+    public function index(): array
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
         $qb = $em->createQueryBuilder();
         
         $qb->select('c')
@@ -65,10 +71,10 @@ class CategoryController extends AbstractController
     /**
      * Creates a new Category entity.
      *
-     * @Route("/", name="category_create", methods={"POST"})
+     * @Route("/category/", name="category_create", methods={"POST"})
      * @Template("category/new.html.twig")
      */
-    public function createAction(Request $request)
+    public function create(Request $request)
     {
         $entity = new Category();
         $form = $this->createCreateForm($entity);
@@ -78,7 +84,7 @@ class CategoryController extends AbstractController
         	$entity->setUpdatetime(new DateTime());
         	$entity->setLat('0');
         	$entity->setLng('0');
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->managerRegistry->getManager();
             $em->persist($entity);
             $em->flush();
             for($i=1;$i<=30;$i++)
@@ -92,7 +98,7 @@ class CategoryController extends AbstractController
             }
             $em->flush();
 
-            return $this->redirect($this->generateUrl('category'));
+            return $this->redirectToRoute('category');
         }
 
         return array(
@@ -123,10 +129,10 @@ class CategoryController extends AbstractController
     /**
      * Displays a form to create a new Category entity.
      *
-     * @Route("/new", name="category_new", methods={"GET"})
+     * @Route("/category/new", name="category_new", methods={"GET"})
      * @Template("category/new.html.twig")
      */
-    public function newAction()
+    public function new(): array
     {
         $entity = new Category();
         $form   = $this->createCreateForm($entity);
@@ -140,12 +146,12 @@ class CategoryController extends AbstractController
     /**
      * Displays a form to edit an existing Category entity.
      *
-     * @Route("/{id}/edit", name="category_edit", methods={"GET"})
+     * @Route("/category/{id}/edit", name="category_edit", methods={"GET"})
      * @Template("category/edit.html.twig")
      */
-    public function editAction($id)
+    public function edit($id): array
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entity = $em->getRepository('App\Entity\Category')->find($id);
 
@@ -184,12 +190,12 @@ class CategoryController extends AbstractController
     /**
      * Edits an existing Category entity.
      *
-     * @Route("/{id}", name="category_update", methods={"PUT"})
+     * @Route("/category/{id}", name="category_update", methods={"PUT"})
      * @Template("category/edit.html.twig")
      */
-    public function updateAction(Request $request, $id)
+    public function update(Request $request, $id)
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entity = $em->getRepository('App\Entity\Category')->find($id);
 
@@ -204,7 +210,7 @@ class CategoryController extends AbstractController
         if ($editForm->isValid()) {
             $em->flush();
 
-            return $this->redirect($this->generateUrl('category'));
+            return $this->redirectToRoute('category');
         }
 
         return array(
@@ -216,15 +222,15 @@ class CategoryController extends AbstractController
     /**
      * Deletes a Category entity.
      *
-     * @Route("/{id}", name="category_delete", methods={"DELETE"})
+     * @Route("/category/{id}", name="category_delete", methods={"DELETE"})
      */
-    public function deleteAction(Request $request, $id)
+    public function delete(Request $request, $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $form = $this->createDeleteForm($id);
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->managerRegistry->getManager();
             $entity = $em->getRepository('App\Entity\Category')->find($id);
 
             if (!$entity) {
@@ -235,17 +241,17 @@ class CategoryController extends AbstractController
             $em->flush();
         }
 
-        return $this->redirect($this->generateUrl('category'));
+        return $this->redirectToRoute('category');
     }
 
     /**
      * Moves a Category entity.
      *
-     * @Route("/{id}/move/{direction}", name="category_move")
+     * @Route("/category/{id}/move/{direction}", name="category_move")
      */
-    public function moveAction(Request $request, $id, $direction)
+    public function move($id, $direction): \Symfony\Component\HttpFoundation\RedirectResponse
     {
-    	$em = $this->getDoctrine()->getManager();
+    	$em = $this->managerRegistry->getManager();
     	
     	$repo = $em->getRepository('App\Entity\Category');
     	$entity = $repo->find($id);
@@ -273,7 +279,7 @@ class CategoryController extends AbstractController
     	
     	$em->flush();
 
-    	return $this->redirect($this->generateUrl('category'));
+    	return $this->redirectToRoute('category');
     }
     /**
      * Creates a form to delete a Category entity by id.
@@ -286,7 +292,7 @@ class CategoryController extends AbstractController
     {
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('category_delete', array('id' => $id)))
-            ->setMethod('DELETE')
+            ->setMethod(\Symfony\Component\HttpFoundation\Request::METHOD_DELETE)
             ->add('submit', SubmitType::class, array('label' => '删除该单位'))
             ->getForm()
         ;

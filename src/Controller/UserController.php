@@ -13,21 +13,27 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 /**
  * User controller.
- *
- * @Route("/user")
  */
 class UserController extends AbstractController
 {
 
     /**
+     * @var \Doctrine\Persistence\ManagerRegistry
+     */
+    private $managerRegistry;
+    public function __construct(\Doctrine\Persistence\ManagerRegistry $managerRegistry)
+    {
+        $this->managerRegistry = $managerRegistry;
+    }
+    /**
      * Lists all User entities.
      *
-     * @Route("/", name="user", methods={"GET"})
+     * @Route("/user/", name="user", methods={"GET"})
      * @Template("user/index.html.twig")
      */
-    public function indexAction()
+    public function index(): array
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entities = $em->getRepository('App\Entity\User')->findAll();
 
@@ -38,10 +44,10 @@ class UserController extends AbstractController
     /**
      * Creates a new User entity.
      *
-     * @Route("/", name="user_create", methods={"POST"})
+     * @Route("/user/", name="user_create", methods={"POST"})
      * @Template("user/new.html.twig")
      */
-    public function createAction(Request $request, UserPasswordEncoderInterface $encoder)
+    public function create(Request $request, UserPasswordEncoderInterface $encoder)
     {
         $entity = new User();
         $form = $this->createCreateForm($entity);
@@ -55,11 +61,11 @@ class UserController extends AbstractController
                 $entity->setPassword($encoded);
         	$entity->setEmail($entity->getUsername() . "@user.wlwdw.com");
         	$entity->setEnabled(TRUE);
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->managerRegistry->getManager();
             $em->persist($entity);
             $em->flush();
 
-            return $this->redirect($this->generateUrl('user'));
+            return $this->redirectToRoute('user');
         }
 
         return array(
@@ -90,10 +96,10 @@ class UserController extends AbstractController
     /**
      * Displays a form to create a new User entity.
      *
-     * @Route("/new", name="user_new", methods={"GET"})
+     * @Route("/user/new", name="user_new", methods={"GET"})
      * @Template("user/new.html.twig")
      */
-    public function newAction()
+    public function new(): array
     {
         $entity = new User();
         $form   = $this->createCreateForm($entity);
@@ -107,12 +113,12 @@ class UserController extends AbstractController
     /**
      * Displays a form to edit an existing User entity.
      *
-     * @Route("/{id}/edit", name="user_edit", methods={"GET"})
+     * @Route("/user/{id}/edit", name="user_edit", methods={"GET"})
      * @Template("user/edit.html.twig")
      */
-    public function editAction($id)
+    public function edit($id): array
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entity = $em->getRepository('App\Entity\User')->find($id);
 
@@ -151,12 +157,12 @@ class UserController extends AbstractController
     /**
      * Edits an existing User entity.
      *
-     * @Route("/{id}", name="user_update", methods={"PUT"})
+     * @Route("/user/{id}", name="user_update", methods={"PUT"})
      * @Template("user/edit.html.twig")
      */
-    public function updateAction(Request $request, $id, UserPasswordHasherInterface $encoder)
+    public function update(Request $request, $id, UserPasswordHasherInterface $encoder)
     {
-        $em = $this->getDoctrine()->getManager();
+        $em = $this->managerRegistry->getManager();
 
         $entity = $em->getRepository('App\Entity\User')->find($id);
 
@@ -176,7 +182,7 @@ class UserController extends AbstractController
             $em->persist($entity);
             $em->flush();
 
-            return $this->redirect($this->generateUrl('user'));
+            return $this->redirectToRoute('user');
         }
 
         return array(
@@ -188,15 +194,15 @@ class UserController extends AbstractController
     /**
      * Deletes a User entity.
      *
-     * @Route("/{id}", name="user_delete", methods={"DELETE"})
+     * @Route("/user/{id}", name="user_delete", methods={"DELETE"})
      */
-    public function deleteAction(Request $request, $id)
+    public function delete(Request $request, $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $form = $this->createDeleteForm($id);
         $form->handleRequest($request);
 
         if ($form->isValid()) {
-            $em = $this->getDoctrine()->getManager();
+            $em = $this->managerRegistry->getManager();
             $entity = $em->getRepository('App\Entity\User')->find($id);
 
             if (!$entity) {
@@ -207,7 +213,7 @@ class UserController extends AbstractController
             $em->flush();
         }
 
-        return $this->redirect($this->generateUrl('user'));
+        return $this->redirectToRoute('user');
     }
 
     /**
@@ -221,7 +227,7 @@ class UserController extends AbstractController
     {
         return $this->createFormBuilder()
             ->setAction($this->generateUrl('user_delete', array('id' => $id)))
-            ->setMethod('DELETE')
+            ->setMethod(\Symfony\Component\HttpFoundation\Request::METHOD_DELETE)
             ->add('submit', SubmitType::class, array('label' => '删除该用户'))
             ->getForm()
         ;
