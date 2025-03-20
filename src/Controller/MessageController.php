@@ -6,7 +6,7 @@ use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use App\Model\Yunba;
 use App\Entity\Message;
@@ -25,9 +25,8 @@ class MessageController extends AbstractController {
     }
     /**
      * Send Message direct to clients.
-     *
-     * @Route("/message/send", name="message_send")
      */
+    #[Route(path: '/message/send', name: 'message_send')]
     public function Send(Request $request): \Symfony\Component\HttpFoundation\Response {
 
 		$yunba = new Yunba ( array (
@@ -79,9 +78,8 @@ class MessageController extends AbstractController {
 	
 	/**
      * show specific Message.
-     *
-     * @Route("/message/{id}/{devid}", name="message_show")
      */
+    #[Route(path: '/message/{id}/{devid}', name: 'message_show')]
     public function show($id,$devid): \Symfony\Component\HttpFoundation\Response{
 		$em = $this->managerRegistry->getManager();
 		$message = $em->getRepository('App\Entity\Message')->find($id);

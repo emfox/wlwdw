@@ -6,7 +6,7 @@ use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use App\Entity\Category;
 use App\Form\CategoryType;
@@ -28,9 +28,8 @@ class CategoryController extends AbstractController
     }
     /**
      * Lists all Category entities via ajax.
-     *
-     * @Route("/category/hierarchy", name="category_hierarchy", methods={"GET"})
      */
+    #[Route(path: '/category/hierarchy', name: 'category_hierarchy', methods: ['GET'])]
     public function hierarchy($root = null): \Symfony\Component\HttpFoundation\Response
 	{
 		$em = $this->managerRegistry->getManager();
@@ -44,9 +43,9 @@ class CategoryController extends AbstractController
     /**
      * Lists all Category entities.
      *
-     * @Route("/category/", name="category", methods={"GET"})
      * @Template("category/index.html.twig")
      */
+    #[Route(path: '/category/', name: 'category', methods: ['GET'])]
     public function index(): array
     {
         $em = $this->managerRegistry->getManager();
@@ -71,9 +70,9 @@ class CategoryController extends AbstractController
     /**
      * Creates a new Category entity.
      *
-     * @Route("/category/", name="category_create", methods={"POST"})
      * @Template("category/new.html.twig")
      */
+    #[Route(path: '/category/', name: 'category_create', methods: ['POST'])]
     public function create(Request $request)
     {
         $entity = new Category();
@@ -129,9 +128,9 @@ class CategoryController extends AbstractController
     /**
      * Displays a form to create a new Category entity.
      *
-     * @Route("/category/new", name="category_new", methods={"GET"})
      * @Template("category/new.html.twig")
      */
+    #[Route(path: '/category/new', name: 'category_new', methods: ['GET'])]
     public function new(): array
     {
         $entity = new Category();
@@ -146,9 +145,9 @@ class CategoryController extends AbstractController
     /**
      * Displays a form to edit an existing Category entity.
      *
-     * @Route("/category/{id}/edit", name="category_edit", methods={"GET"})
      * @Template("category/edit.html.twig")
      */
+    #[Route(path: '/category/{id}/edit', name: 'category_edit', methods: ['GET'])]
     public function edit($id): array
     {
         $em = $this->managerRegistry->getManager();
@@ -190,9 +189,9 @@ class CategoryController extends AbstractController
     /**
      * Edits an existing Category entity.
      *
-     * @Route("/category/{id}", name="category_update", methods={"PUT"})
      * @Template("category/edit.html.twig")
      */
+    #[Route(path: '/category/{id}', name: 'category_update', methods: ['PUT'])]
     public function update(Request $request, $id)
     {
         $em = $this->managerRegistry->getManager();
@@ -221,9 +220,8 @@ class CategoryController extends AbstractController
     }
     /**
      * Deletes a Category entity.
-     *
-     * @Route("/category/{id}", name="category_delete", methods={"DELETE"})
      */
+    #[Route(path: '/category/{id}', name: 'category_delete', methods: ['DELETE'])]
     public function delete(Request $request, $id): \Symfony\Component\HttpFoundation\RedirectResponse
     {
         $form = $this->createDeleteForm($id);
@@ -246,9 +244,8 @@ class CategoryController extends AbstractController
 
     /**
      * Moves a Category entity.
-     *
-     * @Route("/category/{id}/move/{direction}", name="category_move")
      */
+    #[Route(path: '/category/{id}/move/{direction}', name: 'category_move')]
     public function move($id, $direction): \Symfony\Component\HttpFoundation\RedirectResponse
     {
     	$em = $this->managerRegistry->getManager();

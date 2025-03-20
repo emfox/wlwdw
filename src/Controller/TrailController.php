@@ -6,7 +6,7 @@ use DateTime;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use App\Entity\Trail;
 
@@ -25,9 +25,8 @@ class TrailController extends AbstractController
     }
     /**
      * Add a new Trail point entities via ajax.
-     *
-     * @Route("/trail/new/{devid}/{lng}/{lat}", name="trail_new")
      */
+    #[Route(path: '/trail/new/{devid}/{lng}/{lat}', name: 'trail_new')]
     public function new($devid,$lng,$lat): \Symfony\Component\HttpFoundation\Response
 	{
 		$em = $this->managerRegistry->getManager();
@@ -60,9 +59,8 @@ class TrailController extends AbstractController
 	}
 	/**
      * Lists all Trail entities of an specified category via ajax.
-     *
-     * @Route("/trail/list/{catid}", name="trail_list")
      */
+    #[Route(path: '/trail/list/{catid}', name: 'trail_list')]
     public function list($catid): \Symfony\Component\HttpFoundation\Response
 	{
 		$em = $this->managerRegistry->getManager();
