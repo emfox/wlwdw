@@ -21,6 +21,8 @@ class Category
     #[ORM\Column(name: 'title', type: 'string', length: 64)]
     private $title;
 
+    private $indentLabel;
+
     #[ORM\Column(name: 'updatetime', type: 'datetime')]
     private $updatetime;
     #[ORM\Column(name: 'lat', type: 'float')]
@@ -283,13 +285,23 @@ class Category
     {
         return $this->lng;
     }
-    
-    public function getIndentLabel()
+
+    public function setIndentLabel()
     {
-    	return str_repeat(
+    	$this->indentLabel = str_repeat(
     			html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8'),
     			($this->getLvl() + 1) * 3
     	) . $this->getTitle();
+
+        return $this;
+    }
+
+    public function getIndentLabel()
+    {
+    	return str_repeat(
+                        html_entity_decode('&nbsp;', ENT_QUOTES, 'UTF-8'),
+                        ($this->getLvl() + 1) * 3
+        ) . $this->getTitle();
     }
 
     /**

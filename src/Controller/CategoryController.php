@@ -58,7 +58,7 @@ class CategoryController extends AbstractController
         $entities = $query->getResult();
 
         foreach($entities as $entity){
-        	$entity->indentLabel = $entity->getIndentLabel();
+        	$entity->setIndentLabel();
         }
 
         return $this->render('category/index.html.twig', array(
