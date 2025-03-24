@@ -75,7 +75,7 @@ class Category
         return $this->title;
     }
 
-    public function setParent(Category $parent = null)
+    public function setParent(?Category $parent = null)
     {
         $this->parent = $parent;
     }
