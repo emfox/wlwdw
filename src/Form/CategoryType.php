@@ -16,11 +16,14 @@ class CategoryType extends AbstractType
     {
         $builder
             ->add('title',null,array('label' => '单位名'))
-            ->add('parent', null, array('choice_label' => 'indentLabel', 'label'=>'所属单位', 'query_builder' => function($er) {
-    																					return $er->createQueryBuilder('c')
-    																					->orderBy('c.root', 'ASC')
-    																					->addOrderBy('c.lft', 'ASC');},
-                                          )
+            ->add('parent', null, array('choice_label' => 'indentLabel',
+                                        'label'=>'所属单位',
+                                        'query_builder' => function($er) {
+                                                                             return $er->createQueryBuilder('c')
+                                                                                       ->orderBy('c.root', 'ASC')
+                                                                                       ->addOrderBy('c.lft', 'ASC');
+                                                                         },
+                                        )
             	 )
             ->add('devid',null,array('label' => '设备编号','required' => false))
         ;
