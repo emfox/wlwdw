@@ -1,0 +1,87 @@
+name: wlwdw
+
+services:
+    web:
+        image: nginx:1.27
+        depends_on:
+            - php
+            - mysql
+        volumes:
+            - "web_data:/var/www/html"
+        configs:
+            - source: nginx.conf
+              target: /etc/nginx/conf.d/wlwdw.conf
+        environment:
+            - VIRTUAL_HOST=wlwdw.rpwt.org
+            - LETSENCRYPT_HOST=wlwdw.rpwt.org
+            - LETSENCRYPT_EMAIL=emfoxzhou@gmail.com
+        networks:
+            - nginx-proxy
+            - default
+    php:
+        image: emfox/wlwdw-php
+        build:
+            dockerfile_inline: |
+                FROM php:8.4-fpm
+                COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+                RUN install-php-extensions pdo_mysql intl
+        volumes:
+            - "web_data:/var/www/html"
+        networks:
+            - default
+    mysql:
+        image: mysql:8.4
+        volumes:
+            - "db_data:/var/lib/mysql"
+        environment:
+            - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/db_password
+        networks:
+            - default
+        secrets:
+        - db_password
+
+networks:
+    default:
+    nginx-proxy:
+        name: nginx-proxy_default
+        external: true
+
+volumes:
+    web_data:
+        driver: local # Define the driver and options under the volume name
+        driver_opts:
+            type: none
+            device: .
+            o: bind
+    db_data:
+        driver: local # Define the driver and options under the volume name
+        driver_opts:
+            type: none
+            device: ./mysql-data
+            o: bind
+
+configs:
+    nginx.conf:
+        content: |
+            server {
+                server_name wlwdw.rpwt.org;
+                root /var/www/html/public;
+                location / {
+                    # try to serve file directly, fallback to index.php
+                    try_files $$uri /index.php$$is_args$$args;
+                }
+                location ~ ^/index\.php(/|$) {
+                    fastcgi_pass php:9000;
+                    fastcgi_split_path_info ^(.+\.php)(/.*)$;
+                    include fastcgi_params;
+                    fastcgi_param SCRIPT_FILENAME $$document_root$$fastcgi_script_name;
+                    fastcgi_param DOCUMENT_ROOT $$document_root;
+                    fastcgi_param  HTTPS              off;
+                }
+                error_log /var/log/nginx/project_error.log;
+                access_log /var/log/nginx/project_access.log;
+            }
+
+secrets:
+    db_password:
+        file: ./db_password.txt
