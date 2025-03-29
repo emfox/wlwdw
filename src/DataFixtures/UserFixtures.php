@@ -9,11 +9,11 @@ use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
 class UserFixtures extends Fixture
 {
-    private $passwordEncoder;
+    private $passwordHasher;
 
-    public function __construct(UserPasswordHasherInterface $passwordEncoder)
+    public function __construct(UserPasswordHasherInterface $passwordHasher)
     {
-        $this->encoder = $passwordEncoder;
+        $this->hasher = $passwordHasher;
     }
 
     public function load(ObjectManager $manager): void
@@ -21,7 +21,7 @@ class UserFixtures extends Fixture
         $userAdmin = new User();
         $userAdmin->setUsername('admin');
         $userAdmin->setEmail('admin@user.wlwdw.com');
-        $userAdmin->setPassword($this->encoder->encodePassword($userAdmin,'admin'));
+        $userAdmin->setPassword($this->hasher->hashPassword($userAdmin,'admin'));
         $userAdmin->setEnabled(true);
         $userAdmin->setRoles(array('ROLE_ADMIN'));
 
