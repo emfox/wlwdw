@@ -84,4 +84,4 @@ configs:
 
 secrets:
     db_password:
-        file: ./db_password.txt
+        file: ./var/db_password.txt

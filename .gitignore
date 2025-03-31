@@ -1,6 +1,5 @@
 # docker compose volume and secrets
 /mysql-data/
-/db_password.txt
 
 # Cache and log (Symfony4)
 /var/cache/*
