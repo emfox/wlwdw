@@ -1,9 +1,0 @@
-0. (if clone from git) php composer.phar install
-1. cp .env .env.local, fill in DATABASE_URL and *_MAP_API_KEY
-2. php bin/console doctrine:database:create
-3. php bin/console doctrine:schema:update --force
-4. php bin/console doctrine:fixtures:load
-   (use --append to reserve data on update)
-
-rebuild cache:
-    php bin/console cache:clear --env=prod
