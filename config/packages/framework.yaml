@@ -8,7 +8,7 @@ framework:
     annotations: false
     handle_all_throwables: true
 
-    # Enables session support. Note that the session will ONLY be started if you read or write from it.
+    # Note that the session will ONLY be started if you read or write from it.
     # Remove or comment this section to explicitly disable session support.
     session:
         handler_id: ~
