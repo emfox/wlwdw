@@ -1,14 +1,12 @@
-Wlwdw: device location recoder and viewer
-========================
+# Wlwdw: device location recoder and viewer
+
 Running fine on Php 8.4 and Symfony 7.2.
 
-1) Copyright
-------------
+## Copyright
 
 GPL v2+
 
-2) Install
-----------
+## Install
 
 1. cp .env .env.local, adjust DB_PASS DATABASE_URL and *_MAP_API_KEY
 2. // if run via docker
@@ -23,20 +21,19 @@ GPL v2+
 rebuild cache:
     php bin/console cache:clear --env=prod
 
-3) Troubleshooting
-------------------
+## Troubleshooting
+
 If enconter cache permisson problem, try clean cache:
 
-php bin/console cache:clear --env=dev
-chown -R www-data:www-data var/log
-chown -R www-data:www-data var/cache
-chmod 775 -R var/log
-chmod 775 -R var/cache
-chmod 644 var/log/.gitkeep
-chmod 644 var/cache/.gitkeep
+> php bin/console cache:clear --env=dev  
+> chown -R www-data:www-data var/log  
+> chown -R www-data:www-data var/cache  
+> chmod 775 -R var/log  
+> chmod 775 -R var/cache  
+> chmod 644 var/log/.gitkeep  
+> chmod 644 var/cache/.gitkeep
 
-4) Demo
--------
+## Demo
 
 https://wlwdw.rpwt.org
 (not working all the time, online periodically)
