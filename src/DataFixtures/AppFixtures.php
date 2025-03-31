@@ -7,7 +7,7 @@ use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class UserFixtures extends Fixture
+class AppFixtures extends Fixture
 {
     private $passwordHasher;
 
@@ -20,7 +20,7 @@ class UserFixtures extends Fixture
     {
         $userAdmin = new User();
         $userAdmin->setUsername('admin');
-        $userAdmin->setEmail('admin@user.wlwdw.com');
+        $userAdmin->setEmail('admin@wlwdw.rpwt.org');
         $userAdmin->setPassword($this->hasher->hashPassword($userAdmin,'admin'));
         $userAdmin->setEnabled(true);
         $userAdmin->setRoles(array('ROLE_ADMIN'));

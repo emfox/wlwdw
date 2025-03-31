@@ -1,3 +1,8 @@
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
 emfox_gps_index:
     path: /
     defaults:
@@ -9,3 +14,4 @@ emfox_gps_main:
     defaults:
         _controller: "App\\Controller\\DefaultController::main"
         maptype: "google"
+
