@@ -44,7 +44,7 @@ public class YunbaReceiver extends BroadcastReceiver {
 			 YunbaContext = context;
 			sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
 			
-			//String topic = intent.getStringExtra(YunBaManager.MQTT_TOPIC);
+			final String topic = intent.getStringExtra(YunBaManager.MQTT_TOPIC);
 			final String msgid = intent.getStringExtra(YunBaManager.MQTT_MSG);
 			
 			final Handler handler = new Handler() {
@@ -77,7 +77,7 @@ public class YunbaReceiver extends BroadcastReceiver {
 		     		     // send msg to notification
 		     			
 		     			NotificationCompat.Builder mBuilder =
-		     			        new NotificationCompat.Builder(YunbaContext)
+		     			        new NotificationCompat.Builder(YunbaContext, topic)
 		     			        .setSmallIcon(android.R.drawable.ic_dialog_info)
 		     			        .setContentTitle("定位服务器发来消息")
 		     			        .setContentText(msg)
