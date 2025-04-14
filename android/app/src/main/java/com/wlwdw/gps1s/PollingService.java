@@ -63,12 +63,12 @@ public class PollingService extends Service {
     }  
       
     @Override  
-    public void onStart(Intent intent, int startId) {  
+    public int onStartCommand(Intent intent, int flags, int startId) {
     	if(intent.getAction().equals(PollingService.ACTION_STOP)){
     		System.out.println(intent.getAction());
     		isPolling = false;
     		stopSelf();
-    		return;
+    		return START_REDELIVER_INTENT;
     	}
     	setNewLocOption();
     	mLocationClient.requestLocation();
@@ -78,9 +78,10 @@ public class PollingService extends Service {
     		if(!isPolling){
     			should_stop = true;
     		}
-    		return;
+    		return START_REDELIVER_INTENT;
     	}
     	isPolling = true;
+		return START_REDELIVER_INTENT;
     }  
 
       
