@@ -17,7 +17,7 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.Menu;
@@ -30,7 +30,7 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
-public class LocationActivity extends ActionBarActivity{
+public class LocationActivity extends AppCompatActivity {
 	private SharedPreferences sharedPref;
 	private Editor sharedEditor;
 	private TextView LabelTime;
