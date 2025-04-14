@@ -30,6 +30,8 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
+import java.util.UUID;
+
 public class LocationActivity extends AppCompatActivity {
 	private SharedPreferences sharedPref;
 	private Editor sharedEditor;
@@ -57,11 +59,14 @@ public class LocationActivity extends AppCompatActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		startBlackService();
-		setContentView(R.layout.location);
-		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);  
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		sharedEditor = sharedPref.edit();
+		if(sharedPref.getString("app_uuid", "").isEmpty()) {
+			sharedEditor.putString("app_uuid",UUID.randomUUID().toString());
+		}
+		startBlackService();
+		setContentView(R.layout.location);
+		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
 		LabelTime = (TextView)findViewById(R.id.LabelTime);
 		LabelErrcode = (TextView)findViewById(R.id.LabelErrcode);
 		LabelLatLng = (TextView)findViewById(R.id.LabelLatLng);
@@ -266,7 +271,7 @@ public class LocationActivity extends AppCompatActivity {
 			}
 		};
 		
-		String myDeviceId = ((TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
-		YunBaManager.subscribe(getApplicationContext(), new String[]{"all", myDeviceId}, listener);
+		String appUUID = sharedPref.getString("app_uuid","");
+		YunBaManager.subscribe(getApplicationContext(), new String[]{"all", appUUID}, listener);
 	}
 }
