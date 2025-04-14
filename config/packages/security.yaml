@@ -38,7 +38,7 @@ security:
         - { path: ^/category/, role: ROLE_ADMIN }
         - { path: ^/anchor/list, role: ROLE_USER }
         - { path: ^/anchor/, role: ROLE_ADMIN }
-        - { path: ^/trail/new, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/trail/new, role: PUBLIC_ACCESS }
         - { path: ^/trail/, role: ROLE_USER }
         - { path: ^/message/send, role: ROLE_USER }
         - { path: ^/message, role: IS_AUTHENTICATED_ANONYMOUSLY }

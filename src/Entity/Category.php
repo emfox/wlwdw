@@ -16,7 +16,7 @@ class Category
     #[ORM\GeneratedValue]
     private $id;
 
-    #[ORM\Column(name: 'devid', type: 'string', length: 24)]
+    #[ORM\Column(name: 'devid', type: 'string', length: 40)]
     private $devid;
     #[ORM\Column(name: 'title', type: 'string', length: 64)]
     private $title;

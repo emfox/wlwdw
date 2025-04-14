@@ -33,7 +33,6 @@ import android.telephony.TelephonyManager;
 public class YunbaReceiver extends BroadcastReceiver {
 
 	private final static int mId = 1000;
-	public static String myDeviceId;
     private SharedPreferences sharedPref;
 	private MsgdbHelper dbHelper = null;
 	private SQLiteDatabase msgdb = null; 
@@ -43,7 +42,6 @@ public class YunbaReceiver extends BroadcastReceiver {
 	public void onReceive(Context context, Intent intent) {
 		 if (YunBaManager.MESSAGE_RECEIVED_ACTION.equals(intent.getAction())) {
 			 YunbaContext = context;
-			myDeviceId = ((TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
 			sharedPref = PreferenceManager.getDefaultSharedPreferences(context);
 			
 			//String topic = intent.getStringExtra(YunBaManager.MQTT_TOPIC);
@@ -119,7 +117,8 @@ public class YunbaReceiver extends BroadcastReceiver {
 			    	String custom_host = "www.wlwdw.com";
 			    	if(sharedPref.getBoolean("enable_custom_host",false))
 			    		custom_host = sharedPref.getString("custom_host","www.wlwdw.com");
-			    	String GET_URL = "https://" + custom_host  + "/message/" + msgid + "/" + myDeviceId;
+					String appUUID = sharedPref.getString("app_uuid","");
+					String GET_URL = "https://" + custom_host  + "/message/" + msgid + "/" + appUUID;
 			    	try {
 						String url_result = PollingService.readContentFromGet(GET_URL);
 						JSONObject result1 = (JSONObject)new JSONTokener(url_result).nextValue();

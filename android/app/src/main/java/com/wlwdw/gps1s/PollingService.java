@@ -29,7 +29,6 @@ public class PollingService extends Service {
     public static final String ACTION_START = "com.wlwdw.gps1s.StartPollingService";
     public static final String ACTION_STOP = "com.wlwdw.gps1s.StopPollingService";
     public static boolean isPolling = false;
-    public static String myDeviceId;
 	public MyLocationListener mMyLocationListener;
 	
     private LocationClient mLocationClient; 
@@ -47,8 +46,7 @@ public class PollingService extends Service {
     }  
   
     @Override  
-    public void onCreate() {  
-    	myDeviceId = ((TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE)).getDeviceId();
+    public void onCreate() {
     	sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
     	
     	mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
@@ -158,7 +156,8 @@ public class PollingService extends Service {
 			    	String custom_host = "www.wlwdw.com";
 			    	if(sharedPref.getBoolean("enable_custom_host",false))
 			    		custom_host = sharedPref.getString("custom_host","www.wlwdw.com");
-			    	String GET_URL = "https://" + custom_host  + "/trail/new/" + myDeviceId + "/"
+					String appUUID = sharedPref.getString("app_uuid",null);
+			    	String GET_URL = "https://" + custom_host  + "/trail/new/" + appUUID + "/"
 			    			+ Double.toString(wgs.longitude) + "/" + Double.toString(wgs.latitude);
 			    	try {
 						readContentFromGet(GET_URL);
