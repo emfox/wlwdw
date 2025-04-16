@@ -72,7 +72,12 @@ public class MapActivity extends AppCompatActivity {
 				// TODO 自动生成的方法存根
 				
 			}
-        });
+
+			@Override
+			public void onMapStatusChangeStart(MapStatus mapStatus, int i) {
+
+			}
+		});
         
 		//恢复地图中心点和缩放等级
 		centerLatLng = new LatLng(getDouble(sharedPref,"CenterLat",29.3),getDouble(sharedPref,"CenterLng",117.5));

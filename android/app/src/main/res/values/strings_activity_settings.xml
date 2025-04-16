@@ -8,9 +8,9 @@
     <!-- General settings -->
     <string name="pref_header_general">General</string>
     <string name="pref_title_enable_custom_host">启用自定义服务器</string>
-    <string name="pref_description_enable_custom_host">如不启用，默认使用 www.wlwdw.com</string>
+    <string name="pref_description_enable_custom_host">如不启用，默认使用 wlwdw.rpwt.org</string>
     <string name="pref_title_custom_host">自定义服务器地址</string>
-    <string name="pref_default_custom_host">www.wlwdw.com</string>
+    <string name="pref_default_custom_host">wlwdw.rpwt.org</string>
 
     <!-- settings for Data & Sync -->
     <string name="pref_title_sync_frequency">定位上报频率</string>

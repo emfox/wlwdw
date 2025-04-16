@@ -32,5 +32,5 @@
 		602：key mcode不匹配\n
 		501～700：key验证失败\n</string>
     <string name="title_activity_message">消息</string>
-
+    <string name="action_background">根据相关监管要求，在静默状态下或在后台运行时，如非服务所必需或无合理应用场景，不得收集用户信息</string>
 </resources>

@@ -5,11 +5,14 @@ android {
 
     defaultConfig {
         applicationId "com.wlwdw.gps1s"
-        minSdkVersion 14
+        minSdkVersion 22
         targetSdkVersion 30
     }
-
     buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
@@ -24,7 +27,8 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation files('libs/BaiduLBS_Android.jar')
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Map:7.6.4'
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.4'
     implementation files('libs/yunba-sdk-release1.3.5.jar')
 }
 java {
