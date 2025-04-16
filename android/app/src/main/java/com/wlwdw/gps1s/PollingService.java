@@ -50,9 +50,13 @@ public class PollingService extends Service {
     	sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
     	
     	mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);
-    	
-        mLocationClient = new LocationClient(this);
-		mMyLocationListener = new MyLocationListener();
+
+        try {
+            mLocationClient = new LocationClient(this);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        mMyLocationListener = new MyLocationListener();
 		mLocationClient.registerLocationListener(mMyLocationListener);
         mLCoption = new LocationClientOption();
 		setNewLocOption();
