@@ -147,11 +147,15 @@ public class LocationActivity extends AppCompatActivity {
 			
 			@Override
 			public void onClick(View v) {
-				// TODO Auto-generated method stub
-				InitLocation();
-				System.out.println("Start polling once");  
-				PollingUtils.PollingOnce(LocationActivity.this, PollingService.class);
-				
+				if(isLocPolling){
+					locService.requestLocation();
+				}else {
+					LocationClientOption mOption = locService.getOption();
+					mOption.setOnceLocation(true);
+					//FIXME: set ANY option cause API error with code 162.
+					//LocService.setLocationOption(mOption);
+					locService.start();
+				}
 			}
 		});
 		selectMode = (RadioGroup)findViewById(R.id.selectMode);
@@ -257,17 +261,6 @@ public class LocationActivity extends AppCompatActivity {
 		// TODO Auto-generated method stub
 		super.onStop();
 
-	}
-
-	private void InitLocation(){
-		
-		sharedEditor.putInt("LocationMode", tempMode);
-		sharedEditor.putString("CoorType", tempcoor);
-				
-		interval = Integer.parseInt(sharedPref.getString("sync_frequency", "2"));
-
-		sharedEditor.putBoolean("NeedAddr", checkGeoLocation.isChecked());
-		sharedEditor.apply();
 	}
 	
 	private void startBlackService() {

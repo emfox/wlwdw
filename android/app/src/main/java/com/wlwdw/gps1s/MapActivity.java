@@ -97,7 +97,7 @@ public class MapActivity extends AppCompatActivity {
 	    .longitude(getDouble(sharedPref,"LocLng",120.15)).build();
 		mBaiduMap.setMyLocationData(locData); 
 
-		PollingUtils.PollingOnce(MapActivity.this, PollingService.class);
+		//PollingUtils.PollingOnce(MapActivity.this, PollingService.class);
 	}
 
 	@Override

@@ -120,7 +120,7 @@ public class YunbaReceiver extends BroadcastReceiver {
 					String appUUID = sharedPref.getString("app_uuid","");
 					String GET_URL = "https://" + custom_host  + "/message/" + msgid + "/" + appUUID;
 			    	try {
-						String url_result = PollingService.readContentFromGet(GET_URL);
+						String url_result = LocationActivity.readContentFromGet(GET_URL);
 						JSONObject result1 = (JSONObject)new JSONTokener(url_result).nextValue();
 						JSONObject result2 = (JSONObject)new JSONTokener(result1.getString("message")).nextValue();
 						Message notify_main = Message.obtain();
