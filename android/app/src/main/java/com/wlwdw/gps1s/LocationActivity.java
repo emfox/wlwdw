@@ -6,6 +6,7 @@ import io.yunba.android.manager.YunBaManager;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 
+import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
@@ -37,6 +38,11 @@ import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.UUID;
 
 public class LocationActivity extends AppCompatActivity {
@@ -64,7 +70,7 @@ public class LocationActivity extends AppCompatActivity {
 
 	private LocService locService;
 	private boolean isLocPolling;
-	
+	private LatLng wgs;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -112,6 +118,11 @@ public class LocationActivity extends AppCompatActivity {
 		notification.defaults = Notification.DEFAULT_SOUND; //设置为默认的声音
 
 		locService = ((LocationApplication) getApplication()).locService;
+		LocationClientOption mOption = locService.getOption();
+		mOption.setIsNeedAddress(sharedPref.getBoolean("NeedAddr", false));
+		mOption.setCoorType(sharedPref.getString("CoorType", "bd09ll"));
+		//FIXME: set ANY option cause API error with code 162.
+		//LocService.setLocationOption(mOption);
 		boolean isRegSuccess = locService.registerListener(mListener);
 
 		checkGeoLocation.setChecked(sharedPref.getBoolean("NeedAddr", false));
@@ -289,7 +300,6 @@ public class LocationActivity extends AppCompatActivity {
 		@Override
 		public void onReceiveLocation(BDLocation location) {
 
-			// TODO Auto-generated method stub
 			if (null != location && location.getLocType() != BDLocation.TypeServerError) {
 				int tag = 1;
 				StringBuffer sb = new StringBuffer(256);
@@ -383,13 +393,34 @@ public class LocationActivity extends AppCompatActivity {
 						break;
 				}
 				LabelErrcode.setText(errString);
-				double lng = location.getLatitude();
-				double lat = location.getLongitude();
+				wgs = CoordsTrans.bd2wgs(new LatLng(location.getLatitude(),location.getLongitude()));
+				double lng = wgs.longitude;
+				double lat = wgs.latitude;
 				LabelLatLng.setText( lng + "," + lat );
 				double gauss[] = CoordsTrans.ToGaussProj(lng, lat);
 				LabelGauss.setText(Math.round(gauss[0]) + "," + Math.round(gauss[1]));
 				LabelRadius.setText(Float.toString(location.getRadius()));
 				LocResult.setText(sb.toString());
+
+				new Thread(new Runnable(){
+					@Override
+					public void run() {
+						// 拼凑get请求的URL字串，使用URLEncoder.encode对特殊和不可见字符进行编码
+						String custom_host = getString(R.string.pref_default_custom_host);
+						if(sharedPref.getBoolean("enable_custom_host",false))
+							custom_host = sharedPref.getString("custom_host",custom_host);
+						String appUUID = sharedPref.getString("app_uuid",null);
+						String GET_URL = "https://" + custom_host  + "/trail/new/" + appUUID + "/"
+								+ Double.toString(wgs.longitude) + "/" + Double.toString(wgs.latitude);
+						try {
+							String r = readContentFromGet(GET_URL);
+							System.out.println(r);
+						} catch (IOException e) {
+							// TODO 自动生成的 catch 块
+							e.printStackTrace();
+						}
+					}
+				}).start();
 			}
 		}
 
@@ -449,7 +480,28 @@ public class LocationActivity extends AppCompatActivity {
 			System.out.println(sb.toString());
 		}
 	};
-
+	public static String readContentFromGet(String getURL) throws IOException {
+		URL getUrl = new URL(getURL);
+		// 根据拼凑的URL，打开连接，URL.openConnection函数会根据URL的类型，
+		// 返回不同的URLConnection子类的对象，这里URL是一个http，因此实际返回的是HttpURLConnection
+		HttpURLConnection connection = (HttpURLConnection) getUrl
+				.openConnection();
+		// 进行连接，但是实际上get request要在下一句的connection.getInputStream()函数中才会真正发到
+		// 服务器
+		connection.connect();
+		// 取得输入流，并使用Reader读取
+		BufferedReader reader = new BufferedReader(new InputStreamReader(
+				connection.getInputStream()));
+		StringBuffer sb = new StringBuffer(256);
+		String line;
+		while ((line = reader.readLine()) != null) {
+			sb.append(line);
+		}
+		reader.close();
+		// 断开连接
+		connection.disconnect();
+		return sb.toString();
+	}
 	public static int checkPermission(Context context, String permission) {
 
 		boolean allowedByPermission = true;
