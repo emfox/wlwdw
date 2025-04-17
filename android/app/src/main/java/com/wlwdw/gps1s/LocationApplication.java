@@ -19,7 +19,6 @@ import com.baidu.mapapi.common.BaiduMapSDKException;
  */
 public class LocationApplication extends Application {
 	public LocService locService;
-    public Vibrator mVibrator;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -32,7 +31,5 @@ public class LocationApplication extends Application {
             e.printStackTrace();
         }
         SDKInitializer.setCoordType(CoordType.BD09LL);
-
-        mVibrator =(Vibrator)getApplicationContext().getSystemService(Service.VIBRATOR_SERVICE);
     }
 }

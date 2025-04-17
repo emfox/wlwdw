@@ -25,7 +25,7 @@ import android.content.pm.PackageManager;
 
 import android.os.Build;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
+import androidx.preference.PreferenceManager;
 import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -96,25 +96,10 @@ public class LocationActivity extends AppCompatActivity {
 
 		//设置后台定位
 		//android8.0及以上使用NotificationUtils
-		if (Build.VERSION.SDK_INT >= 26) {
-			mNotificationUtils = new NotificationUtils(this);
-			Notification.Builder builder2 = mNotificationUtils.getAndroidChannelNotification
-					("适配android 8限制后台定位功能", "正在后台定位");
-			notification = builder2.build();
-		} else {
-			//获取一个Notification构造器
-			Notification.Builder builder = new Notification.Builder(LocationActivity.this);
-			Intent nfIntent = new Intent(LocationActivity.this, LocationActivity.class);
-
-			builder.setContentIntent(PendingIntent.
-							getActivity(LocationActivity.this, 0, nfIntent, PendingIntent.FLAG_IMMUTABLE)) // 设置PendingIntent
-					.setContentTitle("适配android 8限制后台定位功能") // 设置下拉列表里的标题
-					.setSmallIcon(R.drawable.ic_launcher) // 设置状态栏内的小图标
-					.setContentText("正在后台定位") // 设置上下文内容
-					.setWhen(System.currentTimeMillis()); // 设置该通知发生的时间
-
-			notification = builder.build(); // 获取构建好的Notification
-		}
+		mNotificationUtils = new NotificationUtils(this);
+		Notification.Builder builder2 = mNotificationUtils.getAndroidChannelNotification
+				("适配android 8限制后台定位功能", "正在后台定位");
+		notification = builder2.build();
 		notification.defaults = Notification.DEFAULT_SOUND; //设置为默认的声音
 
 		locService = ((LocationApplication) getApplication()).locService;
@@ -339,8 +324,6 @@ public class LocationActivity extends AppCompatActivity {
 					sb.append(location.getSatelliteNumber());// 卫星数目
 					sb.append("\nheight : ");
 					sb.append(location.getAltitude());// 海拔高度 单位：米
-					sb.append("\ngps status : ");
-					sb.append(location.getGpsAccuracyStatus());// *****gps质量判断*****
 					sb.append("\ndescribe : ");
 					sb.append("gps定位成功");
 				} else if (location.getLocType() == BDLocation.TypeNetWorkLocation) {// 网络定位结果
@@ -349,8 +332,6 @@ public class LocationActivity extends AppCompatActivity {
 						sb.append("\nheight : ");
 						sb.append(location.getAltitude());// 单位：米
 					}
-					sb.append("\noperationers : ");// 运营商信息
-					sb.append(location.getOperators());
 					sb.append("\ndescribe : ");
 					sb.append("网络定位成功");
 				} else if (location.getLocType() == BDLocation.TypeOffLineLocation) {// 离线定位结果
