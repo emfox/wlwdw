@@ -80,7 +80,7 @@ public class LocationActivity extends AppCompatActivity {
 		if(sharedPref.getString("app_uuid", "").isEmpty()) {
 			sharedEditor.putString("app_uuid",UUID.randomUUID().toString());
 		}
-		startBlackService();
+		//startBlackService();
 		setContentView(R.layout.location);
 		LabelTime = (TextView)findViewById(R.id.LabelTime);
 		LabelErrcode = (TextView)findViewById(R.id.LabelErrcode);
@@ -107,7 +107,7 @@ public class LocationActivity extends AppCompatActivity {
 			Intent nfIntent = new Intent(LocationActivity.this, LocationActivity.class);
 
 			builder.setContentIntent(PendingIntent.
-							getActivity(LocationActivity.this, 0, nfIntent, 0)) // 设置PendingIntent
+							getActivity(LocationActivity.this, 0, nfIntent, PendingIntent.FLAG_IMMUTABLE)) // 设置PendingIntent
 					.setContentTitle("适配android 8限制后台定位功能") // 设置下拉列表里的标题
 					.setSmallIcon(R.drawable.ic_launcher) // 设置状态栏内的小图标
 					.setContentText("正在后台定位") // 设置上下文内容
