@@ -4,7 +4,6 @@ namespace App\Form;
 
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
 
 class CategoryType extends AbstractType
 {
@@ -28,22 +27,5 @@ class CategoryType extends AbstractType
             ->add('devid',null,array('label' => '设备编号','required' => false))
         ;
     }
-    
-    /**
-     * @param OptionsResolverInterface $resolver
-     */
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
-    {
-        $resolver->setDefaults(array(
-            'data_class' => '\Entity\Category'
-        ));
-    }
 
-    /**
-     * @return string
-     */
-    public function getName()
-    {
-        return 'emfox_gpsbundle_category';
-    }
 }
