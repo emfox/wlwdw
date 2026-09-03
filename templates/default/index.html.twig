@@ -28,11 +28,9 @@
 </style>
 {% endblock %} {% block javascripts %}
 <script type="text/javascript"
-	src="{{ asset('js/jquery-1.5.2.min.js') }}"></script>
+	src="{{ asset('js/jquery-3.7.1.min.js') }}"></script>
 <script type="text/javascript"
-	src="{{ asset('js/jquery.cookie.js') }}"></script>
-<script type="text/javascript"
-	src="{{ asset('js/jquery.ztree.all-3.5.min.js') }}"></script>
+	src="{{ asset('js/jquery.ztree.all-3.5.48.min.js') }}"></script>
 <script type="text/javascript"
 	src="{{ asset('js/coords_trans.js') }}"></script>
 <script type="text/javascript"
@@ -57,7 +55,13 @@ var Marker_Blank = "{{ asset('images/Marker_Blank.png') }}";
 var Marker_Pin = "{{ asset('images/Marker_Pin.png') }}";
 var Anchor_Path = "{{ asset('images/anchors/') }}";
 var ztreeStatusCookieKey ='ztree-log-status-gps1s';
-$.cookie.defaults.path = '/';
+function wlwdwGetCookie(name) {
+    var m = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/+^])/g, '\\$1') + '=([^;]*)'));
+    return m ? decodeURIComponent(m[1]) : undefined;
+}
+function wlwdwSetCookie(name, value) {
+    document.cookie = name + '=' + encodeURIComponent(value) + '; path=/';
+}
 var zTreeObj;
 //zTree 的参数配置
 var zTreeSetting = { callback:{onClick:zTreeOnClick,onExpand:logStatus,onCollapse:logStatus},
@@ -145,19 +149,37 @@ if(interval > 0)
 function reloadAll(){
 	$.when(
 		$.get("{{ path('anchor_list') }}", function (data) {
-			anchorNodes = $.parseJSON(data).anchor;
+			anchorNodes = JSON.parse(data).anchor;
 		}),
     	$.get("{{ path('category_hierarchy') }}", function (data) {
-        	zNodes = $.parseJSON(data).ztree;
+        	zNodes = JSON.parse(data).ztree;
+        	cleanEmptyChildren(zNodes);
         })
 ).then(function(){
     reloadzTree();
     reloadOverlay();
 })
 }
+
+// 后端对叶子节点输出 children: []，zTree 3.5.48+ 会把"存在空 children 数组"
+// 的节点误判为可展开的父节点（显示展开按钮但点开无内容）。
+// 递归清掉空 children，让叶子节点按叶子渲染（bottom_docu）。
+function cleanEmptyChildren(nodes) {
+	if(!nodes) return;
+	for (var i = 0; i < nodes.length; i++) {
+		var n = nodes[i];
+		if (n.children) {
+			if (n.children.length === 0) {
+				delete n.children;
+			} else {
+				cleanEmptyChildren(n.children);
+			}
+		}
+	}
+}
 function reloadzTree(){
     zTreeObj = $.fn.zTree.init($("#jsonTree"), zTreeSetting, zNodes);
-    var opennodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+    var opennodes = (wlwdwGetCookie(ztreeStatusCookieKey) && wlwdwGetCookie(ztreeStatusCookieKey).split(',') )|| [];
 
 	if(opennodes !== null && opennodes.length !== 0)
 	{
@@ -182,13 +204,13 @@ function zTreeOnClick(event, treeId, treeNode) {
 	//FIXME: 12377 is just a placeholder,
 	//FIXME: Better to use FOSJsRoutingBundle for exporting Symfony Routes to Javascript.
     $.get("{{ path('trail_list',{'catid':12377}) }}".replace(/12377/,treeNode.id), function (data) {
-    	addTrail($.parseJSON(data).trail);
+    	addTrail(JSON.parse(data).trail);
 	});
 };
 
 
 function addDiyDom(treeId, treeNode) {
-	if (treeNode.children.length == 0) return;
+	if (!treeNode.children || treeNode.children.length == 0) return;
 	var aObj = $("#" + treeNode.tId + "_a");
 	var editStr = "<input type='button' id='diyBtn_" + treeNode.id
 		+ "' value='当前位置' onfocus='this.blur();' />";
@@ -200,7 +222,7 @@ function addDiyDom(treeId, treeNode) {
 function logStatus(event, treeId, treeNode)
 {
 
-	var _nodes = ($.cookie(ztreeStatusCookieKey) && $.cookie(ztreeStatusCookieKey).split(',') )|| [];
+	var _nodes = (wlwdwGetCookie(ztreeStatusCookieKey) && wlwdwGetCookie(ztreeStatusCookieKey).split(',') )|| [];
 	var _index = $.inArray(treeNode.id + '', _nodes);
 
 	if(treeNode.open && _index === -1)
@@ -212,7 +234,7 @@ function logStatus(event, treeId, treeNode)
 		_nodes.splice(_index, 1);
 	}
 
-	$.cookie(ztreeStatusCookieKey, _nodes.join(','));
+	wlwdwSetCookie(ztreeStatusCookieKey, _nodes.join(','));
 }
 
 </script>
