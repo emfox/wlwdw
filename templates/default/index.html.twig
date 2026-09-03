@@ -12,8 +12,11 @@
 }
 
 #map {
-	float: left;
-	top: 0px;
+	/* 不用 float：当页面出现垂直滚动条时，JS 按视口硬编码的 float 宽度
+	   会超过容器可用宽度导致 #map 换行掉到左侧栏下方。
+	   这里用 margin-left 让位 + 块级自动宽度，可随滚动条自适应且永不换行。 */
+	margin-left: 180px;
+	overflow: hidden;
 }
 .labels {
 	color: black;
@@ -194,10 +197,10 @@ function reloadzTree(){
 
 function checkSize() {
 	var h = document.documentElement.clientHeight - $('#main').offset().top - $('#footer').height();
-	var w = document.documentElement.clientWidth - $('#aside').width() -1;
 	document.getElementById('aside').style.height = h + "px";
 	document.getElementById('map').style.height = h + "px";
-	document.getElementById('map').style.width = w + "px";
+	// #map 的宽度不再由 JS 硬编码：交给 CSS margin-left + 块级自动宽度，
+	// 避免出现垂直滚动条（可用宽度收窄）时 float 换行导致地图被挤到下方。
 	}
 
 function zTreeOnClick(event, treeId, treeNode) {
