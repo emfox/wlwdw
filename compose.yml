@@ -24,7 +24,11 @@ services:
             dockerfile_inline: |
                 FROM php:8.4-fpm
                 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-                RUN install-php-extensions pdo_mysql intl
+                # unzip for composer while deploying, not necessary on running
+                RUN install-php-extensions pdo_mysql intl \
+                    && apt-get update \
+                    && apt-get install -y --no-install-recommends unzip \
+                    && rm -rf /var/lib/apt/lists/*
         volumes:
             - "web_data:/var/www/html"
         networks:
