@@ -31,8 +31,8 @@ security:
 
     access_control:
         - { path: ^/login$, role: PUBLIC_ACCESS }
-        - { path: ^/register, role: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/resetting, role: IS_AUTHENTICATED_ANONYMOUSLY }
+        - { path: ^/register, role: PUBLIC_ACCESS }
+        - { path: ^/resetting, role: PUBLIC_ACCESS }
         - { path: ^/user/, role: ROLE_ADMIN }
         - { path: ^/category/hierarchy, role: ROLE_USER }
         - { path: ^/category/, role: ROLE_ADMIN }
@@ -41,8 +41,8 @@ security:
         - { path: ^/trail/new, role: PUBLIC_ACCESS }
         - { path: ^/trail/, role: ROLE_USER }
         - { path: ^/message/send, role: ROLE_USER }
-        - { path: ^/message, role: IS_AUTHENTICATED_ANONYMOUSLY }
-        - { path: ^/_wdt/, role: IS_AUTHENTICATED_ANONYMOUSLY } #unprotect dev-toolbar so to redirect to right page.
+        - { path: ^/message, role: PUBLIC_ACCESS }
+        - { path: ^/_wdt/, role: PUBLIC_ACCESS } #unprotect dev-toolbar so to redirect to right page.
         - { path: ^/main, role: ROLE_USER }
         - { path: ^/, role: ROLE_USER }
         #- { path: ^/login, roles: IS_AUTHENTICATED_ANONYMOUSLY, requires_channel: https }
