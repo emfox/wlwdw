@@ -69,11 +69,7 @@ class TrailController extends AbstractController
 				array('time'=>'DESC'),
 				30
 		);
-		if(!$entities)
-		{
-			$response = array("code" => 403, "success" => false, "message"=>"Category not found");
-			return new Response(json_encode($response, JSON_THROW_ON_ERROR));
-		}
+		$trail = array();
 		foreach($entities as $entity)
 		{
 			$id = $entity->getId();

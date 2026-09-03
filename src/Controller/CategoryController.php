@@ -261,7 +261,7 @@ class CategoryController extends AbstractController
     			$repo->moveDown($entity,TRUE);
     			break;
     		default:
-    			throw $this->NotAllowedException('No method found');
+    			throw new \Symfony\Component\HttpKernel\Exception\BadRequestHttpException('Unsupported direction: '.$direction);
     	}
     	
     	$em->flush();

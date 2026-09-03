@@ -84,6 +84,10 @@ class MessageController extends AbstractController {
 		$em = $this->managerRegistry->getManager();
 		$message = $em->getRepository('App\Entity\Message')->find($id);
 		
+		if(!$message){
+			$response = array("code" => 404, "success" => false, "message"=>"Message not found");
+			return new Response(json_encode($response, JSON_THROW_ON_ERROR), Response::HTTP_NOT_FOUND);
+		}
 		//direct authenticate user via devid
 		if($message->getRecipient() != $devid){
 			$response = array("code" => 403, "success" => false, "message"=>"Device Unauthorized");
