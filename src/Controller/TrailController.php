@@ -43,6 +43,12 @@ class TrailController extends AbstractController
 				array('catid'=>$category->getId()),
 				array('time'=>'ASC')
 		);
+		if (null === $trail) {
+			// No history yet (e.g. trail rows were wiped): seed one instead of
+			// crashing on the null below.
+			$trail = new Trail();
+			$trail->setCatid($category->getId());
+		}
 		$trail->setTime($category->getUpdatetime());
 		$trail->setLat($category->getLat());
 		$trail->setLng($category->getLng());
