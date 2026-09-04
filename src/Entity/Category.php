@@ -47,11 +47,11 @@ class Category
     private $root;
 
     #[Gedmo\TreeParent]
-    #[ORM\ManyToOne(targetEntity: \Category::class, inversedBy: 'children')]
+    #[ORM\ManyToOne(targetEntity: Category::class, inversedBy: 'children')]
     #[ORM\JoinColumn(name: 'parent_id', referencedColumnName: 'id', onDelete: 'CASCADE')]
     private $parent;
 
-    #[ORM\OneToMany(targetEntity: \Category::class, mappedBy: 'parent')]
+    #[ORM\OneToMany(targetEntity: Category::class, mappedBy: 'parent')]
     #[ORM\OrderBy(['lft' => 'ASC'])]
     private $children;
 

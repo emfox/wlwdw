@@ -7,7 +7,6 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Attribute\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Template;
 use App\Entity\Category;
 use App\Form\CategoryType;
 use App\Entity\Trail;
@@ -30,7 +29,7 @@ class CategoryController extends AbstractController
      * Lists all Category entities via ajax.
      */
     #[Route(path: '/category/hierarchy', name: 'category_hierarchy', methods: ['GET'])]
-    public function hierarchy($root = null): Response
+    public function hierarchy(): Response
 	{
 		$em = $this->managerRegistry->getManager();
 		$repo = $em->getRepository('App\Entity\Category');
