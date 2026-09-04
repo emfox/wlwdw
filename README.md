@@ -20,7 +20,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 ## Install
-Running fine on Php 8.4 and Symfony 7.4.
+Running fine on Php 8.4 and Symfony 8.1.
 
 1. Generate a local config `.env.local` from the `.env` template with random
    secrets filled in automatically. The file is gitignored so it never gets

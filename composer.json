@@ -4,11 +4,11 @@
 	"type" : "project",
 	"description" : "Wlwdw device location recoder and viewer",
 	"require" : {
-		"php": "^8.2",
+		"php": "^8.4",
 		"ext-ctype": "*",
 		"ext-iconv": "*",
-		"doctrine/doctrine-bundle": "^2.0",
-		"doctrine/orm": "^2.7",
+		"doctrine/doctrine-bundle": "^3.0",
+		"doctrine/orm": "^3.0",
 		"gedmo/doctrine-extensions": "^3.2",
 		"monolog/monolog": "*",
 		"stof/doctrine-extensions-bundle": "*",
@@ -30,8 +30,8 @@
 		"twig/twig": "^3.0"
 	},
 	"require-dev" : {
-		"doctrine/doctrine-fixtures-bundle": "^3.3",
-		"doctrine/doctrine-migrations-bundle": "^3.0",
+		"doctrine/doctrine-fixtures-bundle": "^4.0",
+		"doctrine/doctrine-migrations-bundle": "^4.0",
 		"rector/rector": "^2.0",
 		"symfony/maker-bundle": "*",
 		"symfony/stopwatch": "*",
@@ -75,7 +75,7 @@
 	"extra": {
 		"symfony": {
 			"allow-contrib": false,
-			"require": "7.4.*"
+			"require": "8.1.*"
 		}
 	}
 }
