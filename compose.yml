@@ -29,6 +29,12 @@ services:
                     && apt-get update \
                     && apt-get install -y --no-install-recommends unzip \
                     && rm -rf /var/lib/apt/lists/*
+        environment:
+            # Always run the app in prod mode here. The .env template defaults
+            # to APP_ENV=dev; without this override a compose deploy would boot
+            # the kernel in dev (Web Profiler/debug pages exposed). For local
+            # debugging against this stack, temporarily set APP_ENV=dev here.
+            - APP_ENV=prod
         volumes:
             - "web_data:/var/www/html"
         networks:
