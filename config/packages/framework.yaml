@@ -15,6 +15,11 @@ framework:
         cookie_secure: auto
         cookie_samesite: lax
 
+    # Explicitly keep the current default; the implicit default will flip
+    # to false in Symfony 8.0 (and not setting it is deprecated since 7.3).
+    property_info:
+        with_constructor_extractor: true
+
     fragments: true
     php_errors:
         log: true
