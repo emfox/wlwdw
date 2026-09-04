@@ -74,6 +74,26 @@ class LoginControllerTest extends AbstractAppTestCase
         self::assertResponseRedirects('/login', 302);
     }
 
+    public function testLoginWithoutCsrfTokenIsRejected(): void
+    {
+        $this->createAdmin();
+        $client = $this->client();
+
+        // Submit the form directly, omitting the _csrf_token field entirely.
+        $client->request('POST', '/login', [
+            '_username' => 'admin',
+            '_password' => 'test-pass',
+        ]);
+
+        // The CSRF failure must not authenticate: redirect back to /login.
+        self::assertResponseRedirects('/login', 302);
+
+        // And a follow-up request proves the session is still anonymous.
+        $client->followRedirect();
+        $client->request('GET', '/user/');
+        self::assertResponseRedirects('/login', 302);
+    }
+
     public function testProtectedRouteRedirectsAnonymousUserToLogin(): void
     {
         $client = $this->client();

@@ -23,6 +23,10 @@ security:
             form_login:
                 login_path: app_login
                 check_path: app_login
+                enable_csrf: true
+                # The default token id used by the login form below; change in
+                # sync with the hidden field in templates/login/index.html.twig.
+                csrf_token_id: authenticate
             logout:
                 path: /logout
                 # where to redirect after logout
