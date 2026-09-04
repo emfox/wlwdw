@@ -30,9 +30,13 @@
 		"twig/twig": "^3.0"
 	},
 	"require-dev" : {
+		"dama/doctrine-test-bundle": "^8.6",
 		"doctrine/doctrine-fixtures-bundle": "^4.0",
 		"doctrine/doctrine-migrations-bundle": "^4.0",
+		"phpunit/phpunit": "^12.0",
 		"rector/rector": "^2.0",
+		"symfony/browser-kit": "*",
+		"symfony/css-selector": "*",
 		"symfony/maker-bundle": "*",
 		"symfony/stopwatch": "*",
 		"symfony/web-profiler-bundle": "*"
@@ -67,6 +71,11 @@
 		],
 		"post-update-cmd": [
 			"@auto-scripts"
+		],
+		"test": [
+			"@php -r \"@unlink('var/test.db');\"",
+			"@php bin/console doctrine:schema:create --env=test --no-interaction",
+			"phpunit"
 		]
 	},
 	"conflict": {

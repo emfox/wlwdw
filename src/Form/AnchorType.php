@@ -24,13 +24,20 @@ class AnchorType extends AbstractType
     }
     public function getIconChoices()
     {
-    	$icon_path = 'images/anchors';
-    	$icon_asset_path = '/images/anchors/';
-    	$dh  = opendir($icon_path);
-    	while (false !== ($filename = readdir($dh))) {
-    		if($filename != '.' && $filename != '..')
-                $icons_choices['<img src="' . $icon_asset_path . $filename . '" />'] = $filename;
-    	}
-    	return $icons_choices;
+        // Resolve from the project root instead of relying on the process CWD
+        // (PHP-FPM and test runners do not guarantee it points to public/).
+        $icon_path = __DIR__.'/../../public/images/anchors';
+        $icon_asset_path = '/images/anchors/';
+        $icons_choices = [];
+        if (is_dir($icon_path) && false !== ($dh = opendir($icon_path))) {
+            while (false !== ($filename = readdir($dh))) {
+                if ($filename != '.' && $filename != '..') {
+                    $icons_choices['<img src="'.$icon_asset_path.$filename.'" />'] = $filename;
+                }
+            }
+            closedir($dh);
+        }
+
+        return $icons_choices;
     }
 }

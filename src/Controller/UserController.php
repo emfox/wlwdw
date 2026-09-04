@@ -51,7 +51,7 @@ class UserController extends AbstractController
 
         if ($form->isValid()) {
         	$password = $form->get('password')->getData();
-        	if(strlen($password)==0)
+        	if (null === $password || '' === $password)
         		$password='000000';
                 $hashed = $hasher->hashPassword($entity, $password);
                 $entity->setPassword($hashed);
