@@ -11,7 +11,7 @@
 # Downloaded files are stored byte-for-byte identical to upstream.
 #
 # Usage:
-#   bin/vendor-libs.sh [command] [lib] [version]
+#   bin/update_frontend_vendors.sh [command] [lib] [version]
 #
 # Commands:
 #   status              show installed version of every library
@@ -21,9 +21,9 @@
 #                       A specific version/ref can be given to pin one library.
 #
 # Examples:
-#   bin/vendor-libs.sh check
-#   bin/vendor-libs.sh update proj4
-#   bin/vendor-libs.sh update eviltransform 03ba58d92dfda57f8a1635f3805483c8fc10bd77
+#   bin/update_frontend_vendors.sh check
+#   bin/update_frontend_vendors.sh update proj4
+#   bin/update_frontend_vendors.sh update ztree 3.5.48
 #
 # Environment (only needed where the defaults are unreachable):
 #   RAW_BASE  base URL for raw.githubusercontent.com (mirror, e.g.
