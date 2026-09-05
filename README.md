@@ -53,6 +53,11 @@ mkdir -p mysql-data && docker compose up -d
    password afterwards from the user admin page, or edit the fixture first.
 7. `mysql -uroot -p < wlwdw-backup.sql` //optional, import database backup
 
+8. Optional: insert demo data. Re-running is safe,only adds or repairs `demo-*` data.
+```bash
+php bin/console app:seed-demo-data --apply # no --apply for dry run
+```
+
 ## Troubleshooting
 
 If enconter cache permisson problem, try clean cache:
