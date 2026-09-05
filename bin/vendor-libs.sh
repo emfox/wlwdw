@@ -44,15 +44,14 @@ GIT_BASE="${GIT_BASE:-https://github.com}"
 NPM_BASE="${NPM_BASE:-https://unpkg.com}"
 
 # lib | source | upstream | subpath | installed file
-#   source=github: upstream is "owner/repo", subpath inside repo,
-#                  VERSION stores the commit hash.
 #   source=npm:    upstream is the npm package name, subpath inside package,
 #                  VERSION stores the semantic version.
-# ztree needs a whole tree (js + css skin) and is distributed as the npm
-# package @ztree/ztree_v3, so it is synced from its tarball by sync_ztree()
-# and versioned by npm semver.
+#   source=github: upstream is "owner/repo" (kept for repos without an npm
+#                  release); VERSION stores the commit hash.
+# All three libraries below come from npm. ztree additionally needs a whole
+# tree (js + css skin), so it is pulled from the npm tarball by sync_ztree().
 LIBS=(
-    "eviltransform|github|googollee/eviltransform|javascript/transform.js|transform.js"
+    "eviltransform|npm|eviltransform|transform.js|transform.js"
     "proj4|npm|proj4|dist/proj4.js|proj4.js"
     "ztree|npm|@ztree/ztree_v3|js/jquery.ztree.all.min.js|jquery.ztree.all.min.js"
 )
