@@ -29,7 +29,10 @@
 #   RAW_BASE  base URL for raw.githubusercontent.com (mirror, e.g.
 #             https://ghfast.top/https://raw.githubusercontent.com)
 #   GIT_BASE  base host for git ls-remote (mirror, e.g. https://ghfast.top/https://github.com)
-#   NPM_BASE  base URL of the npm CDN (mirror, e.g. https://cdn.jsdelivr.net/npm)
+#   NPM_BASE      base URL of the npm CDN for version metadata (mirror,
+#                 e.g. https://cdn.jsdelivr.net/npm)
+#   NPM_REGISTRY  npm registry used for tarball downloads (mirror, e.g.
+#                 https://registry.npmmirror.com)
 #
 set -euo pipefail
 
@@ -45,9 +48,13 @@ NPM_BASE="${NPM_BASE:-https://unpkg.com}"
 #                  VERSION stores the commit hash.
 #   source=npm:    upstream is the npm package name, subpath inside package,
 #                  VERSION stores the semantic version.
+# ztree needs a whole tree (js + css skin) and is distributed as the npm
+# package @ztree/ztree_v3, so it is synced from its tarball by sync_ztree()
+# and versioned by npm semver.
 LIBS=(
     "eviltransform|github|googollee/eviltransform|javascript/transform.js|transform.js"
     "proj4|npm|proj4|dist/proj4.js|proj4.js"
+    "ztree|npm|@ztree/ztree_v3|js/jquery.ztree.all.min.js|jquery.ztree.all.min.js"
 )
 
 say() { printf '\033[1;32m%s\033[0m\n' "$*"; }
@@ -70,6 +77,36 @@ latest_npm() { # package -> latest version
 
 verify_eviltransform() { grep -q 'window\["eviltransform"\]' "$1"; }
 verify_proj4() { grep -q '"undefined"!=typeof module?module.exports=s()' "$1"; }
+
+sync_ztree() {
+    # zTree is distributed as the npm package @ztree/ztree_v3 (same upstream as
+    # the GitHub repo, versioned 3.5.48). It ships a whole tree, so we pull the
+    # npm tarball and copy the parts we use: js/jquery.ztree.all.min.js and the
+    # css/zTreeStyle skin (css + images). VERSION stores the npm semver.
+    local pkg="@ztree/ztree_v3" name="ztree" ver pname
+    ver="${1:-$(latest_npm "$pkg")}"
+    [[ -z "$ver" ]] && { err "cannot resolve latest version of $pkg"; exit 1; }
+    pname="${pkg##*/}"
+
+    work="$(mktemp -d)"   # global: EXIT trap runs after locals are gone
+    trap 'rm -rf "$work"' EXIT
+
+    NPM_REGISTRY="${NPM_REGISTRY:-https://registry.npmjs.org}"
+    say "==> $name: fetching $pkg@$ver (npm tarball)"
+    curl -fsSL --max-time 90 "$NPM_REGISTRY/$pkg/-/$pname-$ver.tgz" -o "$work/pkg.tgz" \
+        || { err "download failed for $pkg@$ver"; exit 1; }
+    tar -xzf "$work/pkg.tgz" -C "$work" || { err "tarball extraction failed"; exit 1; }
+    [[ -f "$work/package/js/jquery.ztree.all.min.js" ]] || { err "unexpected npm tarball layout"; exit 1; }
+
+    dest="$VENDOR_DIR/$name"
+    rm -rf "$dest/js" "$dest/css"
+    mkdir -p "$dest/js" "$dest/css"
+    cp "$work/package/js/jquery.ztree.all.min.js" "$dest/js/"
+    cp -R "$work/package/css/zTreeStyle" "$dest/css/zTreeStyle"
+
+    echo "$ver" > "$dest/VERSION"
+    say "==> $name: installed under $dest/ (npm version $ver)"
+}
 
 update_lib() {
     local name="$1" ver src url subpath file dest line
@@ -136,14 +173,22 @@ case "$cmd" in
         show_status
         ;;
     update)
+        update_one() {
+            if [[ "$1" == "ztree" ]]; then
+                sync_ztree "${2:-}"
+            else
+                update_lib "$1" "${2:-}"
+            fi
+        }
         if [[ -n "${2:-}" ]]; then
-            update_lib "$2" "${3:-}"
+            update_one "$2" "${3:-}"
         else
             for entry in "${LIBS[@]}"; do
                 IFS='|' read -r name _ <<< "$entry"
-                update_lib "$name"
+                update_one "$name"
             done
         fi
+        unset -f update_one
         ;;
     *)
         sed -n '2,26p' "$0" | sed 's/^# \{0,1\}//'
