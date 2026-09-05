@@ -30,7 +30,7 @@ function locLabel(){
   map.addOverlay(labelPos);
   map.addEventListener("mousemove",function(e){
       labelPos.setPosition(e.point);
-      var p=bd2wgs(e.point);
+      var p=eviltransform.bd2wgs(e.point.lat,e.point.lng);
       p.lng=Math.round(p.lng*1000000)/1000000;
       p.lat=Math.round(p.lat*1000000)/1000000;
       gauss = toGaussProj(p.lng,p.lat);
@@ -38,7 +38,7 @@ function locLabel(){
       labelPos.setContent(c);
   });
   map.addEventListener("click",function(e){
-      var p=bd2wgs(e.point);
+      var p=eviltransform.bd2wgs(e.point.lat,e.point.lng);
       p.lng=Math.round(p.lng*1000000)/1000000;
       p.lat=Math.round(p.lat*1000000)/1000000;
       gauss = toGaussProj(p.lng,p.lat);
@@ -59,7 +59,7 @@ function setCurLocation(treeNode){
     var bdpoints = new Array();
     Object.keys(nodes).forEach(function(key) {
         if(nodes[key].lat*nodes[key].lng !=0){
-            bdpoint = wgs2bd(nodes[key]);
+            bdpoint = eviltransform.wgs2bd(nodes[key].lat,nodes[key].lng);
             p = new BMap.Point(bdpoint.lng,bdpoint.lat);
             bdpoints.push(p);
         }
@@ -69,7 +69,7 @@ function setCurLocation(treeNode){
 }
 
 function addMarker_p(point){ //添加所有单位的当前点
-    bdpoint=wgs2bd(point);
+    bdpoint=eviltransform.wgs2bd(point.lat,point.lng);
     var p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     content = "<p>单位："+point.title+"</p><p>更新时间："+ point.updatetime.date+"</p>";
     var myIcon = new BMap.Icon(Marker_Pointer,
@@ -104,7 +104,7 @@ function addMarker_p(point){ //添加所有单位的当前点
 }
 
 function addMarker_t(point){ //添加某一单位的历史点
-    bdpoint=wgs2bd(point);
+    bdpoint=eviltransform.wgs2bd(point.lat,point.lng);
     var p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     var myIcon = new BMap.Icon(Marker_Pin,
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});
@@ -122,7 +122,7 @@ function addMarker_t(point){ //添加某一单位的历史点
 }
 
 function addMarker_a(point){ //添加固定参考点
-    bdpoint=wgs2bd(point);
+    bdpoint=eviltransform.wgs2bd(point.lat,point.lng);
     var p = new BMap.Point(bdpoint.lng,bdpoint.lat);
     var myIcon = new BMap.Icon(Anchor_Path + point.icon,
     	    new BMap.Size(32, 32), {anchor: new BMap.Size(16, 32)});

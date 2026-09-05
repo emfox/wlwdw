@@ -68,7 +68,7 @@ function locLabel(){
 		p.lat = e.latLng.lat();
 		p.lng = e.latLng.lng();
 		if(coordsType == "gcj"){
-			p=gcj2wgs(p);
+			p=eviltransform.gcj2wgs(p.lat,p.lng);
 		}
 		p.lng=Math.round(p.lng*1000000)/1000000;
 		p.lat=Math.round(p.lat*1000000)/1000000;
@@ -81,7 +81,7 @@ function locLabel(){
 		p.lat = e.latLng.lat();
 		p.lng = e.latLng.lng();
 		if(coordsType == "gcj"){
-			p=gcj2wgs(p);
+			p=eviltransform.gcj2wgs(p.lat,p.lng);
 		}
 		p.lng=Math.round(p.lng*1000000)/1000000;
 		p.lat=Math.round(p.lat*1000000)/1000000;
@@ -104,7 +104,7 @@ function setCurLocation(treeNode){
     Object.keys(nodes).forEach(function(key) {
         if(nodes[key].lat*nodes[key].lng !=0){
     		if(coordsType == "gcj"){
-    			ggpoint=wgs2gcj(nodes[key]);
+    			ggpoint=eviltransform.wgs2gcj(nodes[key].lat,nodes[key].lng);
     		}else{
     			ggpoint=nodes[key];
     		}
@@ -117,7 +117,7 @@ function setCurLocation(treeNode){
 
 function addMarker_p(point){ //添加所有单位的当前点
 	if(coordsType == "gcj"){
-		ggpoint=wgs2gcj(point);
+		ggpoint=eviltransform.wgs2gcj(point.lat,point.lng);
 	}else{
 		ggpoint = point;
 	}
@@ -171,7 +171,7 @@ function addMarker_p(point){ //添加所有单位的当前点
 
 function addMarker_t(point){ //添加某一单位的历史点
 	if(coordsType == "gcj"){
-		ggpoint=wgs2gcj(point);
+		ggpoint=eviltransform.wgs2gcj(point.lat,point.lng);
 	}else{
 		ggpoint = point;
 	}
@@ -202,7 +202,7 @@ function addMarker_t(point){ //添加某一单位的历史点
 
 function addMarker_a(point){ //添加固定参考点
 	if(coordsType == "gcj"){
-		ggpoint=wgs2gcj(point);
+		ggpoint=eviltransform.wgs2gcj(point.lat,point.lng);
 	}else{
 		ggpoint = point;
 	}
