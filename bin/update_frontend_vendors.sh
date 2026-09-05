@@ -43,17 +43,21 @@ RAW_BASE="${RAW_BASE:-https://raw.githubusercontent.com}"
 GIT_BASE="${GIT_BASE:-https://github.com}"
 NPM_BASE="${NPM_BASE:-https://unpkg.com}"
 
-# lib | source | upstream | subpath | installed file
+# lib | source | upstream | subpath | installed file | pinned version
 #   source=npm:    upstream is the npm package name, subpath inside package,
 #                  VERSION stores the semantic version.
 #   source=github: upstream is "owner/repo" (kept for repos without an npm
 #                  release); VERSION stores the commit hash.
-# All three libraries below come from npm. ztree additionally needs a whole
-# tree (js + css skin), so it is pulled from the npm tarball by sync_ztree().
+#   pinned version (optional): when set, `update` installs this version by
+#   default instead of npm latest. jquery is pinned to 3.7.1 because 4.0
+#   removes legacy APIs the app relies on; bump the pin explicitly to upgrade.
+# All libraries below come from npm. ztree additionally needs a whole tree
+# (js + css skin), so it is pulled from the npm tarball by sync_ztree().
 LIBS=(
-    "eviltransform|npm|eviltransform|transform.js|transform.js"
-    "proj4|npm|proj4|dist/proj4.js|proj4.js"
-    "ztree|npm|@ztree/ztree_v3|js/jquery.ztree.all.min.js|jquery.ztree.all.min.js"
+    "eviltransform|npm|eviltransform|transform.js|transform.js|"
+    "jquery|npm|jquery|dist/jquery.min.js|jquery.min.js|3.7.1"
+    "proj4|npm|proj4|dist/proj4.js|proj4.js|"
+    "ztree|npm|@ztree/ztree_v3|js/jquery.ztree.all.min.js|jquery.ztree.all.min.js|"
 )
 
 say() { printf '\033[1;32m%s\033[0m\n' "$*"; }
@@ -108,16 +112,16 @@ sync_ztree() {
 }
 
 update_lib() {
-    local name="$1" ver src url subpath file dest line
+    local name="$1" ver src url subpath file pin dest line
     line="$(printf '%s\n' "${LIBS[@]}" | awk -F'|' -v n="$name" '$1==n')"
-    IFS='|' read -r _ src url subpath file <<< "$line"
+    IFS='|' read -r _ src url subpath file pin <<< "$line"
     if [[ -z "$src" ]]; then err "unknown library: $name"; exit 1; fi
 
     if [[ "$src" == "github" ]]; then
-        ver="${2:-$(latest_github "$url")}"
+        ver="${2:-${pin:-$(latest_github "$url")}}"
         [[ -z "$ver" ]] && { err "cannot resolve latest revision of $url"; exit 1; }
     else
-        ver="${2:-$(latest_npm "$url")}"
+        ver="${2:-${pin:-$(latest_npm "$url")}}"
         [[ -z "$ver" ]] && { err "cannot resolve latest version of $url"; exit 1; }
     fi
 
@@ -145,16 +149,24 @@ update_lib() {
 }
 
 show_status() {
-    printf '%-14s %-12s %s\n' 'LIBRARY' 'INSTALLED' 'LATEST'
+    printf '%-14s %-12s %-14s %s\n' 'LIBRARY' 'INSTALLED' 'TARGET' 'NOTE'
     for entry in "${LIBS[@]}"; do
-        IFS='|' read -r name src url _ <<< "$entry"
-        local latest
-        if [[ "$src" == "github" ]]; then latest="$(latest_github "$url" 2>/dev/null || echo '?')"; else latest="$(latest_npm "$url" 2>/dev/null || echo '?')"; fi
+        IFS='|' read -r name src url _ _ pin <<< "$entry"
+        local latest note=''
+        if [[ -n "$pin" ]]; then
+            latest="$pin"
+            note='(pinned)'
+        elif [[ "$src" == "github" ]]; then
+            latest="$(latest_github "$url" 2>/dev/null || echo '?')"
+        else
+            latest="$(latest_npm "$url" 2>/dev/null || echo '?')"
+        fi
         latest="${latest:-?}"
         local cur; cur="$(installed_version "$name")"
         local mark=''
-        [[ "$cur" != "(not installed)" && "$cur" != "$latest" && "$latest" != "?" ]] && mark=' <-- new version available'
-        printf '%-14s %-12s %s%s\n' "$name" "${cur:0:10}" "${latest:0:10}" "$mark"
+        [[ -n "$note" ]] && mark=" $note"
+        [[ -z "$note" && "$cur" != "(not installed)" && "$cur" != "$latest" && "$latest" != "?" ]] && mark=' <-- new version available'
+        printf '%-14s %-12s %-14s %s\n' "$name" "${cur:0:10}" "${latest:0:10}" "$mark"
     done
 }
 
