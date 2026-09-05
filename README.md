@@ -48,9 +48,18 @@ mkdir -p mysql-data && docker compose up -d
 3. `php composer.phar install` //if clone from git, after install composer
 4. `php bin/console doctrine:database:create`
 5. `php bin/console doctrine:schema:update --complete --force`
-6. `php bin/console doctrine:fixtures:load` //default user 'admin:admin'
-   (use --append to reserve data on update). Remember to change the admin
-   password afterwards from the user admin page, or edit the fixture first.
+6. Create an admin user. This command works in every environment, including
+   prod (the fixtures loader below only exists in dev/test):
+```bash
+php bin/console app:create-admin                        # prompts for a password
+php bin/console app:create-admin --username admin --password 'S3cret!x'  # or pass it
+```
+   If no password is given on a non-interactive shell, a random one is
+   generated and printed once. Re-running for an existing username refuses to
+   overwrite it. (Dev/test only alternative: `php bin/console
+   doctrine:fixtures:load` seeds the same default user 'admin' with password
+   'admin' -- use --append to reserve data on update, and change the password
+   afterwards from the user admin page.)
 7. `mysql -uroot -p < wlwdw-backup.sql` //optional, import database backup
 
 8. Optional: insert demo data. Re-running is safe,only adds or repairs `demo-*` data.
