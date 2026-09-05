@@ -13,7 +13,7 @@ class AppFixtures extends Fixture
 
     public function __construct(UserPasswordHasherInterface $passwordHasher)
     {
-        $this->hasher = $passwordHasher;
+        $this->passwordHasher = $passwordHasher;
     }
 
     public function load(ObjectManager $manager): void
@@ -21,7 +21,7 @@ class AppFixtures extends Fixture
         $userAdmin = new User();
         $userAdmin->setUsername('admin');
         $userAdmin->setEmail('admin@wlwdw.rpwt.org');
-        $userAdmin->setPassword($this->hasher->hashPassword($userAdmin,'admin'));
+        $userAdmin->setPassword($this->passwordHasher->hashPassword($userAdmin,'admin'));
         $userAdmin->setEnabled(true);
         $userAdmin->setRoles(array('ROLE_ADMIN'));
 
