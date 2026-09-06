@@ -78,7 +78,7 @@ public class LocationActivity extends AppCompatActivity {
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		sharedEditor = sharedPref.edit();
 		if(sharedPref.getString("app_uuid", "").isEmpty()) {
-			sharedEditor.putString("app_uuid",UUID.randomUUID().toString());
+			sharedEditor.putString("app_uuid",UUID.randomUUID().toString()).apply();
 		}
 		//startBlackService();
 		setContentView(R.layout.location);
@@ -359,6 +359,7 @@ public class LocationActivity extends AppCompatActivity {
 						break;
 					case 63:
 						errString = "定准失败。网络异常";
+						break;
 					case 68:
 						errString = "成功。通过缓存获取定位信息";
 						break;
