@@ -1,0 +1,7 @@
+# Local/secret files (never commit real credentials).
+#   Deploy: cp .env.example .env        then edit EMQX_ADMIN_PASSWORD
+#          cp etc/api_keys.example etc/api_keys   then replace the secret
+#   EMQX runtime data (configs, sessions, authz rules) lives in ./data.
+.env
+/etc/api_keys
+/data/

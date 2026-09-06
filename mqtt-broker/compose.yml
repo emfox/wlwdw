@@ -1,0 +1,75 @@
+# Self-hosted MQTT broker (EMQX) for wlwdw push notifications.
+#
+# Deployed as its OWN compose project (separate from the wlwdw app).
+# Android devices reach it as wss://mqtt.rpwt.org (443) through the shared
+# external nginx-proxy; the wlwdw php container publishes to it over the
+# shared wlwdw_default network as "emqx:1883". The loopback 1883 mapping is
+# only for local debugging on the host.
+#
+# Authentication and authorization are NOT configured here via environment
+# variables: EMQX cannot express the HTTP-auth request body template through
+# env vars, and the file-authorizer env path has validation issues. Instead
+# the broker is provisioned once over its REST API by bin/provision.sh (which
+# is idempotent and also removes EMQX's built-in default file authorizer that
+# would otherwise allow everything). The config then persists under ./data.
+#
+# Prerequisites:
+#   - DNS: mqtt.rpwt.org -> this server's public IP
+#   - external nginx-proxy network exists: docker network create nginx-proxy_default
+#   - a .env file in this directory (cp .env.example .env, set EMQX_ADMIN_PASSWORD)
+#   - an API key file (cp etc/api_keys.example etc/api_keys, replace the secret)
+#
+name: mqtt-broker
+
+services:
+    emqx:
+        image: emqx/emqx:5.8.1
+        restart: unless-stopped
+        environment:
+            # Route wss (port 443) via the shared nginx-proxy to EMQX ws listener.
+            - VIRTUAL_HOST=mqtt.rpwt.org
+            - LETSENCRYPT_HOST=mqtt.rpwt.org
+            - LETSENCRYPT_EMAIL=emfoxzhou@gmail.com
+            - VIRTUAL_PORT=8083
+
+            # Dashboard admin (dashboard itself stays internal-only).
+            - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+            - EMQX_DASHBOARD__DEFAULT_PASSWORD=${EMQX_ADMIN_PASSWORD}
+
+            # Bootstrap an API key for bin/provision.sh (read once on boot).
+            - EMQX_API_KEY__BOOTSTRAP_FILE=/opt/emqx/etc/api_keys
+
+            # Nothing may slip through if it is not explicitly allowed by the
+            # per-client ACL returned from wlwdw /mqtt/auth (see provision.sh).
+            - EMQX_AUTHORIZATION__NO_MATCH=deny
+
+        ports:
+            # MQTT for the wlwdw backend on the SAME host only (never public).
+            - "127.0.0.1:1883:1883"
+            # Management API / Dashboard (used by bin/provision.sh): bound to
+            # loopback only, never published to the network.
+            - "127.0.0.1:18083:18083"
+        volumes:
+            # Mount single files (NOT the whole etc dir, which would shadow
+            # EMQX's own emqx.conf etc).
+            - ./etc/api_keys:/opt/emqx/etc/api_keys:ro
+            # Persist runtime config (authn/authz created by provision.sh),
+            # authz rules, sessions, etc.
+            - ./data:/opt/emqx/data
+        networks:
+            - default
+            - nginx-proxy
+            # Join the wlwdw app network so its php container can publish to
+            # emqx:1883 by service name (the loopback 1883 mapping above is for
+            # local debugging on the host only).
+            - wlwdw
+
+networks:
+    nginx-proxy:
+        name: nginx-proxy_default
+        external: true
+    wlwdw:
+        # Created by the wlwdw compose project (name: wlwdw); start wlwdw
+        # first, or create it manually: docker network create wlwdw_default.
+        name: wlwdw_default
+        external: true
