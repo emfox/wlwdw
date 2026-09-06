@@ -36,7 +36,9 @@ cp .env .env.local \
    `DATABASE_URL` in `.env` already references `${DB_PASS}`, so it follows the
    generated value automatically. Finally edit `.env.local` and replace the
    `*_MAP_API_KEY` placeholders with the keys you obtained for Google Maps /
-   Baidu Maps.
+   Baidu Maps. If you use the realtime push feature (see "Realtime push (MQTT)"
+   below), also fill `MQTT_SERVER_PASSWORD` and `MQTT_DEVICE_SHARED_SECRET`
+   with the secrets you configured for the mqtt-broker deployment.
 
 2. Optional, if running via docker: write the generated DB password into the
    docker secret file, then bring the stack up.
@@ -66,6 +68,30 @@ php bin/console app:create-admin --username admin --password 'S3cret!x'  # or pa
 ```bash
 php bin/console app:seed-demo-data --apply # no --apply for dry run
 ```
+
+## Realtime push (MQTT)
+
+`/message/send` persists a message row per recipient (devid) and publishes a
+realtime notification (`{"id": <row id>}`) to the device's MQTT topic so the
+Android client can pull the body via `/message/{id}/{devid}`.
+
+The broker is deployed from the **`mqtt-broker/` directory in this repo**
+(EMQX, same host; see its README for the full step-by-step setup):
+
+- Devices connect to `wss://mqtt.rpwt.org/mqtt` (443, via the shared
+  nginx-proxy). Credentials: username = device id (devid), password = the
+  shared device secret (`MQTT_DEVICE_SHARED_SECRET`).
+- This backend publishes to the broker over the shared `wlwdw_default`
+  docker network as `emqx:1883` (service name), using the `mqtt-server`
+  account (`MQTT_SERVER_USER`/`MQTT_SERVER_PASSWORD`).
+- EMQX authenticates every CONNECT by calling back
+  `https://wlwdw.rpwt.org/mqtt/auth` (see `MqttAuthController`); the response
+  carries a per-client ACL limiting a device to its own devid topic plus the
+  broadcast topic `all` (the `mqtt-broker` deployment wires this up via its
+  `bin/provision.sh`).
+
+The MQTT settings live in `.env`/`.env.local` under `### MQTT push`, and
+`compose.yml` overrides `MQTT_BROKER_HOST` for the php container.
 
 ## Troubleshooting
 

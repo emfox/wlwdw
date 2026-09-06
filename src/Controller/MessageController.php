@@ -7,7 +7,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Model\Yunba;
+use App\Service\MessagePublisherInterface;
 use App\Entity\Message;
 
 /**
@@ -18,63 +18,50 @@ class MessageController extends AbstractController {
      * @var \Doctrine\Persistence\ManagerRegistry
      */
     private $managerRegistry;
-    public function __construct(\Doctrine\Persistence\ManagerRegistry $managerRegistry)
-    {
+    private MessagePublisherInterface $publisher;
+
+    public function __construct(
+        \Doctrine\Persistence\ManagerRegistry $managerRegistry,
+        MessagePublisherInterface $publisher
+    ) {
         $this->managerRegistry = $managerRegistry;
+        $this->publisher = $publisher;
     }
+
     /**
      * Send Message direct to clients.
+     *
+     * Persists one Message per recipient (devid) and pushes a realtime
+     * notification {"id": <message row id>} to the device's MQTT topic.
+     * The client pulls the body via message_show; a failed push is only
+     * logged (the message stays available for later pulls).
      */
     #[Route(path: '/message/send', name: 'message_send')]
     public function Send(Request $request): Response {
-
-		$yunba = new Yunba ( array (
-				"appkey" => "53e491034e9f46851d5a573a" 
-		) );
-		// 初始化
-		$yunba->init ( function ($success): void {
-			echo "[YunBa]init " . ($success ? "success" : "fail") . "\n";
-		} );
-		
-		// 连接
-		$yunba->connect ( function ($success): void {
-			if ($success) {
-				echo "[YunBa]connect success\n";
-			} else {
-				echo "[YunBa]connect fail\n";
-			}
-		} );
-		
-		//Should really wait until fully connected with yunba server
-		sleep(1);
-		
-		$msg = $request->request->get('msg');
-		$topics = explode(',', $request->request->get('topics'));
+		$msg = (string) $request->request->get('msg');
+		$topics = explode(',', (string) $request->request->get('topics'));
 		$em = $this->managerRegistry->getManager();
 
-		foreach($topics as $topic){
-			
+		foreach ($topics as $topic) {
+			$topic = trim($topic);
+			if ($topic === '') {
+				continue;
+			}
+
 			$message = new Message();
 			$message->setRecipient($topic);
 			$message->setTime(new DateTime());
 			$message->setContent($msg);
-			
+
 			$em->persist($message);
 			$em->flush();
-			$yunba->publish(array(
-					"topic" => $topic,
-					"qos" => 2,
-					"msg" => strval($message->getId())
-			), function ($success): void {
-				echo "[YunBa]publish1 " . ($success ? "success" : "fail") . "\n";
-			});
+
+			$this->publisher->publish($topic, ['id' => $message->getId()]);
 		}
-		
-		$yunba->disconnect();
-		
+
 		return new Response($msg);
 	}
-	
+
 	/**
      * show specific Message.
      */
@@ -82,7 +69,7 @@ class MessageController extends AbstractController {
     public function show($id,$devid): Response{
 		$em = $this->managerRegistry->getManager();
 		$message = $em->getRepository('App\Entity\Message')->find($id);
-		
+
 		if(!$message){
 			$response = array("code" => 404, "success" => false, "message"=>"Message not found");
 			return new Response(json_encode($response, JSON_THROW_ON_ERROR), Response::HTTP_NOT_FOUND);

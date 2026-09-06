@@ -35,6 +35,11 @@ services:
             # the kernel in dev (Web Profiler/debug pages exposed). For local
             # debugging against this stack, temporarily set APP_ENV=dev here.
             - APP_ENV=prod
+            # MQTT push: the broker container (mqtt-broker project) joins this
+            # project's default network, so the php container reaches it by
+            # its compose service name over that shared network.
+            - MQTT_BROKER_HOST=emqx
+            - MQTT_BROKER_PORT=1883
         volumes:
             - "web_data:/var/www/html"
         networks:
@@ -74,7 +79,11 @@ configs:
     nginx.conf:
         content: |
             server {
-                server_name wlwdw.rpwt.org;
+                # Public host is wlwdw.rpwt.org; "web" lets the co-located EMQX
+                # broker reach /mqtt/auth by its internal service name (the
+                # broker's HTTP auth callback uses http://web/mqtt/auth), and
+                # "localhost" for in-container self-checks.
+                server_name wlwdw.rpwt.org web localhost;
                 root /var/www/html/public;
                 location / {
                     # try to serve file directly, fallback to index.php

@@ -25,6 +25,9 @@
         <server name="DATABASE_URL" value="sqlite:///%kernel.project_dir%/var/test.db" force="true" />
         <server name="GOOGLE_MAP_API_KEY" value="" force="true" />
         <server name="BAIDU_MAP_API_KEY" value="" force="true" />
+        <server name="MQTT_SERVER_USER" value="mqtt-server" force="true" />
+        <server name="MQTT_SERVER_PASSWORD" value="mqtt-server-test-pass" force="true" />
+        <server name="MQTT_DEVICE_SHARED_SECRET" value="mqtt-device-test-secret" force="true" />
     </php>
 
     <testsuites>

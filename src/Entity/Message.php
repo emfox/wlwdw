@@ -22,7 +22,7 @@ class Message
     /**
      * @var integer
      */
-    #[ORM\Column(name: 'recipient', type: 'string', length: 30)]
+    #[ORM\Column(name: 'recipient', type: 'string', length: 40)]
     private $recipient;
 
     /**

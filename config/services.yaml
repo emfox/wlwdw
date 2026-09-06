@@ -17,3 +17,23 @@ services:
             - '../src/Kernel.php'
 
     # Doctrine Extension listeners to handle behaviors
+
+    # MQTT push (self-hosted EMQX) wiring
+    App\Service\MqttPublisher:
+        arguments:
+            $host: '%env(MQTT_BROKER_HOST)%'
+            $port: '%env(int:MQTT_BROKER_PORT)%'
+            $username: '%env(MQTT_SERVER_USER)%'
+            $password: '%env(MQTT_SERVER_PASSWORD)%'
+
+    # EMQX CONNECT authentication callback
+    App\Controller\MqttAuthController:
+        arguments:
+            $deviceSharedSecret: '%env(MQTT_DEVICE_SHARED_SECRET)%'
+            $serverPassword: '%env(MQTT_SERVER_PASSWORD)%'
+
+when@test:
+    services:
+        # Swap the real MQTT publisher for a recording spy in functional tests.
+        App\Tests\Service\SpyMessagePublisher: ~
+        App\Service\MessagePublisherInterface: '@App\Tests\Service\SpyMessagePublisher'

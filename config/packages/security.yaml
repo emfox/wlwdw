@@ -34,6 +34,9 @@ security:
             provider: app_user_provider
 
     access_control:
+        # EMQX broker authentication callback: self-validating (credential
+        # check inside the controller), no session required.
+        - { path: ^/mqtt/auth, role: PUBLIC_ACCESS }
         - { path: ^/login$, role: PUBLIC_ACCESS }
         - { path: ^/user/, role: ROLE_ADMIN }
         - { path: ^/category/hierarchy, role: ROLE_USER }
