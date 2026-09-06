@@ -9,6 +9,10 @@ build/
 # Local configuration file (sdk path, etc)
 local.properties
 
+# Local secrets (MQTT device shared secret etc). Read by gradle at build time;
+# must never be committed. See gradle-local.properties.example for the format.
+gradle-local.properties
+
 # Log/OS Files
 *.log
 

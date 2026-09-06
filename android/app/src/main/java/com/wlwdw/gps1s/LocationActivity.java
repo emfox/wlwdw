@@ -1,11 +1,6 @@
 package com.wlwdw.gps1s;
 
 
-import io.yunba.android.manager.YunBaManager;
-
-import org.eclipse.paho.client.mqttv3.IMqttActionListener;
-import org.eclipse.paho.client.mqttv3.IMqttToken;
-
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.location.BDAbstractLocationListener;
@@ -80,7 +75,9 @@ public class LocationActivity extends AppCompatActivity {
 		if(sharedPref.getString("app_uuid", "").isEmpty()) {
 			sharedEditor.putString("app_uuid",UUID.randomUUID().toString()).apply();
 		}
-		//startBlackService();
+		// Start the realtime message push service (foreground MQTT connection).
+		requestNotificationPermissionIfNeeded();
+		MqttPushService.start(this);
 		setContentView(R.layout.location);
 		LabelTime = (TextView)findViewById(R.id.LabelTime);
 		LabelErrcode = (TextView)findViewById(R.id.LabelErrcode);
@@ -248,25 +245,12 @@ public class LocationActivity extends AppCompatActivity {
 
 	}
 	
-	private void startBlackService() {
-		YunBaManager.start(getApplicationContext());
-		
-		IMqttActionListener listener = new IMqttActionListener() {
-			
-			@Override
-			public void onSuccess(IMqttToken asyncActionToken) {
-				Log.d("Yunba", "Subscribe succeeded");
-			}
-			
-			@Override
-			public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
-				String msg =  "Subscribe failed : " + exception.getMessage();
-				Log.d("Yunba", msg);
-			}
-		};
-		
-		String appUUID = sharedPref.getString("app_uuid","");
-		YunBaManager.subscribe(getApplicationContext(), new String[]{"all", appUUID}, listener);
+	private void requestNotificationPermissionIfNeeded() {
+		// Android 13+ needs a runtime grant before we can post notifications.
+		if (Build.VERSION.SDK_INT >= 33
+				&& checkPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == 0) {
+			requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 100);
+		}
 	}
 
 	private final BDAbstractLocationListener mListener = new BDAbstractLocationListener() {

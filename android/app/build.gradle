@@ -1,5 +1,18 @@
 apply plugin: 'com.android.application'
 
+// Local secrets for the MQTT device credential. Read from the untracked
+// ../gradle-local.properties (see gradle-local.properties.example); a missing
+// file falls back to the placeholder so the project still builds from a fresh
+// checkout without ever committing a real secret. Keep MQTT_DEVICE_SHARED_SECRET
+// identical to the server-side .env / .env.local of the wlwdw app.
+def localProps = new Properties()
+def localPropsFile = file('../gradle-local.properties')
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { localProps.load(it) }
+}
+def mqttDeviceSharedSecret = localProps.getProperty(
+        'MQTT_DEVICE_SHARED_SECRET', 'wlwdw-device-secret-CHANGE-ME')
+
 android {
     compileSdkVersion 33
 
@@ -7,6 +20,11 @@ android {
         applicationId "com.wlwdw.gps1s"
         minSdkVersion 26
         targetSdkVersion 33
+        buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
+                "\"${mqttDeviceSharedSecret}\""
+    }
+    buildFeatures {
+        buildConfig true
     }
     buildTypes {
         debug {
@@ -29,9 +47,13 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Map:7.6.4'
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.4'
-    implementation files('libs/yunba-sdk-release1.3.5.jar')
     implementation 'androidx.preference:preference:1.2.0'
     implementation 'com.google.android.material:material:1.4.+'
+    // MQTT push over WSS to the self-hosted EMQX broker. HiveMQ client supports
+    // MQTT over WebSockets (Paho Java does not); the -shaded artifact bundles
+    // its transitive netty deps under a renamed package to avoid conflicts on
+    // Android.
+    implementation 'com.hivemq:hivemq-mqtt-client-shaded:1.4.0'
 }
 java {
     toolchain {
