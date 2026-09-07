@@ -2,7 +2,7 @@ name: wlwdw
 
 services:
     web:
-        image: nginx:1.27
+        image: nginx:1.30
         depends_on:
             - php
             - mysql
@@ -48,7 +48,7 @@ services:
         networks:
             - default
     emqx:
-        # Self-hosted MQTT broker for wlwdw push notifications (EMQX 5.8.1).
+        # Self-hosted MQTT broker for wlwdw push notifications (EMQX 5.8 LTS).
         # Devices reach it as wss://mqtt.rpwt.org (443) through the shared
         # external nginx-proxy; the php container publishes to it as emqx:1883
         # over this project's default network. The loopback 1883 mapping is
@@ -62,7 +62,7 @@ services:
         #   - bootstrap API key: config "emqx_api_keys" renders
         #     "dev_key:<${EMQX_API_KEY_SECRET}>" to /opt/emqx/etc/api_keys
         #     (read once on boot).
-        image: emqx/emqx:5.8.1
+        image: emqx/emqx:5.8.8
         restart: unless-stopped
         environment:
             # Route wss (port 443) via the shared nginx-proxy to EMQX ws listener.
