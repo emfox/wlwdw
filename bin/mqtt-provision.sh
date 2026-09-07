@@ -18,10 +18,11 @@
 #      devices, allow all for mqtt-server).
 #
 # Usage:
-#   EMQX_API_KEY=name:secret ./bin/mqtt-provision.sh [--url http://web/mqtt/auth]
+#   ./bin/mqtt-provision.sh [--url http://web/mqtt/auth]
 #
-# The key comes from var/emqx_api_keys (bootstrap, derived by bin/docker-secrets.sh) or
-# the EMQX_API_KEY env var.
+# The API key is "dev_key:<EMQX_API_KEY_SECRET>" (the name compose.yml's
+# emqx_api_keys config bootstraps into EMQX on first boot); the secret is read
+# from .env, or the whole "name:secret" can be passed via EMQX_API_KEY.
 #
 # The auth callback URL defaults to the wlwdw nginx service ("web") on this
 # project's default network. The emqx and web containers share that network
@@ -34,17 +35,18 @@ set -euo pipefail
 API_BASE="${EMQX_API_BASE:-http://127.0.0.1:18083/api/v5}"
 AUTH_URL="${1:-http://web/mqtt/auth}"
 
-# Resolve the API key from the env or from var/emqx_api_keys (first non-comment line).
+# Resolve the API key: EMQX_API_KEY env var wins; otherwise read the secret
+# from .env and prepend the "dev_key:" name that compose bootstraps.
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -n "${EMQX_API_KEY:-}" ]]; then
     api_key="$EMQX_API_KEY"
 else
-    api_key="$(awk 'NF && $0 !~ /^[ \t]*#/ {print; exit}' "$here/../var/emqx_api_keys" 2>/dev/null)"
-fi
-if [[ -z "${api_key:-}" ]]; then
-    echo "ERROR: no API key. Either set EMQX_API_KEY=name:secret or run:" >&2
-    echo "  ./bin/docker-secrets.sh   # derives var/emqx_api_keys from .env.local" >&2
-    exit 1
+    secret="$(sed -n 's/^EMQX_API_KEY_SECRET=//p' "$here/../.env" 2>/dev/null | head -n1 | tr -d '"')"
+    if [[ -z "$secret" ]]; then
+        echo "ERROR: EMQX_API_KEY_SECRET not found in .env" >&2
+        exit 1
+    fi
+    api_key="dev_key:$secret"
 fi
 
 api() { # method path [json-body]
@@ -75,8 +77,9 @@ if ! api GET /authorization/sources >/dev/null 2>&1; then
     echo "  - the container was started before this compose change: run 'docker compose up -d' again" >&2
     echo "    so the 127.0.0.1:18083 mapping exists (check 'docker compose ps')" >&2
     echo "  - EMQX is still booting (watch 'docker compose logs -f emqx')" >&2
-    echo "  - the API key was not bootstrapped: EMQX imports var/emqx_api_keys only on" >&2
-    echo "    fresh data dir, so if you started it before creating the file, run:" >&2
+    echo "  - the API key was not bootstrapped: EMQX imports its bootstrap key" >&2
+    echo "    (rendered from EMQX_API_KEY_SECRET in .env) only on a fresh data" >&2
+    echo "    dir, so if you started it before the key existed, run:" >&2
     echo "      docker compose down && rm -rf mqtt-data && docker compose up -d" >&2
     exit 1
 fi

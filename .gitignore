@@ -2,8 +2,8 @@
 /mysql-data/
 
 # Self-hosted EMQX broker (emqx service in compose.yml): runtime data persists
-# here; the derived secret files (var/db_password, var/mqtt.env,
-# var/emqx_api_keys) are covered by the /var/ ignore below.
+# here. EMQX/MySQL credentials are read by compose.yml straight from .env (see
+# the env ignore below); no derived secret files.
 /mqtt-data/
 
 # Cache and log (Symfony4)
@@ -35,6 +35,9 @@
 /.web-server-pid
 
 ###> symfony/framework-bundle ###
+# .env holds real secrets locally (cp .env.example .env); .env.example and
+# .env.test stay tracked. Legacy .env.local is still ignored if you keep it.
+/.env
 /.env.local
 /.env.local.php
 /.env.*.local

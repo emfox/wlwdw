@@ -4,7 +4,7 @@ apply plugin: 'com.android.application'
 // ../gradle-local.properties (see gradle-local.properties.example); a missing
 // file falls back to the placeholder so the project still builds from a fresh
 // checkout without ever committing a real secret. Keep MQTT_DEVICE_SHARED_SECRET
-// identical to the server-side .env / .env.local of the wlwdw app.
+// identical to the server-side .env of the wlwdw app.
 def localProps = new Properties()
 def localPropsFile = file('../gradle-local.properties')
 if (localPropsFile.exists()) {

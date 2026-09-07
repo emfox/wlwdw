@@ -9,7 +9,7 @@ import java.nio.charset.StandardCharsets;
  * endpoint.
  *
  * Keep MQTT_DEVICE_SHARED_SECRET identical to the server-side
- * MQTT_DEVICE_SHARED_SECRET (.env / .env.local of the wlwdw app).
+ * MQTT_DEVICE_SHARED_SECRET (.env of the wlwdw app).
  */
 public final class MqttConfig {
     private MqttConfig() {

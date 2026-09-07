@@ -38,9 +38,9 @@ services:
             # MQTT push: the broker (emqx service below) shares this project's
             # default network, so the php container reaches it by the service
             # name over that network. The MQTT credentials are intentionally
-            # NOT injected here: Symfony loads them from .env/.env.local inside
-            # the container (see services.yaml %env()% arguments), so the real
-            # values in .env.local apply.
+            # NOT injected here: Symfony loads them from .env inside the
+            # container (see services.yaml %env()% arguments), so the real
+            # values in .env apply.
             - MQTT_BROKER_HOST=emqx
             - MQTT_BROKER_PORT=1883
         volumes:
@@ -62,16 +62,14 @@ services:
         # default file authorizer that would otherwise allow everything). The
         # config then persists under ./mqtt-data.
         #
-        # Secrets come from gitignored local files only (never the tracked
-        # .env template). Both are DERIVED from .env.local by
-        # bin/docker-secrets.sh (single source of truth, like var/db_password
-        # for MySQL), so do not edit them by hand: var/mqtt.env (env_file)
-        # carries the dashboard admin password; var/emqx_api_keys (bind) bootstraps
-        # the API key.
+        # Secrets come straight from .env (the gitignored real-secret file) via
+        # native compose mechanisms, no derived files:
+        #   - dashboard admin password: ${EMQX_DASHBOARD__DEFAULT_PASSWORD}
+        #   - management API key: config "emqx_api_keys" renders
+        #     "dev_key:<${EMQX_API_KEY_SECRET}>" to /opt/emqx/etc/api_keys
+        #     (EMQX reads that file once as its bootstrap key).
         image: emqx/emqx:5.8.1
         restart: unless-stopped
-        env_file:
-            - ./var/mqtt.env
         environment:
             # Route wss (port 443) via the shared nginx-proxy to EMQX ws listener.
             - VIRTUAL_HOST=mqtt.rpwt.org
@@ -81,7 +79,7 @@ services:
 
             # Dashboard admin (dashboard itself stays internal-only).
             - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
-            # Dashboard password comes from var/mqtt.env (env_file), not here.
+            - EMQX_DASHBOARD__DEFAULT_PASSWORD=${EMQX_DASHBOARD__DEFAULT_PASSWORD}
 
             # Bootstrap an API key for bin/mqtt-provision.sh (read once on boot).
             - EMQX_API_KEY__BOOTSTRAP_FILE=/opt/emqx/etc/api_keys
@@ -97,12 +95,12 @@ services:
             # to loopback only, never published to the network.
             - "127.0.0.1:18083:18083"
         volumes:
-            # Mount single files (NOT the whole dir, which would shadow EMQX's
-            # own etc contents).
-            - ./var/emqx_api_keys:/opt/emqx/etc/api_keys:ro
             # Persist runtime config (authn/authz created by mqtt-provision.sh),
             # authz rules, sessions, etc.
             - ./mqtt-data:/opt/emqx/data
+        configs:
+            - source: emqx_api_keys
+              target: /opt/emqx/etc/api_keys
         networks:
             - default
             - nginx-proxy
@@ -162,7 +160,12 @@ configs:
                 error_log /var/log/nginx/project_error.log;
                 access_log /var/log/nginx/project_access.log;
             }
+    # EMQX bootstrap API key: a single no-comment "name:secret" line rendered
+    # from .env (EMQX parses line 1 as the key; a comment would abort import).
+    emqx_api_keys:
+        content: dev_key:${EMQX_API_KEY_SECRET}
 
 secrets:
     db_password:
-        file: ./var/db_password
+        # MySQL root password, taken straight from .env (DB_PASS).
+        environment: "DB_PASS"

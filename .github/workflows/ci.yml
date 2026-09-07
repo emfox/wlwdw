@@ -40,6 +40,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-composer-
 
+      # .env is gitignored (real secrets); composer's auto-scripts run
+      # cache:clear on install, so the app needs a .env before that. The
+      # template placeholders are fine for CI (tests use .env.test values).
+      - name: Prepare .env from template
+        run: cp .env.example .env
+
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
 
