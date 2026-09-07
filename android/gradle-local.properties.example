@@ -1,10 +1,19 @@
 # Local secrets for Android build (NOT committed; see .gitignore).
 #
-# Copy this file to gradle-local.properties in this directory and fill in a
-# real value, matching the server-side MQTT_DEVICE_SHARED_SECRET in the wlwdw
-# app (.env). The backend's /mqtt/auth callback uses that secret to validate
-# every non-server (device) MQTT client, so this must be identical across
-# Android and server.
+# Copy this file to gradle-local.properties in this directory and fill in real
+# values:
 #
 #   cp gradle-local.properties.example gradle-local.properties
+#
+# MQTT_DEVICE_SHARED_SECRET
+#   Must match the server-side MQTT_DEVICE_SHARED_SECRET in the wlwdw app
+#   (.env). The backend's /mqtt/auth callback validates every non-server
+#   (device) MQTT client with it, so it must be identical across Android and
+#   server.
+#
+# BAIDU_MAP_AK
+#   Baidu Map/Location API key for this app's package (com.wlwdw.gps1s), bound
+#   to your signing SHA1 (debug + release) on the Baidu console. Without it the
+#   map/location SDK reports key errors (502/505/602).
 MQTT_DEVICE_SHARED_SECRET=change_me_same_as_server_env
+BAIDU_MAP_AK=change_me_baidu_map_ak

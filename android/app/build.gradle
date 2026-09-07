@@ -1,10 +1,12 @@
 apply plugin: 'com.android.application'
 
-// Local secrets for the MQTT device credential. Read from the untracked
-// ../gradle-local.properties (see gradle-local.properties.example); a missing
-// file falls back to the placeholder so the project still builds from a fresh
-// checkout without ever committing a real secret. Keep MQTT_DEVICE_SHARED_SECRET
-// identical to the server-side .env of the wlwdw app.
+// Local secrets for the MQTT device credential and the Baidu Map/Location API
+// key. Read from the untracked ../gradle-local.properties (see
+// gradle-local.properties.example); a missing file falls back to placeholders
+// so the project still builds from a fresh checkout without ever committing a
+// real secret. Keep MQTT_DEVICE_SHARED_SECRET identical to the server-side
+// .env of the wlwdw app, and BAIDU_MAP_AK bound to this app's package + signing
+// SHA1 on the Baidu console.
 def localProps = new Properties()
 def localPropsFile = file('../gradle-local.properties')
 if (localPropsFile.exists()) {
@@ -12,6 +14,7 @@ if (localPropsFile.exists()) {
 }
 def mqttDeviceSharedSecret = localProps.getProperty(
         'MQTT_DEVICE_SHARED_SECRET', 'wlwdw-device-secret-CHANGE-ME')
+def baiduMapAk = localProps.getProperty('BAIDU_MAP_AK', 'change_me_baidu_map_ak')
 
 android {
     compileSdkVersion 33
@@ -22,6 +25,9 @@ android {
         targetSdkVersion 33
         buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
                 "\"${mqttDeviceSharedSecret}\""
+        manifestPlaceholders = [
+                'BAIDU_MAP_AK': baiduMapAk,
+        ]
     }
     buildFeatures {
         buildConfig true

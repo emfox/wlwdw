@@ -38,6 +38,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class LocationActivity extends AppCompatActivity {
@@ -112,6 +114,9 @@ public class LocationActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View v) {
 				if (!isLocPolling) {
+					// Continuous (screen-off) tracking needs the background-location
+					// grant on Android 10+; ask here, in context of the start action.
+					ensureLocationPermissions();
 					locService.getClient().enableLocInForeground(1, notification);
 					locService.start();
 					startLocation.setText(getString(R.string.stoplocation));
@@ -245,6 +250,31 @@ public class LocationActivity extends AppCompatActivity {
 
 	}
 	
+	private static final int PERM_REQ_LOCATION = 200;
+
+	/**
+	 * Foreground location plus, on Android 10+, ACCESS_BACKGROUND_LOCATION so
+	 * fixes keep arriving while the screen is off and the app is backgrounded.
+	 * Called when the user starts continuous location; if the background part
+	 * is denied, fixes still work while this screen is visible.
+	 */
+	private void ensureLocationPermissions() {
+		List<String> missing = new ArrayList<>();
+		if (checkPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == 0) {
+			missing.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
+		}
+		if (checkPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == 0) {
+			missing.add(android.Manifest.permission.ACCESS_COARSE_LOCATION);
+		}
+		if (Build.VERSION.SDK_INT >= 29
+				&& checkPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == 0) {
+			missing.add(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+		}
+		if (!missing.isEmpty()) {
+			requestPermissions(missing.toArray(new String[0]), PERM_REQ_LOCATION);
+		}
+	}
+
 	private void requestNotificationPermissionIfNeeded() {
 		// Android 13+ needs a runtime grant before we can post notifications.
 		if (Build.VERSION.SDK_INT >= 33

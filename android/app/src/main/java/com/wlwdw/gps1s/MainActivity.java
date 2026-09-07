@@ -47,7 +47,6 @@ import java.util.regex.Pattern;
 public class MainActivity extends Activity {
     private final int SDK_PERMISSION_REQUEST = 127;
     private ListView FunctionList;
-    private String permissionInfo;
 
     private final int DIALOG_KEY_BACK = 1;
     private final int DIALOG_PERMISSION = 2;
@@ -154,41 +153,19 @@ public class MainActivity extends Activity {
     private void getPersimmions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             ArrayList<String> permissions = new ArrayList<String>();
-            /***
-             * 定位权限为必须权限，用户如果禁止，则每次进入都会申请
-             */
-            // 定位精确位置
+            // Foreground location (GPS + network). If denied it is re-asked on
+            // the next launch, since locating the device is the app's purpose.
+            // The background-location grant is requested from LocationActivity
+            // when the user actually starts continuous tracking (Android 10+).
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.ACCESS_FINE_LOCATION);
             }
             if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
                 permissions.add(Manifest.permission.ACCESS_COARSE_LOCATION);
             }
-            /*
-             * 读写权限和电话状态权限非必要权限(建议授予)只会申请一次，用户同意或者禁止，只会弹一次
-             */
-            // 读写权限
-            if (addPermission(permissions, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
-                permissionInfo += "Manifest.permission.WRITE_EXTERNAL_STORAGE Deny \n";
-            }
             if (permissions.size() > 0) {
                 requestPermissions(permissions.toArray(new String[permissions.size()]), SDK_PERMISSION_REQUEST);
             }
-        }
-    }
-
-    @TargetApi(23)
-    private boolean addPermission(ArrayList<String> permissionsList, String permission) {
-        // 如果应用没有获得对应权限,则添加到列表中,准备批量申请
-        if (checkSelfPermission(permission) != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationale(permission)) {
-                return true;
-            } else {
-                permissionsList.add(permission);
-                return false;
-            }
-        } else {
-            return true;
         }
     }
 
@@ -275,7 +252,7 @@ public class MainActivity extends Activity {
     private void onUsePermission() {
         if (!Utils.contains(this, Utils.SP_PERMISSION_DIALOG)) {
             Utils.putString(this, Utils.SP_PERMISSION_DIALOG, Utils.SP_PERMISSION_DIALOG);
-            showMissingPermissionDialog("定位SDK DEMO在使用时需要申请以下权限：", "1、定位权限，用于定位功能测试。\n2、读写权限，用于写入离线定位数据。\n", DIALOG_PERMISSION);
+            showMissingPermissionDialog("本应用需要使用定位权限", "定位权限用于确定并上报设备位置。\n开始持续定位（熄屏追踪）时，还会申请后台定位权限。\n", DIALOG_PERMISSION);
         }
     }
 
