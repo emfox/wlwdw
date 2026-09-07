@@ -36,7 +36,7 @@
 
 ###> symfony/framework-bundle ###
 # .env holds real secrets locally (cp .env.example .env); .env.example and
-# .env.test stay tracked. Legacy .env.local is still ignored if you keep it.
+# .env.test stay tracked.
 /.env
 /.env.local
 /.env.local.php

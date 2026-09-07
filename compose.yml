@@ -54,20 +54,14 @@ services:
         # over this project's default network. The loopback 1883 mapping is
         # only for local debugging on the host.
         #
-        # Authentication/authorization are NOT configured via environment
-        # variables: EMQX cannot express the HTTP-auth request body template
-        # through env vars, and the file-authorizer env path has validation
-        # issues. Instead the broker is provisioned once over its REST API by
-        # bin/mqtt-provision.sh (idempotent; also removes EMQX's built-in
-        # default file authorizer that would otherwise allow everything). The
-        # config then persists under ./mqtt-data.
+        # Provisioned once over the REST API by bin/mqtt-provision.sh
+        # (idempotent; config persists in ./mqtt-data).
         #
-        # Secrets come straight from .env (the gitignored real-secret file) via
-        # native compose mechanisms, no derived files:
+        # Credentials come from .env via compose mechanisms:
         #   - dashboard admin password: ${EMQX_DASHBOARD__DEFAULT_PASSWORD}
-        #   - management API key: config "emqx_api_keys" renders
+        #   - bootstrap API key: config "emqx_api_keys" renders
         #     "dev_key:<${EMQX_API_KEY_SECRET}>" to /opt/emqx/etc/api_keys
-        #     (EMQX reads that file once as its bootstrap key).
+        #     (read once on boot).
         image: emqx/emqx:5.8.1
         restart: unless-stopped
         environment:
