@@ -35,15 +35,77 @@ services:
             # the kernel in dev (Web Profiler/debug pages exposed). For local
             # debugging against this stack, temporarily set APP_ENV=dev here.
             - APP_ENV=prod
-            # MQTT push: the broker container (mqtt-broker project) joins this
-            # project's default network, so the php container reaches it by
-            # its compose service name over that shared network.
+            # MQTT push: the broker (emqx service below) shares this project's
+            # default network, so the php container reaches it by the service
+            # name over that network. The MQTT credentials are intentionally
+            # NOT injected here: Symfony loads them from .env/.env.local inside
+            # the container (see services.yaml %env()% arguments), so the real
+            # values in .env.local apply.
             - MQTT_BROKER_HOST=emqx
             - MQTT_BROKER_PORT=1883
         volumes:
             - "web_data:/var/www/html"
         networks:
             - default
+    emqx:
+        # Self-hosted MQTT broker for wlwdw push notifications (EMQX 5.8.1).
+        # Devices reach it as wss://mqtt.rpwt.org (443) through the shared
+        # external nginx-proxy; the php container publishes to it as emqx:1883
+        # over this project's default network. The loopback 1883 mapping is
+        # only for local debugging on the host.
+        #
+        # Authentication/authorization are NOT configured via environment
+        # variables: EMQX cannot express the HTTP-auth request body template
+        # through env vars, and the file-authorizer env path has validation
+        # issues. Instead the broker is provisioned once over its REST API by
+        # bin/mqtt-provision.sh (idempotent; also removes EMQX's built-in
+        # default file authorizer that would otherwise allow everything). The
+        # config then persists under ./mqtt-data.
+        #
+        # Secrets come from gitignored local files only (never the tracked
+        # .env template). Both are DERIVED from .env.local by
+        # bin/docker-secrets.sh (single source of truth, like var/db_password
+        # for MySQL), so do not edit them by hand: var/mqtt.env (env_file)
+        # carries the dashboard admin password; var/emqx_api_keys (bind) bootstraps
+        # the API key.
+        image: emqx/emqx:5.8.1
+        restart: unless-stopped
+        env_file:
+            - ./var/mqtt.env
+        environment:
+            # Route wss (port 443) via the shared nginx-proxy to EMQX ws listener.
+            - VIRTUAL_HOST=mqtt.rpwt.org
+            - LETSENCRYPT_HOST=mqtt.rpwt.org
+            - LETSENCRYPT_EMAIL=emfoxzhou@gmail.com
+            - VIRTUAL_PORT=8083
+
+            # Dashboard admin (dashboard itself stays internal-only).
+            - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+            # Dashboard password comes from var/mqtt.env (env_file), not here.
+
+            # Bootstrap an API key for bin/mqtt-provision.sh (read once on boot).
+            - EMQX_API_KEY__BOOTSTRAP_FILE=/opt/emqx/etc/api_keys
+
+            # Nothing may slip through if it is not explicitly allowed by the
+            # per-client ACL returned from web /mqtt/auth (see mqtt-provision.sh).
+            - EMQX_AUTHORIZATION__NO_MATCH=deny
+
+        ports:
+            # MQTT for the wlwdw backend on the SAME host only (never public).
+            - "127.0.0.1:1883:1883"
+            # Management API / Dashboard (used by bin/mqtt-provision.sh): bound
+            # to loopback only, never published to the network.
+            - "127.0.0.1:18083:18083"
+        volumes:
+            # Mount single files (NOT the whole dir, which would shadow EMQX's
+            # own etc contents).
+            - ./var/emqx_api_keys:/opt/emqx/etc/api_keys:ro
+            # Persist runtime config (authn/authz created by mqtt-provision.sh),
+            # authz rules, sessions, etc.
+            - ./mqtt-data:/opt/emqx/data
+        networks:
+            - default
+            - nginx-proxy
     mysql:
         image: mysql:8.4
         volumes:
@@ -103,4 +165,4 @@ configs:
 
 secrets:
     db_password:
-        file: ./var/db_password.txt
+        file: ./var/db_password

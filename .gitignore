@@ -1,6 +1,11 @@
 # docker compose volume and secrets
 /mysql-data/
 
+# Self-hosted EMQX broker (emqx service in compose.yml): runtime data persists
+# here; the derived secret files (var/db_password, var/mqtt.env,
+# var/emqx_api_keys) are covered by the /var/ ignore below.
+/mqtt-data/
+
 # Cache and log (Symfony4)
 /var/cache/*
 /var/log/*

@@ -3,9 +3,10 @@ package com.wlwdw.gps1s;
 import java.nio.charset.StandardCharsets;
 
 /**
- * MQTT push configuration (self-hosted EMQX broker, see the mqtt-broker
- * deployment). Devices authenticate as their devid with a shared secret that
- * the EMQX broker validates by calling back wlwdw's /mqtt/auth endpoint.
+ * MQTT push configuration (self-hosted EMQX broker, the emqx service of the
+ * wlwdw compose project). Devices authenticate as their devid with a shared
+ * secret that the EMQX broker validates by calling back wlwdw's /mqtt/auth
+ * endpoint.
  *
  * Keep MQTT_DEVICE_SHARED_SECRET identical to the server-side
  * MQTT_DEVICE_SHARED_SECRET (.env / .env.local of the wlwdw app).

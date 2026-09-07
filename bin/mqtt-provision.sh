@@ -3,8 +3,8 @@
 #
 # EMQX env vars cannot express the HTTP-auth request body template and the
 # file authorizer env path is buggy, so this script configures both over the
-# management API (configuration persists in ./data/configs/cluster.hocon and
-# survives restarts). It is idempotent: safe to re-run after redeploys.
+# management API (configuration persists in ./mqtt-data/configs/cluster.hocon
+# and survives restarts). It is idempotent: safe to re-run after redeploys.
 #
 # What it sets up:
 #   1. Removes EMQX's BUILT-IN default file authorizer, whose final
@@ -18,30 +18,32 @@
 #      devices, allow all for mqtt-server).
 #
 # Usage:
-#   EMQX_API_KEY=name:secret ./bin/provision.sh [--url http://web/mqtt/auth]
+#   EMQX_API_KEY=name:secret ./bin/mqtt-provision.sh [--url http://web/mqtt/auth]
 #
-# The key comes from etc/api_keys (bootstrap) or the EMQX_API_KEY env var.
+# The key comes from var/emqx_api_keys (bootstrap, derived by bin/docker-secrets.sh) or
+# the EMQX_API_KEY env var.
 #
-# The auth callback URL defaults to the wlwdw nginx service ("web") on the
-# shared wlwdw_default network. EMQX and the wlwdw web container are joined to
-# that network, so EMQX reaches /mqtt/auth directly over internal HTTP (no
-# TLS, no public round-trip, no cert verification). Override with --url only
-# if you deliberately want a public/external endpoint instead.
+# The auth callback URL defaults to the wlwdw nginx service ("web") on this
+# project's default network. The emqx and web containers share that network
+# (both services of the same compose project), so EMQX reaches /mqtt/auth
+# directly over internal HTTP (no TLS, no public round-trip, no cert
+# verification). Override with --url only if you deliberately want a
+# public/external endpoint instead.
 set -euo pipefail
 
 API_BASE="${EMQX_API_BASE:-http://127.0.0.1:18083/api/v5}"
 AUTH_URL="${1:-http://web/mqtt/auth}"
 
-# Resolve the API key from the env or from etc/api_keys (first non-comment line).
+# Resolve the API key from the env or from var/emqx_api_keys (first non-comment line).
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -n "${EMQX_API_KEY:-}" ]]; then
     api_key="$EMQX_API_KEY"
 else
-    api_key="$(awk 'NF && $0 !~ /^[ \t]*#/ {print; exit}' "$here/../etc/api_keys" 2>/dev/null)"
+    api_key="$(awk 'NF && $0 !~ /^[ \t]*#/ {print; exit}' "$here/../var/emqx_api_keys" 2>/dev/null)"
 fi
 if [[ -z "${api_key:-}" ]]; then
-    echo "ERROR: no API key. Either set EMQX_API_KEY=name:secret or create etc/api_keys:" >&2
-    echo "  cp etc/api_keys.example etc/api_keys   # then replace the secret" >&2
+    echo "ERROR: no API key. Either set EMQX_API_KEY=name:secret or run:" >&2
+    echo "  ./bin/docker-secrets.sh   # derives var/emqx_api_keys from .env.local" >&2
     exit 1
 fi
 
@@ -73,9 +75,9 @@ if ! api GET /authorization/sources >/dev/null 2>&1; then
     echo "  - the container was started before this compose change: run 'docker compose up -d' again" >&2
     echo "    so the 127.0.0.1:18083 mapping exists (check 'docker compose ps')" >&2
     echo "  - EMQX is still booting (watch 'docker compose logs -f emqx')" >&2
-    echo "  - the API key was not bootstrapped: EMQX imports etc/api_keys only on a" >&2
+    echo "  - the API key was not bootstrapped: EMQX imports var/emqx_api_keys only on" >&2
     echo "    fresh data dir, so if you started it before creating the file, run:" >&2
-    echo "      docker compose down && rm -rf data && docker compose up -d" >&2
+    echo "      docker compose down && rm -rf mqtt-data && docker compose up -d" >&2
     exit 1
 fi
 if api POST /authorization/sources '{"type":"built_in_database","enable":true}' >/dev/null 2>&1; then
