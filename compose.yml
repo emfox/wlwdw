@@ -93,8 +93,14 @@ services:
             # authz rules, sessions, etc.
             - ./mqtt-data:/opt/emqx/data
         configs:
+            # EMQX runs as a non-root user (uid/gid 1000), so the bootstrap
+            # key file must be readable by that uid (compose defaults to
+            # root:root 0440, which EMQX cannot open).
             - source: emqx_api_keys
               target: /opt/emqx/etc/api_keys
+              uid: "1000"
+              gid: "1000"
+              mode: 0440
         networks:
             - default
             - nginx-proxy
