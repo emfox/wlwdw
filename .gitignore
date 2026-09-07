@@ -1,11 +1,6 @@
 # docker compose volume and secrets
 /mysql-data/
 
-# Self-hosted EMQX broker (emqx service in compose.yml): runtime data persists
-# here. EMQX/MySQL credentials are read by compose.yml straight from .env (see
-# the env ignore below); no derived secret files.
-/mqtt-data/
-
 # Cache and log (Symfony4)
 /var/cache/*
 /var/log/*

@@ -3,8 +3,9 @@
 #
 # EMQX env vars cannot express the HTTP-auth request body template and the
 # file authorizer env path is buggy, so this script configures both over the
-# management API (configuration persists in ./mqtt-data/configs/cluster.hocon
-# and survives restarts). It is idempotent: safe to re-run after redeploys.
+# management API (configuration persists in the mqtt_data volume's
+# configs/cluster.hocon and survives restarts). It is idempotent: safe to
+# re-run after redeploys.
 #
 # What it sets up:
 #   1. Removes EMQX's BUILT-IN default file authorizer, whose final
@@ -80,7 +81,7 @@ if ! api GET /authorization/sources >/dev/null 2>&1; then
     echo "  - the API key was not bootstrapped: EMQX imports its bootstrap key" >&2
     echo "    (rendered from EMQX_API_KEY_SECRET in .env) only on a fresh data" >&2
     echo "    dir, so if you started it before the key existed, run:" >&2
-    echo "      docker compose down && rm -rf mqtt-data && docker compose up -d" >&2
+    echo "      docker compose down && docker volume rm wlwdw_mqtt_data && docker compose up -d" >&2
     exit 1
 fi
 if api POST /authorization/sources '{"type":"built_in_database","enable":true}' >/dev/null 2>&1; then

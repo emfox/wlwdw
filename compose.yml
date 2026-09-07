@@ -55,7 +55,7 @@ services:
         # only for local debugging on the host.
         #
         # Provisioned once over the REST API by bin/mqtt-provision.sh
-        # (idempotent; config persists in ./mqtt-data).
+        # (idempotent; config persists in the mqtt_data volume).
         #
         # Credentials come from .env via compose mechanisms:
         #   - dashboard admin password: ${EMQX_DASHBOARD__DEFAULT_PASSWORD}
@@ -89,9 +89,7 @@ services:
             # to loopback only, never published to the network.
             - "127.0.0.1:18083:18083"
         volumes:
-            # Persist runtime config (authn/authz created by mqtt-provision.sh),
-            # authz rules, sessions, etc.
-            - ./mqtt-data:/opt/emqx/data
+            - mqtt_data:/opt/emqx/data
         configs:
             # EMQX runs as a non-root user (uid/gid 1000), so the bootstrap
             # key file must be readable by that uid (compose defaults to
@@ -134,6 +132,8 @@ volumes:
             type: none
             device: ./mysql-data
             o: bind
+    # Named volume (not ./mqtt-data bind): seeded owned by emqx (uid 1000).
+    mqtt_data:
 
 configs:
     nginx.conf:
