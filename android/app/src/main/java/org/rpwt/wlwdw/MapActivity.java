@@ -1,6 +1,5 @@
 package org.rpwt.wlwdw;
 
-import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.map.BaiduMap;
 import com.baidu.mapapi.map.MapStatus;
 import com.baidu.mapapi.map.MapStatusUpdate;
@@ -43,8 +42,9 @@ public class MapActivity extends AppCompatActivity {
 		mLocalBroadcastManager = LocalBroadcastManager.getInstance(this);  
 		sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 		sharedEditor = sharedPref.edit();
-		
-		SDKInitializer.initialize(getApplicationContext());
+
+		// SDK 初始化统一走 Application（幂等、且尊重隐私同意状态），避免重复 initialize。
+		((LocationApplication) getApplication()).ensureBaiduSdkInitialized(this);
 
 		setContentView(R.layout.map);
 		mMapView = (MapView) findViewById(R.id.bmapView);

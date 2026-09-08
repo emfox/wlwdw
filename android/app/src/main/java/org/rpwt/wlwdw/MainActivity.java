@@ -64,8 +64,17 @@ public class MainActivity extends Activity {
     }
 
     private void initSDK(boolean status) {
-        LocationClient.setAgreePrivacy(status);
-        ((LocationApplication)getApplication()).locService = new LocService(getApplicationContext());
+        LocationApplication app = (LocationApplication) getApplication();
+        if (status) {
+            // 用户已同意隐私政策，才初始化百度 SDK 与定位服务。
+            app.ensureBaiduSdkInitialized(this);
+            LocationClient.setAgreePrivacy(true);
+            if (app.locService == null) {
+                app.locService = new LocService(getApplicationContext());
+            }
+        } else {
+            LocationClient.setAgreePrivacy(false);
+        }
 
         onUsePermission();
         getPersimmions();

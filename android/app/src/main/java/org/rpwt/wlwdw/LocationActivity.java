@@ -1,6 +1,7 @@
 package org.rpwt.wlwdw;
 
 
+import com.baidu.location.LocationClient;
 import com.baidu.location.LocationClientOption;
 import com.baidu.mapapi.model.LatLng;
 import com.baidu.location.BDAbstractLocationListener;
@@ -8,6 +9,7 @@ import com.baidu.location.BDLocation;
 import com.baidu.location.Poi;
 import com.baidu.location.PoiRegion;
 import org.rpwt.wlwdw.service.LocService;
+import org.rpwt.wlwdw.service.Utils;
 
 import android.app.Notification;
 import android.app.PendingIntent;
@@ -102,7 +104,23 @@ public class LocationActivity extends AppCompatActivity {
 		notification = builder2.build();
 		notification.defaults = Notification.DEFAULT_SOUND; //设置为默认的声音
 
-		locService = ((LocationApplication) getApplication()).locService;
+		LocationApplication app = (LocationApplication) getApplication();
+		locService = app.locService;
+		if (locService == null) {
+			// 进程被系统回收后可能经推送通知 / START_STICKY 直接重建本页，
+			// 而 locService 平时只在 MainActivity（用户同意隐私后）创建。
+			// 若已有同意记录则在此惰性补齐；否则引导回主页而非空指针崩溃。
+			if (Utils.getString(this, Utils.SP_PRIVACY_STATUS).equals("1")) {
+				app.ensureBaiduSdkInitialized(this);
+				LocationClient.setAgreePrivacy(true);
+				locService = new LocService(getApplicationContext());
+				app.locService = locService;
+			} else {
+				Toast.makeText(this, "请先同意隐私政策再进入定位", Toast.LENGTH_LONG).show();
+				finish();
+				return;
+			}
+		}
 		LocationClientOption mOption = locService.getOption();
 		mOption.setIsNeedAddress(sharedPref.getBoolean("NeedAddr", false));
 		mOption.setCoorType(sharedPref.getString("CoorType", "bd09ll"));
