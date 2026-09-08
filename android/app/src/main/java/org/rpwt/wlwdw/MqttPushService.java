@@ -107,7 +107,7 @@ public class MqttPushService extends Service {
                         // exclusively by the outer loop.
                         .useMqttVersion3()
                         .identifier(devid)
-                        .serverHost(MqttConfig.MQTT_HOST)
+                        .serverHost(MqttConfig.serverHost(MqttPushService.this))
                         .serverPort(MqttConfig.MQTT_PORT)
                         .webSocketConfig()
                             .serverPath(MqttConfig.MQTT_PATH)

@@ -74,9 +74,11 @@ Android client can pull the body via `/message/{id}/{devid}`.
 The broker is the **`emqx` service of `compose.yml`** (self-hosted EMQX 5.8).
 All MQTT settings live in `.env` under `### MQTT push`.
 
-- Devices connect to `wss://mqtt.rpwt.org/mqtt` (443, via the shared external
-  nginx-proxy) as username = device id (devid), password =
-  `MQTT_DEVICE_SHARED_SECRET`.
+- Devices connect to `wss://wlwdw.rpwt.org/mqtt` (443, via the shared external
+  nginx-proxy, which routes that domain's `/mqtt` path to the emqx service)
+  as username = device id (devid), password = `MQTT_DEVICE_SHARED_SECRET`.
+  The Android app resolves this host from its "custom server" setting
+  (default: wlwdw.rpwt.org).
 - The backend publishes to the broker as `emqx:1883` on the project's default
   network using `mqtt-server` / `MQTT_SERVER_PASSWORD`.
 - On every CONNECT, EMQX calls back `http://web/mqtt/auth` (`MqttAuthController`)

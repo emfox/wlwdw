@@ -47,11 +47,8 @@ public final class MqttMessageHandler {
             return;
         }
 
-        String customHost = context.getString(R.string.pref_default_custom_host);
-        if (prefs.getBoolean("enable_custom_host", false)) {
-            customHost = prefs.getString("custom_host", customHost);
-        }
-        final String url = "https://" + customHost + "/message/" + msgId + "/" + appUuid;
+        final String url = "https://" + MqttConfig.serverHost(context)
+                + "/message/" + msgId + "/" + appUuid;
 
         new Thread(() -> {
             try {

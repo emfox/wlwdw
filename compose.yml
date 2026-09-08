@@ -13,6 +13,9 @@ services:
               target: /etc/nginx/conf.d/wlwdw.conf
         environment:
             - VIRTUAL_HOST=wlwdw.rpwt.org
+            # Serve the site at the domain root; EMQX shares this same domain
+            # under /mqtt (see the emqx service), so keep the two paths apart.
+            - VIRTUAL_PATH=/
             - LETSENCRYPT_HOST=wlwdw.rpwt.org
             - LETSENCRYPT_EMAIL=emfoxzhou@gmail.com
         networks:
@@ -49,10 +52,12 @@ services:
             - default
     emqx:
         # Self-hosted MQTT broker for wlwdw push notifications (EMQX 5.8 LTS).
-        # Devices reach it as wss://mqtt.rpwt.org (443) through the shared
-        # external nginx-proxy; the php container publishes to it as emqx:1883
-        # over this project's default network. The loopback 1883 mapping is
-        # only for local debugging on the host.
+        # Devices reach it as wss://wlwdw.rpwt.org/mqtt (443) through the shared
+        # external nginx-proxy, which routes the /mqtt path of that domain to
+        # this service (the web service above serves the rest of the domain).
+        # The php container publishes to it as emqx:1883 over this project's
+        # default network. The loopback 1883 mapping is only for local
+        # debugging on the host.
         #
         # Provisioned once over the REST API by bin/mqtt-provision.sh
         # (idempotent; config persists in the mqtt_data volume).
@@ -65,10 +70,14 @@ services:
         image: emqx/emqx:5.8.8
         restart: unless-stopped
         environment:
-            # Route wss (port 443) via the shared nginx-proxy to EMQX ws listener.
-            - VIRTUAL_HOST=mqtt.rpwt.org
-            - LETSENCRYPT_HOST=mqtt.rpwt.org
-            - LETSENCRYPT_EMAIL=emfoxzhou@gmail.com
+            # Route wss (port 443) via the shared nginx-proxy to EMQX ws
+            # listener. EMQX shares the web domain: nginx-proxy sends the
+            # /mqtt path prefix here (VIRTUAL_PATH) and everything else to the
+            # web service (VIRTUAL_PATH=/). The EMQX ws listener path must
+            # stay /mqtt so the forwarded request hits it unchanged (no
+            # VIRTUAL_DEST rewriting).
+            - VIRTUAL_HOST=wlwdw.rpwt.org
+            - VIRTUAL_PATH=/mqtt
             - VIRTUAL_PORT=8083
 
             # Dashboard admin (dashboard itself stays internal-only).

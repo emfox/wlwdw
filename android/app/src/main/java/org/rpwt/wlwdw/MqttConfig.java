@@ -1,5 +1,10 @@
 package org.rpwt.wlwdw;
 
+import android.content.Context;
+import android.content.SharedPreferences;
+
+import androidx.preference.PreferenceManager;
+
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -15,11 +20,28 @@ public final class MqttConfig {
     private MqttConfig() {
     }
 
-    /** Broker host: Android connects over WSS (port 443, shared nginx-proxy). */
-    public static final String MQTT_HOST = "mqtt.rpwt.org";
-    public static final int MQTT_PORT = 443;
     /** EMQX ws listener path (must match the broker / nginx-proxy). */
     public static final String MQTT_PATH = "/mqtt";
+    /** Broker port: always 443 (WSS through the shared nginx-proxy). */
+    public static final int MQTT_PORT = 443;
+
+    /**
+     * Resolve the broker host to connect to. This honours the same
+     * "custom server" preference the HTTP endpoints use (enable_custom_host /
+     * custom_host in Settings): when disabled, devices use the built-in
+     * default (wlwdw.rpwt.org, where nginx-proxy routes /mqtt to EMQX); when
+     * enabled, the configured host is used instead. Host must be a bare
+     * host[:port?] name without scheme/path - for WSS only a host on the
+     * default 443 port is supported, matching the HTTP endpoints' https.
+     */
+    public static String serverHost(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        String host = context.getString(R.string.pref_default_custom_host);
+        if (prefs.getBoolean("enable_custom_host", false)) {
+            host = prefs.getString("custom_host", host);
+        }
+        return host;
+    }
 
     /**
      * Shared secret that devices present to the broker, which the broker

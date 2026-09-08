@@ -491,9 +491,7 @@ public class LocationActivity extends AppCompatActivity {
 				new Thread(new Runnable(){
 					@Override
 					public void run() {
-						String custom_host = getString(R.string.pref_default_custom_host);
-						if(sharedPref.getBoolean("enable_custom_host",false))
-							custom_host = sharedPref.getString("custom_host",custom_host);
+						String custom_host = MqttConfig.serverHost(LocationActivity.this);
 						String appUUID = sharedPref.getString("app_uuid",null);
 						if (appUUID == null) {
 							return;
