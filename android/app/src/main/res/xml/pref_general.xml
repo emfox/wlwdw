@@ -1,12 +1,10 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android" >
 
-    <!-- Read-only: shows this install's tracking device id (the random UUID
-         that Category.devid on the server must match to deliver pushes /
-         accept trail uploads). Its summary is set at runtime by
-         SettingsFragment from the stored app_uuid. -->
+    <!-- Read-only value, but the row is tappable: tapping copies this install's
+         tracking device id (the random UUID that Category.devid on the server
+         must match to deliver pushes / accept trail uploads). -->
     <Preference
         android:key="device_id_display"
-        android:selectable="false"
         android:title="@string/pref_title_device_id" />
 
     <CheckBoxPreference
