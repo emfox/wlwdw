@@ -7,11 +7,8 @@ import android.Manifest;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.net.Uri;
@@ -21,7 +18,6 @@ import androidx.annotation.NonNull;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.TextPaint;
-import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
 import android.text.style.ClickableSpan;
 import android.text.style.ForegroundColorSpan;
@@ -34,7 +30,6 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.baidu.location.LocationClient;
 
@@ -66,11 +61,6 @@ public class MainActivity extends Activity {
 
         FunctionList = (ListView) findViewById(R.id.functionList);
         FunctionList.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_expandable_list_item_1, getData()));
-        // after andrioid m,must request Permiision on runtime
-        IntentFilter filter = new IntentFilter();
-        // 点击home键广播，由系统发出
-        filter.addAction(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
-        registerReceiver(mHomeAndLockReceiver, filter);
     }
 
     private void initSDK(boolean status) {
@@ -254,34 +244,5 @@ public class MainActivity extends Activity {
             Utils.putString(this, Utils.SP_PERMISSION_DIALOG, Utils.SP_PERMISSION_DIALOG);
             showMissingPermissionDialog("本应用需要使用定位权限", "定位权限用于确定并上报设备位置。\n开始持续定位（熄屏追踪）时，还会申请后台定位权限。\n", DIALOG_PERMISSION);
         }
-    }
-
-    /**
-     * 监听是否点击了home键将客户端推到后台
-     */
-    private BroadcastReceiver mHomeAndLockReceiver = new BroadcastReceiver() {
-        String SYSTEM_REASON = "reason";
-        String SYSTEM_HOME_KEY = "homekey";
-        String SYSTEM_HOME_RECENT = "recentapps";
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (action.equals(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)) {
-                String reason = intent.getStringExtra(SYSTEM_REASON);
-                if (TextUtils.equals(reason, SYSTEM_HOME_KEY) || TextUtils.equals(reason, SYSTEM_HOME_RECENT)) {
-                    if (!Utils.contains(MainActivity.this, Utils.SP_HOME_BACK_RETURN)) {
-                        Utils.putString(MainActivity.this, Utils.SP_HOME_BACK_RETURN, Utils.SP_HOME_BACK_RETURN);
-                        Toast.makeText(context, context.getString(R.string.action_background), Toast.LENGTH_LONG).show();
-                    }
-                }
-            }
-        }
-    };
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(mHomeAndLockReceiver);
     }
 }

@@ -17,12 +17,15 @@ def mqttDeviceSharedSecret = localProps.getProperty(
 def baiduMapAk = localProps.getProperty('BAIDU_MAP_AK', 'change_me_baidu_map_ak')
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "com.wlwdw.gps1s"
         minSdkVersion 26
-        targetSdkVersion 33
+        // Deliberately 34, not 35+: at 35+ Android 15 limits dataSync
+        // foreground services to 6h per 24h, which would kill the long-lived
+        // MQTT push service on Android 15/16 devices (and forces edge-to-edge).
+        targetSdkVersion 34
         buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
                 "\"${mqttDeviceSharedSecret}\""
         manifestPlaceholders = [
@@ -50,11 +53,12 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.0.2'
-    implementation 'com.baidu.lbsyun:BaiduMapSDK_Map:7.6.4'
-    implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.4'
-    implementation 'androidx.preference:preference:1.2.0'
-    implementation 'com.google.android.material:material:1.4.+'
+    implementation 'androidx.appcompat:appcompat:1.8.0'
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Map:8.2.0'
+    implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.9'
+    implementation 'androidx.preference:preference:1.2.1'
+    implementation 'androidx.cursoradapter:cursoradapter:1.0.0' // SimpleCursorAdapter in MessageActivity
+    implementation 'com.google.android.material:material:1.14.0'
     // MQTT push over WSS to the self-hosted EMQX broker. HiveMQ client supports
     // MQTT over WebSockets (Paho Java does not); the -shaded artifact bundles
     // its transitive netty deps under a renamed package to avoid conflicts on
