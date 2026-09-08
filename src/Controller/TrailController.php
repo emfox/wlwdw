@@ -24,20 +24,37 @@ class TrailController extends AbstractController
     }
     /**
      * Add a new Trail point entities via ajax.
+     *
+     * POST with a JSON body {"devid","lat","lng"} (previously an anonymous
+     * GET with the values in the URL). Reporting is deliberately POST-only:
+     * a GET must never carry a write side effect (prefetch/crawlers/log
+     * analyzers would otherwise create bogus reports), and coordinates are
+     * validated before anything is stored. An unknown devid answers with
+     * HTTP 200 + {"result":"deny"} rather than a 403 so the endpoint cannot
+     * be used to enumerate which devids exist.
      */
-    #[Route(path: '/trail/new/{devid}/{lng}/{lat}', name: 'trail_new')]
-    public function new($devid,$lng,$lat): Response
+    #[Route(path: '/trail/new', name: 'trail_new', methods: ['POST'])]
+    public function new(Request $request): Response
 	{
+		$data = json_decode((string) $request->getContent(), true);
+		$devid = trim((string) ($data['devid'] ?? ''));
+		$lat = filter_var($data['lat'] ?? null, FILTER_VALIDATE_FLOAT);
+		$lng = filter_var($data['lng'] ?? null, FILTER_VALIDATE_FLOAT);
+
+		if ('' === $devid
+				|| false === $lat || false === $lng
+				|| !is_finite($lat) || !is_finite($lng)
+				|| $lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+			return $this->json(['code' => 403, 'success' => false, 'message' => 'Invalid Coordinates']);
+		}
+
 		$em = $this->managerRegistry->getManager();
 		$category = $em->getRepository('App\Entity\Category')->findOneByDevid($devid);
 		if(!$category)
 		{
-			$response = array("code" => 403, "success" => false, "message"=>"Device Unauthorized");
-			return new Response(json_encode($response, JSON_THROW_ON_ERROR));
-		}
-		if($lat<0.01 or $lng<0.01){
-			$response = array("code" => 403, "success" => false, "message"=>"Invalid Coordinates");
-			return new Response(json_encode($response, JSON_THROW_ON_ERROR));
+			// Same 200 status as a valid reply so devid existence cannot be
+			// probed through the HTTP status code.
+			return $this->json(['result' => 'deny', 'code' => 403, 'success' => false, 'message' => 'Device Unauthorized']);
 		}
 		$trail = $em->getRepository('App\Entity\Trail')->findOneBy(
 				array('catid'=>$category->getId()),
@@ -59,8 +76,7 @@ class TrailController extends AbstractController
 		$em->persist($category);
 		$em->flush();
 
-		$response = array("code" => 100, "success" => true);
-		return new Response(json_encode($response, JSON_THROW_ON_ERROR));
+		return $this->json(['code' => 100, 'success' => true]);
 	}
 	/**
      * Lists all Trail entities of an specified category via ajax.

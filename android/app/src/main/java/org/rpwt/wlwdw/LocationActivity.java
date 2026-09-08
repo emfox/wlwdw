@@ -38,9 +38,11 @@ import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -489,15 +491,20 @@ public class LocationActivity extends AppCompatActivity {
 				new Thread(new Runnable(){
 					@Override
 					public void run() {
-						// 拼凑get请求的URL字串，使用URLEncoder.encode对特殊和不可见字符进行编码
 						String custom_host = getString(R.string.pref_default_custom_host);
 						if(sharedPref.getBoolean("enable_custom_host",false))
 							custom_host = sharedPref.getString("custom_host",custom_host);
 						String appUUID = sharedPref.getString("app_uuid",null);
-						String GET_URL = "https://" + custom_host  + "/trail/new/" + appUUID + "/"
-								+ Double.toString(wgs.longitude) + "/" + Double.toString(wgs.latitude);
+						if (appUUID == null) {
+							return;
+						}
+						// Report via POST /trail/new with a JSON body (the server
+						// endpoint accepts no GET; coordinates are the WGS84 fix).
+						String json = "{\"devid\":\"" + appUUID
+								+ "\",\"lat\":" + wgs.latitude
+								+ ",\"lng\":" + wgs.longitude + "}";
 						try {
-							String r = readContentFromGet(GET_URL);
+							String r = postJson("https://" + custom_host + "/trail/new", json);
 							System.out.println(r);
 						} catch (IOException e) {
 							// TODO 自动生成的 catch 块
@@ -586,6 +593,40 @@ public class LocationActivity extends AppCompatActivity {
 		connection.disconnect();
 		return sb.toString();
 	}
+
+	/**
+	 * POSTs a JSON body and returns the response text. Connection/read
+	 * timeouts keep a flaky network from hanging the upload thread forever.
+	 */
+	public static String postJson(String urlString, String json) throws IOException {
+		URL url = new URL(urlString);
+		HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+		try {
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.setConnectTimeout(10_000);
+			connection.setReadTimeout(10_000);
+			connection.setDoOutput(true);
+			connection.getOutputStream().write(json.getBytes(StandardCharsets.UTF_8));
+
+			int status = connection.getResponseCode();
+			InputStream in = status >= 400
+					? connection.getErrorStream()
+					: connection.getInputStream();
+			BufferedReader reader = new BufferedReader(new InputStreamReader(
+					in == null ? InputStream.nullInputStream() : in, StandardCharsets.UTF_8));
+			StringBuilder sb = new StringBuilder(256);
+			String line;
+			while ((line = reader.readLine()) != null) {
+				sb.append(line);
+			}
+			reader.close();
+			return sb.toString();
+		} finally {
+			connection.disconnect();
+		}
+	}
+
 	public static int checkPermission(Context context, String permission) {
 
 		boolean allowedByPermission = true;

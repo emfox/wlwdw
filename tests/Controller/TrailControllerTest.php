@@ -17,20 +17,28 @@ class TrailControllerTest extends AbstractAppTestCase
     public function testNewRejectsUnknownDevid(): void
     {
         $client = $this->client();
-        $client->request('GET', '/trail/new/ghost-device/116.4/39.9');
+        $client->request('POST', '/trail/new', [], [], ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['devid' => 'ghost-device', 'lat' => 39.9, 'lng' => 116.4]));
 
         self::assertResponseIsSuccessful();
         $body = $this->jsonBody($client);
-        self::assertSame(403, $body['code']);
+        // Same HTTP 200 as success, only the body differs: an unknown devid
+        // must not be distinguishable from a valid one by status code alone.
+        self::assertSame('deny', $body['result'] ?? null);
         self::assertFalse($body['success']);
     }
 
-    public function testNewRejectsInvalidCoordinates(): void
+    public function testNewRejectsMissingCoordinates(): void
     {
         $this->createCategoryViaForm('坐标校验单位', 'coord-dev');
 
         $client = $this->client();
-        $client->request('GET', '/trail/new/coord-dev/0/0');
+        // No lat/lng at all (e.g. a malformed client payload): must be
+        // rejected before anything touches the DB. Note (0,0) is NOT invalid
+        // under the range check (-90..90 / -180..180) - only missing,
+        // non-numeric, non-finite or out-of-range values are.
+        $client->request('POST', '/trail/new', [], [], ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['devid' => 'coord-dev']));
 
         self::assertResponseIsSuccessful();
         $body = $this->jsonBody($client);
@@ -38,12 +46,26 @@ class TrailControllerTest extends AbstractAppTestCase
         self::assertStringContainsString('Invalid Coordinates', $body['message']);
     }
 
+    public function testNewRejectsOutOfRangeCoordinates(): void
+    {
+        $this->createCategoryViaForm('越界校验单位', 'range-dev');
+
+        $client = $this->client();
+        $client->request('POST', '/trail/new', [], [], ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['devid' => 'range-dev', 'lat' => 95, 'lng' => 181]));
+
+        self::assertResponseIsSuccessful();
+        $body = $this->jsonBody($client);
+        self::assertSame(403, $body['code']);
+    }
+
     public function testNewWithValidReportUpdatesCategoryPosition(): void
     {
         $this->createCategoryViaForm('上报单位', 'report-dev');
 
         $client = $this->client();
-        $client->request('GET', '/trail/new/report-dev/116.391/39.907');
+        $client->request('POST', '/trail/new', [], [], ['CONTENT_TYPE' => 'application/json'],
+            json_encode(['devid' => 'report-dev', 'lat' => 39.907, 'lng' => 116.391]));
 
         self::assertResponseIsSuccessful();
         $body = $this->jsonBody($client);
