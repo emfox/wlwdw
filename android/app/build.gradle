@@ -76,6 +76,7 @@ dependencies {
     implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.9'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'androidx.cursoradapter:cursoradapter:1.0.0' // SimpleCursorAdapter in MessageActivity
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0' // MapActivity
     implementation 'com.google.android.material:material:1.14.0'
     // MQTT push over WSS to the self-hosted EMQX broker. HiveMQ client supports
     // MQTT over WebSockets (Paho Java does not); the -shaded artifact bundles
@@ -83,8 +84,6 @@ dependencies {
     // Android.
     implementation 'com.hivemq:hivemq-mqtt-client-shaded:1.4.0'
 }
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
-    }
-}
+// No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
+// 8.9 already requires JDK 17+, so the former hardcoded JDK 11 toolchain was
+// both unnecessary and forced a JDK download on machines without one.)
