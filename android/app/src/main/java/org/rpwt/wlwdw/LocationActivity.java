@@ -324,10 +324,34 @@ public class LocationActivity extends AppCompatActivity {
 	}
 
 	private void startLocationPolling() {
+		applySyncFrequencyToScanner();
 		locService.getClient().enableLocInForeground(1, notification);
 		locService.start();
 		startLocation.setText(getString(R.string.stoplocation));
 		isLocPolling = true;
+	}
+
+	/**
+	 * Make the real location scan interval match the "sync_frequency" setting
+	 * (minutes, default 2). Previously the Baidu client always scanned at the
+	 * LocService default scanSpan of 3 s, so fixes - and one trail upload each -
+	 * fired every few seconds regardless of the setting. The scan span is
+	 * applied on the same default option instance the client was configured
+	 * with before start, so a fix is delivered (and uploaded) once per interval.
+	 */
+	private void applySyncFrequencyToScanner() {
+		int minutes = 2;
+		try {
+			minutes = Integer.parseInt(sharedPref.getString("sync_frequency", "2"));
+		} catch (NumberFormatException ignored) {
+			// keep the default
+		}
+		if (minutes < 1) {
+			minutes = 1;
+		}
+		LocationClientOption option = locService.getDefaultLocationClientOption();
+		option.setScanSpan(minutes * 60_000);
+		locService.setLocationOption(option);
 	}
 
 	private void stopLocationPolling() {
