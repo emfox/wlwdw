@@ -1,4 +1,4 @@
-package com.wlwdw.gps1s;
+package org.rpwt.wlwdw;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;

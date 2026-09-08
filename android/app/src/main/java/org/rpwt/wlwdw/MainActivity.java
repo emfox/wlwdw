@@ -1,7 +1,7 @@
-package com.wlwdw.gps1s;
+package org.rpwt.wlwdw;
 
-import com.wlwdw.gps1s.service.LocService;
-import com.wlwdw.gps1s.service.Utils;
+import org.rpwt.wlwdw.service.LocService;
+import org.rpwt.wlwdw.service.Utils;
 
 import android.Manifest;
 import android.annotation.TargetApi;

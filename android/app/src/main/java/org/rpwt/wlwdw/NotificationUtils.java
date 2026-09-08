@@ -1,4 +1,4 @@
-package com.wlwdw.gps1s;
+package org.rpwt.wlwdw;
 
 
 import android.app.Notification;
@@ -11,7 +11,7 @@ import android.graphics.Color;
 public class NotificationUtils extends ContextWrapper {
 
     private NotificationManager mManager;
-    public static final String ANDROID_CHANNEL_ID = "com.wlwdw.gps1s";
+    public static final String ANDROID_CHANNEL_ID = "org.rpwt.wlwdw";
     public static final String ANDROID_CHANNEL_NAME = "ANDROID CHANNEL";
 
     public NotificationUtils(Context base) {

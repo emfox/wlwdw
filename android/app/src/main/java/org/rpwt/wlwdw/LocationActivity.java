@@ -1,4 +1,4 @@
-package com.wlwdw.gps1s;
+package org.rpwt.wlwdw;
 
 
 import com.baidu.location.LocationClientOption;
@@ -7,7 +7,7 @@ import com.baidu.location.BDAbstractLocationListener;
 import com.baidu.location.BDLocation;
 import com.baidu.location.Poi;
 import com.baidu.location.PoiRegion;
-import com.wlwdw.gps1s.service.LocService;
+import org.rpwt.wlwdw.service.LocService;
 
 import android.app.Notification;
 import android.app.PendingIntent;

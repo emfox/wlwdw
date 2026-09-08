@@ -12,7 +12,7 @@
 #   server.
 #
 # BAIDU_MAP_AK
-#   Baidu Map/Location API key for this app's package (com.wlwdw.gps1s), bound
+#   Baidu Map/Location API key for this app's package (org.rpwt.wlwdw), bound
 #   to your signing SHA1 (debug + release) on the Baidu console. Without it the
 #   map/location SDK reports key errors (502/505/602).
 MQTT_DEVICE_SHARED_SECRET=change_me_same_as_server_env

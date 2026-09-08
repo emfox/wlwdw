@@ -1,4 +1,4 @@
-package com.wlwdw.gps1s.service;
+package org.rpwt.wlwdw.service;
 
 import android.content.Context;
 import android.content.SharedPreferences;

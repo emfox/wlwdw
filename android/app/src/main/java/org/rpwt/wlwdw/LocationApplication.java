@@ -1,11 +1,11 @@
-package com.wlwdw.gps1s;
+package org.rpwt.wlwdw;
 
 
 import android.app.Application;
 import android.app.Service;
 import android.os.Vibrator;
 
-import com.wlwdw.gps1s.service.LocService;
+import org.rpwt.wlwdw.service.LocService;
 import com.baidu.mapapi.CoordType;
 import com.baidu.mapapi.SDKInitializer;
 import com.baidu.mapapi.common.BaiduMapSDKException;

@@ -20,7 +20,7 @@ android {
     compileSdkVersion 36
 
     defaultConfig {
-        applicationId "com.wlwdw.gps1s"
+        applicationId "org.rpwt.wlwdw"
         minSdkVersion 26
         // Deliberately 34, not 35+: at 35+ Android 15 limits dataSync
         // foreground services to 6h per 24h, which would kill the long-lived
@@ -49,7 +49,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    namespace 'com.wlwdw.gps1s'
+    namespace 'org.rpwt.wlwdw'
 }
 
 dependencies {
