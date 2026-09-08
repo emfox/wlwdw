@@ -20,13 +20,13 @@ import androidx.preference.PreferenceManager;
 import androidx.appcompat.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 
 public class MapActivity extends AppCompatActivity {
 
 	MapView mMapView = null;
 	BaiduMap mBaiduMap;
-	MyLocationData locData;
 	private SharedPreferences sharedPref;
 	private Editor sharedEditor;
 	private LatLng centerLatLng;
@@ -87,17 +87,21 @@ public class MapActivity extends AppCompatActivity {
 		.zoom(zoom).build();
 		MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);
 		mBaiduMap.setMapStatus(mMapStatusUpdate);
-		
-		//恢复当前坐标
-		locData = new MyLocationData.Builder()  
-	    .accuracy(sharedPref.getFloat("LocRadius",1200))  
-	    // 此处设置开发者获取到的方向信息，顺时针0-360  
-	    .direction(100)
-	    .latitude(getDouble(sharedPref,"LocLat",30.26))  
-	    .longitude(getDouble(sharedPref,"LocLng",120.15)).build();
-		mBaiduMap.setMyLocationData(locData); 
 
-		//PollingUtils.PollingOnce(MapActivity.this, PollingService.class);
+		// 蓝点只画"真实拿到过的定位"：无 fix 则不画（也不显示编造的默认坐标）。
+		if (LocationStore.hasFix) {
+			applyMyLocation(LocationStore.latitude, LocationStore.longitude, LocationStore.radius);
+		}
+	}
+
+	private void applyMyLocation(double lat, double lng, float accuracyRadius) {
+		MyLocationData locData = new MyLocationData.Builder()
+				.accuracy(accuracyRadius)
+				// 此处设置开发者获取到的方向信息，顺时针0-360（无罗盘数据，固定值）
+				.direction(100)
+				.latitude(lat)
+				.longitude(lng).build();
+		mBaiduMap.setMyLocationData(locData);
 	}
 
 	@Override
@@ -105,12 +109,10 @@ public class MapActivity extends AppCompatActivity {
 		super.onDestroy();
 		// 在activity执行onDestroy时执行mMapView.onDestroy()，实现地图生命周期管理
 		mMapView.onDestroy();
+		// 只记忆地图视野（中心点/缩放）；蓝点坐标统一由 LocationStore 提供，不再回存。
 		sharedEditor.putFloat("zoom", zoom);
 		putDouble(sharedEditor,"CenterLat",centerLatLng.latitude);
 		putDouble(sharedEditor,"CenterLng",centerLatLng.longitude);
-		sharedEditor.putFloat("LocRadius", locData.accuracy);
-		putDouble(sharedEditor,"LocLat",locData.latitude);
-		putDouble(sharedEditor,"LocLng",locData.longitude);
 		sharedEditor.apply();
 	}
 
@@ -140,14 +142,12 @@ public class MapActivity extends AppCompatActivity {
 		mReceiver = new BroadcastReceiver() {    
             @Override    
             public void onReceive(Context context, Intent intent) {    
-                if (intent.getAction().equals("LocationResult")) {    
-                	locData = new MyLocationData.Builder()  
-            	    .accuracy(intent.getExtras().getFloat("Radius"))  
-            	    // 此处设置开发者获取到的方向信息，顺时针0-360  
-            	    .direction(100)
-            	    .latitude(intent.getExtras().getDouble("BaiduLatitude"))  
-            	    .longitude(intent.getExtras().getDouble("BaiduLongitude")).build();
-                	mBaiduMap.setMyLocationData(locData); 
+                if (intent.getAction().equals("LocationResult")) {
+                	// 定位源(LocationActivity)每次成功定位都会广播，蓝点实时跟随。
+                	applyMyLocation(
+                			intent.getExtras().getDouble("BaiduLatitude"),
+                			intent.getExtras().getDouble("BaiduLongitude"),
+                			intent.getExtras().getFloat("Radius"));
                 }   
             }    
         };
@@ -196,8 +196,12 @@ public class MapActivity extends AppCompatActivity {
 	    }
 
 	public void jumpCurLocation(){
-		//跳到当前坐标所在的地图中心点
-		centerLatLng = new LatLng(locData.latitude,locData.longitude);
+		//跳到当前坐标所在的地图中心点（读单一来源 LocationStore）
+		if (!LocationStore.hasFix) {
+			Toast.makeText(this, "尚无定位数据", Toast.LENGTH_SHORT).show();
+			return;
+		}
+		centerLatLng = new LatLng(LocationStore.latitude, LocationStore.longitude);
 		mMapStatus = new MapStatus.Builder()
 		.target(centerLatLng).build();
 		MapStatusUpdate mMapStatusUpdate = MapStatusUpdateFactory.newMapStatus(mMapStatus);

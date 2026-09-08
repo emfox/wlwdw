@@ -379,6 +379,15 @@ public class LocationActivity extends AppCompatActivity {
 		public void onReceiveLocation(BDLocation location) {
 
 			if (null != location && location.getLocType() != BDLocation.TypeServerError) {
+				// 成功定位（GPS 61 / 网络 161 / 缓存 68）才作为"最新位置"发布给地图等界面；
+				// 坐标取百度返回的 bd09ll 原始值（上传服务器用的是下方转换后的 WGS84）。
+				int locType = location.getLocType();
+				if (locType == BDLocation.TypeGpsLocation
+						|| locType == BDLocation.TypeNetWorkLocation
+						|| locType == 68) {
+					LocationStore.update(LocationActivity.this,
+							location.getLatitude(), location.getLongitude(), location.getRadius());
+				}
 				int tag = 1;
 				StringBuffer sb = new StringBuffer(256);
 				sb.append("\nlocType description : ");// *****对应的定位类型说明*****
