@@ -18,9 +18,12 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Realtime MQTT push foreground service + its notifications. The
          FOREGROUND_SERVICE_DATA_SYNC permission is required since Android 14
-         (targetSdk 34) for a dataSync-type foreground service. -->
+         (targetSdk 34) for a dataSync-type foreground service; the Baidu
+         location SDK's own :remote service runs as a location-type foreground
+         service when continuous location is on. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
@@ -41,10 +44,16 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Baidu location SDK's internal service (separate :remote process).
+             foregroundServiceType is required since Android 14 (targetSdk 34)
+             for any service that may call startForeground(); the SDK does so
+             when location runs as a foreground service. -->
         <service
             android:name="com.baidu.location.f"
             android:enabled="true"
-            android:process=":remote"></service>
+            android:exported="false"
+            android:foregroundServiceType="location"
+            android:process=":remote" />
 
         <!-- Baidu Map/Location API key, injected at build time from the
              untracked android/gradle-local.properties (see
