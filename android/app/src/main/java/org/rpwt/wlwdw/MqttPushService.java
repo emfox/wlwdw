@@ -100,7 +100,11 @@ public class MqttPushService extends Service {
             Mqtt3BlockingClient c = null;
             try {
                 c = MqttClient.builder()
-                        .automaticReconnectWithDefaultConfig()
+                        // No automaticReconnectWithDefaultConfig(): with a
+                        // blocking client it would race the manual loop below
+                        // (both re-connecting the same client id and kicking
+                        // each other on the broker). Reconnection is handled
+                        // exclusively by the outer loop.
                         .useMqttVersion3()
                         .identifier(devid)
                         .serverHost(MqttConfig.MQTT_HOST)

@@ -32,6 +32,7 @@ import android.widget.CheckBox;
 import android.widget.RadioGroup;
 import android.widget.RadioGroup.OnCheckedChangeListener;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -114,18 +115,9 @@ public class LocationActivity extends AppCompatActivity {
 			@Override
 			public void onClick(View v) {
 				if (!isLocPolling) {
-					// Continuous (screen-off) tracking needs the background-location
-					// grant on Android 10+; ask here, in context of the start action.
-					ensureLocationPermissions();
-					locService.getClient().enableLocInForeground(1, notification);
-					locService.start();
-					startLocation.setText(getString(R.string.stoplocation));
-					isLocPolling = true;
+					requestLocationPermissionsAndStart();
 				} else {
-					locService.getClient().disableLocInForeground(true);
-					locService.stop();
-					startLocation.setText(getString(R.string.startlocation));
-					isLocPolling = false;
+					stopLocationPolling();
 				}
 			}
 		});
@@ -251,14 +243,19 @@ public class LocationActivity extends AppCompatActivity {
 	}
 	
 	private static final int PERM_REQ_LOCATION = 200;
+	private static final int PERM_REQ_BACKGROUND = 201;
 
 	/**
-	 * Foreground location plus, on Android 10+, ACCESS_BACKGROUND_LOCATION so
-	 * fixes keep arriving while the screen is off and the app is backgrounded.
-	 * Called when the user starts continuous location; if the background part
-	 * is denied, fixes still work while this screen is visible.
+	 * Start flow for continuous location. Android 14+ (targetSdk 34) throws a
+	 * SecurityException if a location-type foreground service is started
+	 * without the while-in-use location permission, so the actual start is
+	 * deferred to the permission callbacks instead of racing the dialogs.
 	 */
-	private void ensureLocationPermissions() {
+	private void requestLocationPermissionsAndStart() {
+		if (hasWhileInUseLocation()) {
+			ensureBackgroundLocationAndStart();
+			return;
+		}
 		List<String> missing = new ArrayList<>();
 		if (checkPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == 0) {
 			missing.add(android.Manifest.permission.ACCESS_FINE_LOCATION);
@@ -266,13 +263,60 @@ public class LocationActivity extends AppCompatActivity {
 		if (checkPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == 0) {
 			missing.add(android.Manifest.permission.ACCESS_COARSE_LOCATION);
 		}
+		requestPermissions(missing.toArray(new String[0]), PERM_REQ_LOCATION);
+	}
+
+	private boolean hasWhileInUseLocation() {
+		return checkPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == 1
+				|| checkPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) == 1;
+	}
+
+	/**
+	 * Screen-off tracking needs ACCESS_BACKGROUND_LOCATION on Android 10+. It is
+	 * asked for only after the while-in-use grant is in place (a background
+	 * request bundled into the same batch is ignored on Android 11+), and the
+	 * start proceeds either way: without it fixes still arrive while the app is
+	 * on screen.
+	 */
+	private void ensureBackgroundLocationAndStart() {
 		if (Build.VERSION.SDK_INT >= 29
 				&& checkPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == 0) {
-			missing.add(android.Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+			requestPermissions(new String[]{android.Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+					PERM_REQ_BACKGROUND);
+			return;
 		}
-		if (!missing.isEmpty()) {
-			requestPermissions(missing.toArray(new String[0]), PERM_REQ_LOCATION);
+		startLocationPolling();
+	}
+
+	@Override
+	public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+		super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+		if (requestCode == PERM_REQ_LOCATION) {
+			if (hasWhileInUseLocation()) {
+				ensureBackgroundLocationAndStart();
+			} else {
+				Toast.makeText(this, "需要定位权限才能开始持续定位", Toast.LENGTH_LONG).show();
+			}
+		} else if (requestCode == PERM_REQ_BACKGROUND) {
+			if (checkPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION) == 0) {
+				Toast.makeText(this, "未授予后台定位权限，熄屏后可能停止上报", Toast.LENGTH_LONG).show();
+			}
+			startLocationPolling();
 		}
+	}
+
+	private void startLocationPolling() {
+		locService.getClient().enableLocInForeground(1, notification);
+		locService.start();
+		startLocation.setText(getString(R.string.stoplocation));
+		isLocPolling = true;
+	}
+
+	private void stopLocationPolling() {
+		locService.getClient().disableLocInForeground(true);
+		locService.stop();
+		startLocation.setText(getString(R.string.startlocation));
+		isLocPolling = false;
 	}
 
 	private void requestNotificationPermissionIfNeeded() {
