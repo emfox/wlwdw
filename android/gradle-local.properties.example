@@ -15,5 +15,16 @@
 #   Baidu Map/Location API key for this app's package (org.rpwt.wlwdw), bound
 #   to your signing SHA1 (debug + release) on the Baidu console. Without it the
 #   map/location SDK reports key errors (502/505/602).
+#
+# RELEASE_KEYSTORE_PATH / RELEASE_KEY_ALIAS / RELEASE_STORE_PASSWORD /
+# RELEASE_KEY_PASSWORD
+#   Release signing config, resolved relative to android/. The keystore file
+#   (android/keystore/release.jks) is gitignored and must be backed up
+#   separately — it signs every distributed APK. If these are absent, release
+#   builds are left unsigned.
 MQTT_DEVICE_SHARED_SECRET=change_me_same_as_server_env
 BAIDU_MAP_AK=change_me_baidu_map_ak
+RELEASE_KEYSTORE_PATH=keystore/release.jks
+RELEASE_KEY_ALIAS=release
+RELEASE_STORE_PASSWORD=change_me_release_store_password
+RELEASE_KEY_PASSWORD=change_me_release_key_password
