@@ -37,7 +37,9 @@ android {
         // Deliberately 34, not 35+: at 35+ Android 15 limits dataSync
         // foreground services to 6h per 24h, which would kill the long-lived
         // MQTT push service on Android 15/16 devices (and forces edge-to-edge).
-        // See wlwdw-android-refactor.md §3-A for the way off this pin.
+        // The service is long-lived message delivery, not data sync, so the way
+        // off this pin is to re-declare it as specialUse (or connectedDevice) —
+        // neither of those types has a time limit.
         targetSdkVersion 34
         buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
                 "\"${mqttDeviceSharedSecret}\""
