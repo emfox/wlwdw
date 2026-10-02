@@ -3,7 +3,6 @@ package org.rpwt.wlwdw.ui.screen
 import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -36,14 +34,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import java.util.Locale
 import org.rpwt.wlwdw.R
+import org.rpwt.wlwdw.location.Fix
+import org.rpwt.wlwdw.tracking.ReportFailure
+import org.rpwt.wlwdw.tracking.TrackingState
 import org.rpwt.wlwdw.ui.component.Callout
 import org.rpwt.wlwdw.ui.component.StatusPill
 import org.rpwt.wlwdw.ui.component.StatusRing
 import org.rpwt.wlwdw.ui.component.StatusTone
 import org.rpwt.wlwdw.ui.component.WlwdwCard
-import org.rpwt.wlwdw.ui.demo.DemoData
 import org.rpwt.wlwdw.ui.model.DeviceStatus
+import org.rpwt.wlwdw.ui.relativeTime
 import org.rpwt.wlwdw.ui.theme.CoordinateTextStyle
 import org.rpwt.wlwdw.ui.theme.WlwdwDimens
 import org.rpwt.wlwdw.ui.theme.statusColors
@@ -51,24 +53,25 @@ import org.rpwt.wlwdw.ui.theme.statusColors
 /**
  * Tab 1: is the device reporting, and what does the server know about it.
  *
- * The whole screen is a function of [DeviceStatus] -- the ring's colour and
- * wording, whether the permission notice appears, which link row is unhappy,
- * and whether the primary button starts or stops tracking. Keeping that in one
- * `when` is the point: the pre-rewrite screen spread the same information over
- * seven diagnostic rows and a numeric error code.
+ * The whole screen is a function of [TrackingState] -- the ring's colour and
+ * wording, whether a notice appears, which link row is unhappy, what the last
+ * report was, and whether the primary button starts or stops tracking. Keeping
+ * that in one `when` is the point: the pre-rewrite screen spread the same
+ * information over seven diagnostic rows and a numeric error code.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatusScreen(
-    status: DeviceStatus,
+    state: TrackingState,
+    deviceId: String,
     reportIntervalMinutes: Int,
     onOpenSettings: () -> Unit,
     onToggleTracking: () -> Unit,
     onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier,
-    onCycleDemoStatus: (() -> Unit)? = null,
 ) {
-    val tracking = status != DeviceStatus.Stopped
+    val status = state.status
+    val tracking = state.running
 
     Column(
         modifier = modifier
@@ -99,16 +102,27 @@ fun StatusScreen(
                 .padding(horizontal = WlwdwDimens.PagePadding),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            if (status == DeviceStatus.PermissionMissing) {
-                Callout(
+            when (status) {
+                DeviceStatus.PermissionMissing -> Callout(
                     title = stringResource(R.string.wlwdw_perm_title),
                     body = stringResource(R.string.wlwdw_perm_body),
                     actionLabel = stringResource(R.string.wlwdw_perm_action),
                     onAction = onRequestPermission,
                     modifier = Modifier.padding(top = 10.dp, bottom = WlwdwDimens.CardGap),
                 )
-            } else {
-                Spacer(Modifier.height(WlwdwDimens.CardGap))
+
+                DeviceStatus.DeviceUnregistered -> Callout(
+                    title = stringResource(R.string.wlwdw_unregistered_title),
+                    // The id is in the body because the fix is to type it into
+                    // the server; without it the notice says "something is
+                    // wrong" and offers nowhere to go.
+                    body = stringResource(R.string.wlwdw_unregistered_body) + "\n" + deviceId,
+                    actionLabel = stringResource(R.string.wlwdw_unregistered_action),
+                    onAction = onOpenSettings,
+                    modifier = Modifier.padding(top = 10.dp, bottom = WlwdwDimens.CardGap),
+                )
+
+                else -> Spacer(Modifier.height(WlwdwDimens.CardGap))
             }
 
             StatusRing(
@@ -120,20 +134,20 @@ fun StatusScreen(
             Spacer(Modifier.height(10.dp))
 
             Text(
-                text = heroLine(status),
+                text = heroLine(state),
                 style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
 
             Spacer(Modifier.height(16.dp))
 
-            LocationCard(stale = status == DeviceStatus.LocationFailed)
+            LocationCard(fix = state.fix, stale = status == DeviceStatus.LocationFailed)
 
             Spacer(Modifier.height(WlwdwDimens.CardGap))
 
             WlwdwCard {
-                val upload = uploadLink(status)
-                val push = pushLink(status)
+                val upload = uploadLink(state)
+                val push = pushLink(state)
                 LinkRow(
                     label = stringResource(R.string.wlwdw_link_upload),
                     pill = stringResource(upload.textRes),
@@ -179,34 +193,20 @@ fun StatusScreen(
                 )
             }
 
-            if (onCycleDemoStatus != null) {
-                // Stage 1 only: the design's status matrix is the heart of this
-                // screen, so the prototype needs a way to walk it. Goes away
-                // with ui/demo/DemoData.kt.
-                Text(
-                    text = stringResource(R.string.wlwdw_demo_status, stringResource(ringTitle(status))),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier
-                        .padding(vertical = 14.dp)
-                        .clickable(onClick = onCycleDemoStatus),
-                )
-            } else {
-                Spacer(Modifier.height(WlwdwDimens.CardGap))
-            }
+            Spacer(Modifier.height(WlwdwDimens.CardGap))
         }
     }
 }
 
 /** Where the device is (or last was). */
 @Composable
-private fun LocationCard(stale: Boolean) {
+private fun LocationCard(fix: Fix?, stale: Boolean) {
     WlwdwCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 imageVector = Icons.Filled.Place,
                 contentDescription = null,
-                tint = if (stale) {
+                tint = if (stale || fix == null) {
                     MaterialTheme.colorScheme.onSurfaceVariant
                 } else {
                     MaterialTheme.colorScheme.primary
@@ -215,31 +215,45 @@ private fun LocationCard(stale: Boolean) {
                     .padding(end = 5.dp)
                     .size(17.dp),
             )
-            Text(
-                text = if (stale) DemoData.staleAddress else DemoData.address,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
+            if (fix == null) {
+                Text(
+                    text = stringResource(R.string.wlwdw_location_unknown),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            } else {
+                Text(
+                    // Five decimals is about a metre at these latitudes: more
+                    // would be noise dressed up as precision.
+                    text = String.format(Locale.US, "%.5f, %.5f", fix.lat, fix.lng),
+                    style = CoordinateTextStyle,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
         }
 
-        Spacer(Modifier.height(6.dp))
+        if (fix != null) {
+            Spacer(Modifier.height(6.dp))
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(7.dp),
-        ) {
-            Text(
-                text = if (stale) DemoData.staleCoordinates else DemoData.coordinates,
-                style = CoordinateTextStyle,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = "·",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.outline,
-            )
-            MetaChip(if (stale) DemoData.staleAccuracy else DemoData.accuracy)
-            MetaChip(if (stale) DemoData.staleFixSource else DemoData.fixSource)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
+            ) {
+                fix.accuracyMetres?.let {
+                    MetaChip(String.format(Locale.US, "±%.0f m", it))
+                }
+                MetaChip(fixSourceLabel(fix.provider))
+                Text(
+                    text = "·",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.outline,
+                )
+                Text(
+                    text = relativeTime(fix.atMillis),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
 
         if (stale) {
@@ -251,6 +265,14 @@ private fun LocationCard(stale: Boolean) {
             )
         }
     }
+}
+
+/** The provider as the phone names it, mapped to something a user reads. */
+@Composable
+private fun fixSourceLabel(provider: String): String = when (provider) {
+    "gps" -> stringResource(R.string.wlwdw_fix_source_gps)
+    "network" -> stringResource(R.string.wlwdw_fix_source_network)
+    else -> stringResource(R.string.wlwdw_fix_source_other)
 }
 
 /** A neutral chip: precision, fix source. Not a status, so not a [StatusPill]. */
@@ -295,6 +317,7 @@ private fun ringTone(status: DeviceStatus): StatusTone = when (status) {
     DeviceStatus.Stopped -> StatusTone.Idle
     DeviceStatus.PushOffline -> StatusTone.Warn
     DeviceStatus.LocationFailed -> StatusTone.Error
+    DeviceStatus.DeviceUnregistered -> StatusTone.Error
 }
 
 @StringRes
@@ -305,6 +328,7 @@ private fun ringTitle(status: DeviceStatus): Int = when (status) {
     DeviceStatus.Stopped -> R.string.wlwdw_ring_stopped
     DeviceStatus.PushOffline -> R.string.wlwdw_ring_push_offline
     DeviceStatus.LocationFailed -> R.string.wlwdw_ring_no_fix
+    DeviceStatus.DeviceUnregistered -> R.string.wlwdw_ring_unregistered
 }
 
 @Composable
@@ -316,38 +340,40 @@ private fun ringCaption(status: DeviceStatus, reportIntervalMinutes: Int): Strin
     DeviceStatus.Stopped -> stringResource(R.string.wlwdw_ring_stopped_caption)
     DeviceStatus.PushOffline -> stringResource(R.string.wlwdw_ring_push_caption)
     DeviceStatus.LocationFailed -> stringResource(R.string.wlwdw_ring_no_fix_caption)
+    DeviceStatus.DeviceUnregistered -> stringResource(R.string.wlwdw_ring_unregistered_caption)
 }
 
 /**
- * The line under the ring: when the server last heard from this device. It is
- * the only number that answers "can my family see me", so a failed state shows
- * the last *successful* report rather than the last attempt.
+ * The line under the ring: when the server last heard from this device.
+ *
+ * It is the only number that answers "can my family see me", so it counts
+ * *successful* reports only. A device whose uploads have been failing for an
+ * hour must not show the time of the attempt that failed.
  */
 @Composable
-private fun heroLine(status: DeviceStatus): String = when (status) {
-    DeviceStatus.Reporting,
-    DeviceStatus.PermissionMissing -> stringResource(R.string.wlwdw_last_report, DemoData.lastReport)
-
-    DeviceStatus.Stopped -> stringResource(R.string.wlwdw_last_report, DemoData.lastReportStopped)
-
-    DeviceStatus.Retrying,
-    DeviceStatus.PushOffline,
-    DeviceStatus.LocationFailed -> stringResource(
-        R.string.wlwdw_last_success,
-        DemoData.lastSuccessfulReport,
+private fun heroLine(state: TrackingState): String {
+    val last = state.lastSuccessAt ?: return stringResource(R.string.wlwdw_last_never)
+    return stringResource(
+        if (state.failure == null) R.string.wlwdw_last_report else R.string.wlwdw_last_success,
+        relativeTime(last),
     )
 }
 
 private data class LinkPresentation(@StringRes val textRes: Int, val tone: StatusTone)
 
-private fun uploadLink(status: DeviceStatus): LinkPresentation = when (status) {
-    DeviceStatus.Retrying -> LinkPresentation(R.string.wlwdw_link_failing, StatusTone.Error)
-    DeviceStatus.Stopped -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
+private fun uploadLink(state: TrackingState): LinkPresentation = when {
+    !state.running -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
+    state.failure is ReportFailure.Upload -> LinkPresentation(R.string.wlwdw_link_failing, StatusTone.Error)
+    state.failure is ReportFailure.Refused -> LinkPresentation(R.string.wlwdw_link_refused, StatusTone.Error)
     else -> LinkPresentation(R.string.wlwdw_link_ok, StatusTone.Ok)
 }
 
-private fun pushLink(status: DeviceStatus): LinkPresentation = when (status) {
-    DeviceStatus.PushOffline -> LinkPresentation(R.string.wlwdw_link_reconnecting, StatusTone.Warn)
-    DeviceStatus.Stopped -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
-    else -> LinkPresentation(R.string.wlwdw_link_online, StatusTone.Ok)
+/**
+ * The push link is not wired up yet -- MQTT is the next stage. Reporting it as
+ * "online" would be the one thing this screen must not do, so it says what is
+ * true instead.
+ */
+private fun pushLink(state: TrackingState): LinkPresentation = when {
+    !state.running -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
+    else -> LinkPresentation(R.string.wlwdw_link_pending, StatusTone.Idle)
 }

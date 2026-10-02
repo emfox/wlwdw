@@ -1,6 +1,9 @@
 package org.rpwt.wlwdw.ui
 
+import android.Manifest
 import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,13 +26,11 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
@@ -43,8 +44,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.rpwt.wlwdw.R
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
-import org.rpwt.wlwdw.ui.demo.DemoData
-import org.rpwt.wlwdw.ui.model.DeviceStatus
 import org.rpwt.wlwdw.ui.nav.WlwdwDest
 import org.rpwt.wlwdw.ui.screen.ConsentScreen
 import org.rpwt.wlwdw.ui.screen.MapScreen
@@ -148,9 +147,44 @@ private fun Tabs(
     val messages by appViewModel.messages.collectAsStateWithLifecycle()
     val unreadCount = messages.count { it.unread }
 
-    // Stage 1 only: the status matrix is driven by hand so the prototype can be
-    // walked through all six states. The reporting service replaces this.
-    var status by remember { mutableStateOf(DemoData.status) }
+    val tracking by appViewModel.tracking.collectAsStateWithLifecycle()
+
+    // The permission can change while the app is in the background -- granting
+    // "all the time" happens on a Settings page -- so re-read it whenever the
+    // app comes back rather than trusting what was true when the loop started.
+    LifecycleResumeEffect(Unit) {
+        appViewModel.refreshPermissions()
+        onPauseOrDispose { }
+    }
+
+    // Foreground and background are separate requests on purpose. From Android
+    // 11 the system refuses to grant "all the time" in the same dialog as the
+    // while-in-use grant, and asking for it first gets both refused. So: ask
+    // for while-in-use, start tracking, and let the status screen's notice ask
+    // for the rest once there is a reason to.
+    val foregroundPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions(),
+    ) {
+        appViewModel.refreshPermissions()
+        appViewModel.startTracking()
+    }
+    val backgroundPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { appViewModel.refreshPermissions() }
+
+    val requestForeground = {
+        foregroundPermission.launch(
+            arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+            ),
+        )
+    }
+    // On Android 11+ this call is what routes the user to the app's location
+    // settings page; the dialog alone is not allowed to offer "all the time".
+    val requestBackground = {
+        backgroundPermission.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+    }
 
     Scaffold(
         // The screens own their insets: a screen's top app bar applies the
@@ -196,12 +230,23 @@ private fun Tabs(
         ) {
             composable<WlwdwDest.Status> {
                 StatusScreen(
-                    status = status,
+                    state = tracking,
+                    deviceId = settings.deviceId,
                     reportIntervalMinutes = settings.reportIntervalMinutes,
                     onOpenSettings = { navController.navigate(WlwdwDest.Settings) },
-                    onToggleTracking = { status = status.toggled() },
-                    onRequestPermission = { status = DeviceStatus.PermissionMissing },
-                    onCycleDemoStatus = { status = status.next() },
+                    onToggleTracking = {
+                        when {
+                            tracking.running -> appViewModel.stopTracking()
+                            // Never start a tracker without the permission it
+                            // needs: the request and the start are one action,
+                            // and the callback starts the loop once granted.
+                            !tracking.hasForeground -> requestForeground()
+                            else -> appViewModel.startTracking()
+                        }
+                    },
+                    onRequestPermission = {
+                        if (tracking.hasForeground) requestBackground() else requestForeground()
+                    },
                 )
             }
             composable<WlwdwDest.Map> {
@@ -241,19 +286,3 @@ private fun NavHostController.switchTab(dest: WlwdwDest) {
         restoreState = true
     }
 }
-
-// --- Stage 1 prototype only -------------------------------------------------
-// The two helpers below walk the status matrix by hand so the six states can be
-// reviewed without the reporting service. They go away with ui/demo/DemoData.kt.
-
-private fun DeviceStatus.next(): DeviceStatus = when (this) {
-    DeviceStatus.Reporting -> DeviceStatus.PermissionMissing
-    DeviceStatus.PermissionMissing -> DeviceStatus.Retrying
-    DeviceStatus.Retrying -> DeviceStatus.PushOffline
-    DeviceStatus.PushOffline -> DeviceStatus.LocationFailed
-    DeviceStatus.LocationFailed -> DeviceStatus.Stopped
-    DeviceStatus.Stopped -> DeviceStatus.Reporting
-}
-
-private fun DeviceStatus.toggled(): DeviceStatus =
-    if (this == DeviceStatus.Stopped) DeviceStatus.Reporting else DeviceStatus.Stopped

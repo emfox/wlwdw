@@ -1,49 +1,22 @@
 package org.rpwt.wlwdw.ui.demo
 
-import org.rpwt.wlwdw.ui.model.DeviceStatus
-import org.rpwt.wlwdw.ui.model.LinkState
-
 /**
- * Fixed values for the stage 1 prototype.
+ * Fixed values for what is still a prototype.
  *
- * Everything here is invented. Stage 1 is the interface only, deliberately, so
- * that the layout can be reviewed without the data layer being able to hide
- * problems behind it. The data layer replaces this file; nothing else reads it,
- * and no other file should start to.
+ * Everything here is invented. What has been deleted from this file is as
+ * informative as what is left: the status matrix, the last-report times and the
+ * coordinates all come from `tracking/ReportingEngine` now, and the message
+ * list and the settings from the data layer. Only the map, which has no tile
+ * source yet, and the settings screen's log row still stand in.
  */
 object DemoData {
 
-    // --- Status tab ---------------------------------------------------------
-
-    /** The state the status screen renders. Change this to see the others. */
-    val status: DeviceStatus = DeviceStatus.Reporting
-
-    const val lastReport = "刚刚（12:04:31）"
-    const val lastSuccessfulReport = "47 分钟前"
-
-    /** Shown when tracking is off, so nothing is being sent at all. */
-    const val lastReportStopped = "3 天前"
-
-    const val address = "浙江省杭州市西湖区文三路 90 号"
-    const val coordinates = "30.274105, 120.126254"
-    const val accuracy = "±14 m"
-    const val fixSource = "GPS"
-
-    /**
-     * Kept on screen when there is no fresh fix, so the user sees where the
-     * device last was rather than an empty card.
-     */
-    const val staleAddress = "浙江省杭州市余杭区文一西路 969 号"
-    const val staleCoordinates = "30.281340, 119.987210"
-    const val staleAccuracy = "±120 m"
-    const val staleFixSource = "网络定位"
-
-    val uploadState: LinkState = LinkState.Ok
-    val pushState: LinkState = LinkState.Ok
-
     // --- Map tab ------------------------------------------------------------
 
+    /** The last fix's age and precision, as the map's bottom sheet shows it. */
     const val mapFixAge = "刚刚 · ±14 m"
+
+    const val address = "浙江省杭州市西湖区文三路 90 号"
 
     data class Anchor(val name: String, val time: String)
 
@@ -52,22 +25,12 @@ object DemoData {
         Anchor("家里", "11:47"),
     )
 
-    // --- Messages tab -------------------------------------------------------
-
-    /**
-     * Gone from here: the message list now comes from the Room store
-     * (`data/MessageRepository`), and the unread count from that same list. The
-     * inbox is empty until the push pipeline lands, which is what the empty
-     * state on that screen is for.
-     */
-
     // --- Settings tab -------------------------------------------------------
 
     /**
-     * The settings screen's own values -- device id, host, reporting interval,
-     * version -- are no longer here: they come from DataStore (device id, host,
-     * interval) or from the build itself (version). See
-     * `data/prefs/PreferencesRepository`.
+     * Still a stand-in: nothing writes a log file yet. The settings screen's
+     * other values -- device id, host, reporting interval, version -- come from
+     * DataStore or from the build itself.
      */
     const val logCount = "3 条"
 }

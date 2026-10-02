@@ -47,6 +47,13 @@ room = "2.8.5"
 # needs. Change it on its own.
 ksp = "2.3.12"
 
+# --- Network (the data/net package) ---
+# Ktor replaces the HttpURLConnection the pre-rewrite app used by hand. The
+# OkHttp engine rather than Ktor's own CIO: on Android it is the one that uses
+# the platform TLS stack and does connection pooling, which matters for an app
+# that talks to the same host every couple of minutes.
+ktor = "3.6.0"
+
 [libraries]
 # --- Compose UI stack (the whole app UI; see the ui/ package) ---
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -74,6 +81,14 @@ compose-material3 = { module = "androidx.compose.material3:material3" }
 compose-material-icons-extended = { module = "androidx.compose.material:material-icons-extended" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+
+# --- Network ---
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "ktor" }
+# ContentNegotiation + the kotlinx JSON converter: the pair that turns a
+# @Serializable class into the request body and the response body back.
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

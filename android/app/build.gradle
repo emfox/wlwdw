@@ -131,6 +131,14 @@ dependencies {
     implementation libs.androidx.room.runtime
     implementation libs.androidx.room.ktx
     ksp libs.androidx.room.compiler
+
+    // --- The network layer (data/net package) ---
+    // Only the report call exists so far; the message pull and the MQTT
+    // handshake will reuse this same client.
+    implementation libs.ktor.client.core
+    implementation libs.ktor.client.okhttp
+    implementation libs.ktor.client.content.negotiation
+    implementation libs.ktor.serialization.kotlinx.json
 }
 // No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
 // 9.4 requires JDK 17+, so the former hardcoded JDK 11 toolchain was both

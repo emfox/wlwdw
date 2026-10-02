@@ -8,8 +8,8 @@ package org.rpwt.wlwdw.ui.model
  * keeps only the combinations that actually change what the screen should say,
  * so each one is a named type here and the wording for each lives with the UI.
  *
- * Stage 1 renders these from fixed demo values; the data layer will produce
- * them for real later, and this is where it will report them into.
+ * Produced for real by `tracking/ReportingEngine`, which is the only thing that
+ * decides which of these is current.
  */
 sealed interface DeviceStatus {
 
@@ -33,6 +33,17 @@ sealed interface DeviceStatus {
 
     /** No usable fix. The last known one stays on screen, marked as old. */
     data object LocationFailed : DeviceStatus
+
+    /**
+     * The server does not know this device id.
+     *
+     * Not one of the six the design enumerated, and it earns its place: it is
+     * the state a fresh install starts in, and the only one the user fixes on
+     * the server rather than on the phone. Without it the screen said
+     * "reporting" while the server was answering `{"result":"deny"}` to every
+     * report -- the failure mode that made wiring this up worth doing.
+     */
+    data object DeviceUnregistered : DeviceStatus
 }
 
 /**

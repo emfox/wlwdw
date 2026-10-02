@@ -3,16 +3,23 @@ package org.rpwt.wlwdw.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.rpwt.wlwdw.data.MessageRepository
 import org.rpwt.wlwdw.data.model.Message
+import org.rpwt.wlwdw.data.net.WlwdwApi
 import org.rpwt.wlwdw.data.prefs.PreferencesRepository
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
+import org.rpwt.wlwdw.location.LocationSource
+import org.rpwt.wlwdw.tracking.ReportingEngine
+import org.rpwt.wlwdw.tracking.TrackingState
 
 /**
  * The app's state, as the screens read it.
@@ -27,6 +34,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = PreferencesRepository(application)
     private val messageStore = MessageRepository(application)
+    private val location = LocationSource(application)
+    private val engine = ReportingEngine(WlwdwApi(), location)
+
+    /** The job running [ReportingEngine.run]; null when tracking is off. */
+    private var trackingJob: Job? = null
 
     val settings: StateFlow<WlwdwPrefs?> = flow {
         // Seed before the first emission, so the id is already there the first
@@ -45,6 +57,39 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
      */
     val messages: StateFlow<List<Message>> = messageStore.observe()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * What the tracking screen shows.
+     *
+     * The engine owns this rather than the ViewModel mirroring it into a second
+     * StateFlow: there is exactly one thing that knows whether a report went
+     * out, and it is the thing that sent it.
+     */
+    val tracking: StateFlow<TrackingState> = engine.state
+
+    fun startTracking() {
+        if (trackingJob?.isActive == true) return
+        // Read the permissions before the first tick so the ring shows the
+        // right wording immediately rather than after a fix attempt.
+        engine.onPermissionsChanged()
+        trackingJob = viewModelScope.launch {
+            // Read the settings fresh on every tick: a change to the interval or
+            // the server is then picked up by the loop that is already running.
+            engine.run { settings.filterNotNull().first() }
+        }
+    }
+
+    fun stopTracking() {
+        trackingJob?.cancel()
+        trackingJob = null
+        // The loop's own finally block is what clears `running`. Wiping the
+        // whole state here would also throw away the last fix and the time of
+        // the last successful report, which are exactly what the screen shows
+        // once tracking has stopped.
+    }
+
+    /** Called when the app may have just been granted (or lost) location. */
+    fun refreshPermissions() = engine.onPermissionsChanged()
 
     fun acceptConsent() = viewModelScope.launch { prefs.setConsentAccepted(true) }
 

@@ -8,9 +8,10 @@
     <string name="app_name">物联网定位</string>
 
     <!-- The Compose UI (org.rpwt.wlwdw.ui). Text that belongs to the interface
-         lives here; values that are really data (addresses, coordinates,
-         message bodies, the device id) live in ui/demo/DemoData.kt for now and
-         will come from the data layer later. -->
+         lives here. Values that are really data (coordinates, the last report
+         time, the device id) are not text and are not here: they come from
+         the data layer or, where nothing produces them yet, from
+         ui/demo/DemoData.kt. -->
 
     <string name="wlwdw_app_title">我来了我到了</string>
     <string name="wlwdw_title_settings">设置</string>
@@ -40,25 +41,48 @@
     <string name="wlwdw_ring_push_caption">上报正常</string>
     <string name="wlwdw_ring_no_fix">定位失败</string>
     <string name="wlwdw_ring_no_fix_caption">显示上次位置</string>
+    <string name="wlwdw_ring_unregistered">设备未登记</string>
+    <string name="wlwdw_ring_unregistered_caption">服务器不认识</string>
 
     <!-- Status screen: the rest -->
     <string name="wlwdw_last_report">最后上报 · %1$s</string>
     <string name="wlwdw_last_success">最后成功上报 · %1$s</string>
+    <string name="wlwdw_last_never">还没有成功上报</string>
     <string name="wlwdw_location_stale">位置可能已变化</string>
+    <string name="wlwdw_location_unknown">还没有定位</string>
+    <!-- Where the fix came from, as the provider is named on the phone. -->
+    <string name="wlwdw_fix_source_gps">GPS</string>
+    <string name="wlwdw_fix_source_network">网络</string>
+    <string name="wlwdw_fix_source_other">定位</string>
     <string name="wlwdw_link_upload">服务器上报</string>
     <string name="wlwdw_link_push">消息推送</string>
     <string name="wlwdw_link_ok">正常</string>
     <string name="wlwdw_link_online">在线</string>
     <string name="wlwdw_link_failing">失败 · 连接超时</string>
+    <string name="wlwdw_link_refused">被服务器拒绝</string>
     <string name="wlwdw_link_reconnecting">重连中</string>
     <string name="wlwdw_link_offline">离线</string>
+    <string name="wlwdw_link_pending">未接入</string>
     <string name="wlwdw_start_tracking">开始追踪</string>
     <string name="wlwdw_stop_tracking">停止追踪</string>
+
+    <!-- How long ago something happened. Used for the last report and for a fix
+         that is only shown as the previous one. -->
+    <string name="wlwdw_ago_now">刚刚</string>
+    <string name="wlwdw_ago_minutes">%1$d 分钟前</string>
+    <string name="wlwdw_ago_hours">%1$d 小时前</string>
+    <string name="wlwdw_ago_days">%1$d 天前</string>
 
     <!-- Status screen: background-location notice -->
     <string name="wlwdw_perm_title">后台定位权限未开启</string>
     <string name="wlwdw_perm_body">熄屏后位置会停止上报。需要把定位权限改成「始终允许」。</string>
     <string name="wlwdw_perm_action">去开启 ›</string>
+
+    <!-- Status screen: the device is not registered on the server. Shown with
+         the id, because the fix is to add that id server-side. -->
+    <string name="wlwdw_unregistered_title">这台设备还没登记</string>
+    <string name="wlwdw_unregistered_body">服务器不认识本机 ID，上报会被拒绝。把下面的 ID 加到服务器后重新开始追踪。</string>
+    <string name="wlwdw_unregistered_action">查看设备 ID ›</string>
 
     <!-- Map screen -->
     <string name="wlwdw_map_my_location">我的位置</string>
@@ -107,9 +131,5 @@
     <string name="wlwdw_consent_agree">同意并继续</string>
     <string name="wlwdw_consent_decline">不同意</string>
     <string name="wlwdw_consent_fine">继续即表示你已阅读并同意《隐私政策》</string>
-
-    <!-- Temporary: the stage 1 demo affordance that walks the status matrix.
-         Remove together with ui/demo/DemoData.kt. -->
-    <string name="wlwdw_demo_status">演示状态：%1$s</string>
 
 </resources>
