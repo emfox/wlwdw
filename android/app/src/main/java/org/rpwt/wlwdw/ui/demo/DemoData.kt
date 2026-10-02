@@ -54,30 +54,12 @@ object DemoData {
 
     // --- Messages tab -------------------------------------------------------
 
-    data class Message(
-        val sender: String,
-        val body: String,
-        val time: String,
-        val unread: Boolean,
-        val fromServer: Boolean,
-    )
-
-    val messagesToday = listOf(
-        Message("妈妈", "到楼下了，下来帮我拿一下东西", "刚刚", unread = true, fromServer = false),
-        Message("服务器", "设备定位已恢复上报", "12:04", unread = true, fromServer = true),
-        Message("爸爸", "今天不用等我吃饭", "11:20", unread = false, fromServer = false),
-    )
-
-    val messagesYesterday = listOf(
-        Message("服务器", "上报持续失败 3 次，请检查网络", "21:33", unread = false, fromServer = true),
-    )
-
     /**
-     * Derived, never a literal: the badge and the unread rows have to agree, and
-     * a hand-kept count is the one thing that silently drifts out of step with
-     * the list it summarises.
+     * Gone from here: the message list now comes from the Room store
+     * (`data/MessageRepository`), and the unread count from that same list. The
+     * inbox is empty until the push pipeline lands, which is what the empty
+     * state on that screen is for.
      */
-    val unreadCount = (messagesToday + messagesYesterday).count { it.unread }
 
     // --- Settings tab -------------------------------------------------------
 

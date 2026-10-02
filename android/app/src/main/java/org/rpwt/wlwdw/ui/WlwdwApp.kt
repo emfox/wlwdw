@@ -142,6 +142,12 @@ private fun Tabs(
     val destination = backStackEntry?.destination
     val selectedTab = WlwdwTabs.firstOrNull { destination.isAt(it.dest) }
 
+    // Collected here rather than inside the messages tab, because the badge in
+    // the bar needs the count from every tab. The count is derived from the
+    // list it summarises, so the two cannot disagree.
+    val messages by appViewModel.messages.collectAsStateWithLifecycle()
+    val unreadCount = messages.count { it.unread }
+
     // Stage 1 only: the status matrix is driven by hand so the prototype can be
     // walked through all six states. The reporting service replaces this.
     var status by remember { mutableStateOf(DemoData.status) }
@@ -158,7 +164,7 @@ private fun Tabs(
                         val selected = tab == selectedTab
                         // Unread mail is the guidance's large badge: a count,
                         // not a hand-drawn dot.
-                        val unread = tab.dest == WlwdwDest.Messages && DemoData.unreadCount > 0
+                        val unread = tab.dest == WlwdwDest.Messages && unreadCount > 0
                         ShortNavigationBarItem(
                             selected = selected,
                             onClick = { navController.switchTab(tab.dest) },
@@ -166,7 +172,7 @@ private fun Tabs(
                                 val image = if (selected) tab.selectedIcon else tab.unselectedIcon
                                 if (unread) {
                                     BadgedBox(
-                                        badge = { Badge { Text(DemoData.unreadCount.toString()) } },
+                                        badge = { Badge { Text(unreadCount.toString()) } },
                                     ) {
                                         Icon(imageVector = image, contentDescription = null)
                                     }
@@ -202,7 +208,10 @@ private fun Tabs(
                 MapScreen()
             }
             composable<WlwdwDest.Messages> {
-                MessageScreen(onMarkAllRead = {})
+                MessageScreen(
+                    messages = messages,
+                    onMarkAllRead = appViewModel::markAllRead,
+                )
             }
             composable<WlwdwDest.Settings> {
                 SettingsScreen(

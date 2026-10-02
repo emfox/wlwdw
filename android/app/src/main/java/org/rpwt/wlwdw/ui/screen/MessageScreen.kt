@@ -1,5 +1,6 @@
 package org.rpwt.wlwdw.ui.screen
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,10 +29,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import org.rpwt.wlwdw.R
+import org.rpwt.wlwdw.data.model.Message
+import org.rpwt.wlwdw.data.model.MessageDay
 import org.rpwt.wlwdw.ui.component.MessageRow
 import org.rpwt.wlwdw.ui.component.StatusPill
 import org.rpwt.wlwdw.ui.component.StatusTone
-import org.rpwt.wlwdw.ui.demo.DemoData
 import org.rpwt.wlwdw.ui.theme.WlwdwDimens
 
 /**
@@ -49,11 +51,16 @@ import org.rpwt.wlwdw.ui.theme.WlwdwDimens
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MessageScreen(
+    messages: List<Message>,
     onMarkAllRead: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val today = DemoData.messagesToday
-    val yesterday = DemoData.messagesYesterday
+    // Grouped here rather than in the query: the list is already in arrival
+    // order, so one pass over it gives both the groups and their order, and a
+    // third "earlier" bucket is a one-line change instead of another query.
+    val groups = MessageDay.entries.mapNotNull { day ->
+        messages.filter { it.day == day }.takeIf { it.isNotEmpty() }?.let { day to it }
+    }
 
     Column(
         modifier = modifier
@@ -82,7 +89,7 @@ fun MessageScreen(
             },
         )
 
-        if (today.isEmpty() && yesterday.isEmpty()) {
+        if (groups.isEmpty()) {
             EmptyMessages(Modifier.fillMaxSize())
         } else {
             LazyColumn(
@@ -95,21 +102,11 @@ fun MessageScreen(
                 ),
                 verticalArrangement = Arrangement.spacedBy(9.dp),
             ) {
-                if (today.isNotEmpty()) {
-                    item { DaySeparator(stringResource(R.string.wlwdw_messages_today)) }
-                    items(today) { message ->
-                        MessageRow(
-                            sender = message.sender,
-                            body = message.body,
-                            time = message.time,
-                            unread = message.unread,
-                            fromServer = message.fromServer,
-                        )
+                groups.forEach { (day, dayMessages) ->
+                    item(key = "day-$day") {
+                        DaySeparator(stringResource(dayLabel(day)))
                     }
-                }
-                if (yesterday.isNotEmpty()) {
-                    item { DaySeparator(stringResource(R.string.wlwdw_messages_yesterday)) }
-                    items(yesterday) { message ->
+                    items(dayMessages, key = { it.id }) { message ->
                         MessageRow(
                             sender = message.sender,
                             body = message.body,
@@ -122,6 +119,13 @@ fun MessageScreen(
             }
         }
     }
+}
+
+@StringRes
+private fun dayLabel(day: MessageDay): Int = when (day) {
+    MessageDay.Today -> R.string.wlwdw_messages_today
+    MessageDay.Yesterday -> R.string.wlwdw_messages_yesterday
+    MessageDay.Earlier -> R.string.wlwdw_messages_earlier
 }
 
 /** A date break in the list: a word with a rule either side. */

@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
+    // Room's annotation processor runs through KSP.
+    alias(libs.plugins.ksp)
 }
 
 // Local secrets: the MQTT device credential and the release signing keystore.
@@ -93,6 +95,14 @@ kotlin {
     }
 }
 
+// Room exports the schema it generates, which is what a migration is written
+// against later. The processor only warns that it cannot export if this is
+// missing, but an exported schema is the difference between writing a migration
+// and guessing at one.
+ksp {
+    arg('room.schemaLocation', "$projectDir/schemas")
+}
+
 dependencies {
     // --- The rewritten UI (ui/ package): Compose single-activity app ---
     // The BOM has to be imported before the compose artifacts so their versions
@@ -116,6 +126,11 @@ dependencies {
     implementation libs.androidx.datastore.preferences
     implementation libs.androidx.lifecycle.viewmodel.compose
     implementation libs.androidx.lifecycle.runtime.compose
+    // Room replaces the pre-rewrite MsgdbHelper. The compiler is a KSP
+    // processor, so it is added with ksp() rather than implementation().
+    implementation libs.androidx.room.runtime
+    implementation libs.androidx.room.ktx
+    ksp libs.androidx.room.compiler
 }
 // No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
 // 9.4 requires JDK 17+, so the former hardcoded JDK 11 toolchain was both

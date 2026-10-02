@@ -71,6 +71,10 @@
     <string name="wlwdw_messages_mark_all_read">全部已读</string>
     <string name="wlwdw_messages_today">今天</string>
     <string name="wlwdw_messages_yesterday">昨天</string>
+    <!-- Anything older than yesterday. Not in the design, which only ever showed
+         two days; the store can hold more, so the list needs somewhere to put
+         them rather than dropping them. -->
+    <string name="wlwdw_messages_earlier">更早</string>
     <string name="wlwdw_messages_empty_title">还没有消息</string>
     <string name="wlwdw_messages_empty_body">家人发来的消息和上报异常提醒会出现在这里。</string>
 

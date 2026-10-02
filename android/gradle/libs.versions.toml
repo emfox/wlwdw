@@ -39,6 +39,13 @@ dataStore = "1.2.1"
 # ViewModel + collectAsStateWithLifecycle for the Compose screens. 2.11.0 is
 # the newest stable (2.12 is alpha), and it is the line navigation 2.10 pulls in.
 lifecycle = "2.11.0"
+# Room 3 is the object mapping the pre-rewrite MsgdbHelper did by hand.
+room = "2.8.5"
+# KSP runs Room's annotation processor. Since 2.3 it is versioned on its own
+# rather than as "<kotlin>-<ksp>", so it no longer has to match the Kotlin
+# version -- which is what makes it usable with the Kotlin 2.4.20 the build
+# needs. Change it on its own.
+ksp = "2.3.12"
 
 [libraries]
 # --- Compose UI stack (the whole app UI; see the ui/ package) ---
@@ -50,6 +57,12 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "dataStore" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
+
+# --- Data layer: the message store ---
+androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
+# room-ktx: the Flow-returning DAO queries and suspend transactions.
+androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
+androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
 compose-ui = { module = "androidx.compose.ui:ui" }
@@ -71,3 +84,4 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 # its version has to track the Kotlin version, not the compose-bom.
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
