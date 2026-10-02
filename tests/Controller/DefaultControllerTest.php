@@ -47,4 +47,14 @@ class DefaultControllerTest extends AbstractAppTestCase
 
         self::assertResponseIsSuccessful();
     }
+
+    public function testUnknownMapTypeIsRejected(): void
+    {
+        $client = $this->loginAs('viewer');
+        $client->request('GET', '/main/somemap');
+
+        // The route constrains maptype to the known providers, so a typo in the
+        // URL fails loudly instead of silently falling back to the Baidu branch.
+        self::assertResponseStatusCodeSame(404);
+    }
 }

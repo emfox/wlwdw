@@ -14,4 +14,6 @@ emfox_gps_main:
     defaults:
         _controller: "App\\Controller\\DefaultController::main"
         maptype: "google"
+    requirements:
+        maptype: 'google|baidu|tianditu'
 
