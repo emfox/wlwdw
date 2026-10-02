@@ -5,7 +5,7 @@ twig:
     globals:
         google_map_api_key: '%env(GOOGLE_MAP_API_KEY)%'
         baidu_map_api_key: '%env(BAIDU_MAP_API_KEY)%'
-        tianditu_map_api_key: '%env(TIANDITU_MAP_API_KEY)%'
+        tianditu_map_api_key: '%env(default::TIANDITU_MAP_API_KEY)%'
     file_name_pattern: '*.twig'
 
 when@test:
