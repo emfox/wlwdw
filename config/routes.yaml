@@ -7,13 +7,13 @@ emfox_gps_index:
     path: /
     defaults:
         _controller: Symfony\Bundle\FrameworkBundle\Controller\RedirectController
-        path: /main/google
+        path: /main/tianditu
         permanent: true
 emfox_gps_main:
     path:     /main/{maptype}
     defaults:
         _controller: "App\\Controller\\DefaultController::main"
-        maptype: "google"
+        maptype: "tianditu"
     requirements:
         maptype: 'google|baidu|tianditu'
 

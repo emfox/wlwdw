@@ -39,9 +39,10 @@ cp .env.example .env \
        -e "s/^EMQX_API_KEY_SECRET=.*/EMQX_API_KEY_SECRET=$EMQX_API_KEY_SECRET/" .env \
   && rm -f .env.bak
 ```
-   Then edit `.env` to set the map API keys (`GOOGLE_MAP_API_KEY`,
-   `BAIDU_MAP_API_KEY`) and, if you use realtime push, `MQTT_DEVICE_SHARED_SECRET`
-   to the same value the Android app embeds.
+   Then edit `.env` to set the map API keys (`TIANDITU_MAP_API_KEY` is the one
+   the viewer opens on by default; `GOOGLE_MAP_API_KEY` and `BAIDU_MAP_API_KEY`
+   back `/main/google` and `/main/baidu`) and, if you use realtime push,
+   `MQTT_DEVICE_SHARED_SECRET` to the same value the Android app embeds.
 
 2. Optional, if running via docker (only `mysql-data` needs pre-creating; the
    EMQX data volume is created automatically):

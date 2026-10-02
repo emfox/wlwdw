@@ -15,13 +15,13 @@ class DefaultControllerTest extends AbstractAppTestCase
         self::assertResponseRedirects('/login', 302);
     }
 
-    public function testRootRedirectsLoggedInUserToMainGoogle(): void
+    public function testRootRedirectsLoggedInUserToMainTianditu(): void
     {
         $client = $this->loginAs('viewer');
         $client->request('GET', '/');
 
         // The RedirectController route is configured as a permanent redirect.
-        self::assertResponseRedirects('/main/google', 301);
+        self::assertResponseRedirects('/main/tianditu', 301);
     }
 
     public function testMainGooglePageRendersForRegularUser(): void
