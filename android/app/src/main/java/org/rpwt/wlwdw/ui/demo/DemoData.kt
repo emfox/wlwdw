@@ -81,9 +81,11 @@ object DemoData {
 
     // --- Settings tab -------------------------------------------------------
 
-    const val deviceId = "3f2a9c14-8b7e-4d21-9c33-0a7f5b2e8d10"
-    const val host = "wlwdw.rpwt.org"
-    const val reportInterval = "每 5 分钟"
-    const val version = "2.0.0 (1)"
+    /**
+     * The settings screen's own values -- device id, host, reporting interval,
+     * version -- are no longer here: they come from DataStore (device id, host,
+     * interval) or from the build itself (version). See
+     * `data/prefs/PreferencesRepository`.
+     */
     const val logCount = "3 条"
 }

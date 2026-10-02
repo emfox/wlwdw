@@ -15,9 +15,11 @@ import androidx.compose.material.icons.outlined.Map
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.ShortNavigationBar
 import androidx.compose.material3.ShortNavigationBarItem
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +30,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -38,6 +42,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.rpwt.wlwdw.R
+import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
 import org.rpwt.wlwdw.ui.demo.DemoData
 import org.rpwt.wlwdw.ui.model.DeviceStatus
 import org.rpwt.wlwdw.ui.nav.WlwdwDest
@@ -89,16 +94,56 @@ private val WlwdwTabs = listOf(
  * one is no longer recommended as of M3 Expressive -- and is hidden on the
  * screens that are not tabs, which are reached from a top app bar and backed
  * out of.
+ *
+ * Consent is a gate in front of the tabs rather than a destination in them.
+ * That is what makes it appear exactly once per install: the answer is stored,
+ * so the next launch starts at the tabs and never builds the page at all. As a
+ * destination it needed a `popUpTo` to keep it off the back stack, and the
+ * back stack is a fragile place to keep a compliance decision.
  */
 @Composable
-fun WlwdwApp(navController: NavHostController = rememberNavController()) {
+fun WlwdwApp(
+    navController: NavHostController = rememberNavController(),
+    // Not named `viewModel`: that would shadow the `viewModel()` factory used as
+    // this very default, and a parameter cannot be resolved in its own default.
+    appViewModel: AppViewModel = viewModel(),
+) {
+    val settings by appViewModel.settings.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val loaded = settings
+
+    when {
+        // One frame while DataStore is read. Deliberately blank rather than a
+        // guess: this is what stops the consent page from flashing for a user
+        // who has already answered it.
+        loaded == null -> Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.surface,
+        ) {}
+
+        !loaded.consentAccepted -> ConsentScreen(
+            onAgree = appViewModel::acceptConsent,
+            // Declining leaves the app. Forcing consent with a non-cancellable
+            // dialog is what the design rules out.
+            onDecline = { (context as? Activity)?.finish() },
+        )
+
+        else -> Tabs(loaded, navController, appViewModel)
+    }
+}
+
+@Composable
+private fun Tabs(
+    settings: WlwdwPrefs,
+    navController: NavHostController,
+    appViewModel: AppViewModel,
+) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val selectedTab = WlwdwTabs.firstOrNull { destination.isAt(it.dest) }
-    val context = LocalContext.current
 
     // Stage 1 only: the status matrix is driven by hand so the prototype can be
-    // walked through all six states. The data layer replaces this.
+    // walked through all six states. The reporting service replaces this.
     var status by remember { mutableStateOf(DemoData.status) }
 
     Scaffold(
@@ -140,24 +185,13 @@ fun WlwdwApp(navController: NavHostController = rememberNavController()) {
     ) { innerPadding ->
         NavHost(
             navController = navController,
-            startDestination = WlwdwDest.Consent,
+            startDestination = WlwdwDest.Status,
             modifier = Modifier.fillMaxSize().padding(innerPadding),
         ) {
-            composable<WlwdwDest.Consent> {
-                ConsentScreen(
-                    onAgree = {
-                        navController.navigate(WlwdwDest.Status) {
-                            popUpTo(WlwdwDest.Consent) { inclusive = true }
-                        }
-                    },
-                    // Declining leaves the app. Forcing consent with a
-                    // non-cancellable dialog is what the design rules out.
-                    onDecline = { (context as? Activity)?.finish() },
-                )
-            }
             composable<WlwdwDest.Status> {
                 StatusScreen(
                     status = status,
+                    reportIntervalMinutes = settings.reportIntervalMinutes,
                     onOpenSettings = { navController.navigate(WlwdwDest.Settings) },
                     onToggleTracking = { status = status.toggled() },
                     onRequestPermission = { status = DeviceStatus.PermissionMissing },
@@ -171,7 +205,13 @@ fun WlwdwApp(navController: NavHostController = rememberNavController()) {
                 MessageScreen(onMarkAllRead = {})
             }
             composable<WlwdwDest.Settings> {
-                SettingsScreen(onBack = { navController.popBackStack() })
+                SettingsScreen(
+                    prefs = settings,
+                    onBack = { navController.popBackStack() },
+                    onUseCustomHostChange = appViewModel::setUseCustomHost,
+                    onCustomHostChange = appViewModel::setCustomHost,
+                    onReportIntervalChange = appViewModel::setReportIntervalMinutes,
+                )
             }
         }
     }
@@ -195,7 +235,7 @@ private fun NavHostController.switchTab(dest: WlwdwDest) {
 
 // --- Stage 1 prototype only -------------------------------------------------
 // The two helpers below walk the status matrix by hand so the six states can be
-// reviewed without the data layer. They go away with ui/demo/DemoData.kt.
+// reviewed without the reporting service. They go away with ui/demo/DemoData.kt.
 
 private fun DeviceStatus.next(): DeviceStatus = when (this) {
     DeviceStatus.Reporting -> DeviceStatus.PermissionMissing

@@ -109,6 +109,13 @@ dependencies {
     implementation libs.compose.material.icons.extended
     implementation libs.kotlinx.serialization.json
     debugImplementation libs.compose.ui.tooling
+
+    // --- The data layer (data/ package) ---
+    // DataStore holds the settings; the ViewModel pieces are what lets a screen
+    // read it as state instead of holding its own copy.
+    implementation libs.androidx.datastore.preferences
+    implementation libs.androidx.lifecycle.viewmodel.compose
+    implementation libs.androidx.lifecycle.runtime.compose
 }
 // No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
 // 9.4 requires JDK 17+, so the former hardcoded JDK 11 toolchain was both

@@ -61,6 +61,7 @@ import org.rpwt.wlwdw.ui.theme.statusColors
 @Composable
 fun StatusScreen(
     status: DeviceStatus,
+    reportIntervalMinutes: Int,
     onOpenSettings: () -> Unit,
     onToggleTracking: () -> Unit,
     onRequestPermission: () -> Unit,
@@ -113,7 +114,7 @@ fun StatusScreen(
             StatusRing(
                 tone = ringTone(status),
                 title = stringResource(ringTitle(status)),
-                caption = ringCaption(status),
+                caption = ringCaption(status, reportIntervalMinutes),
             )
 
             Spacer(Modifier.height(10.dp))
@@ -307,8 +308,9 @@ private fun ringTitle(status: DeviceStatus): Int = when (status) {
 }
 
 @Composable
-private fun ringCaption(status: DeviceStatus): String = when (status) {
-    DeviceStatus.Reporting -> DemoData.reportInterval
+private fun ringCaption(status: DeviceStatus, reportIntervalMinutes: Int): String = when (status) {
+    // The interval is a setting, so this reads it rather than quoting it.
+    DeviceStatus.Reporting -> stringResource(R.string.wlwdw_interval_every, reportIntervalMinutes)
     DeviceStatus.PermissionMissing -> stringResource(R.string.wlwdw_ring_permission_caption)
     DeviceStatus.Retrying -> stringResource(R.string.wlwdw_ring_retrying_caption)
     DeviceStatus.Stopped -> stringResource(R.string.wlwdw_ring_stopped_caption)

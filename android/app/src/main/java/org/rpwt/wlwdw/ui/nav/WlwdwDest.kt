@@ -10,19 +10,12 @@ import kotlinx.serialization.Serializable
  * destination becomes a compile error rather than a runtime failure. Adding a
  * screen means adding a type here plus one `composable<...>` entry in
  * `WlwdwApp`.
+ *
+ * The first-run consent page is deliberately not one of these: it is a gate in
+ * front of the graph (see `WlwdwApp`), because it is answered once per install
+ * and a back stack is the wrong place to remember a compliance decision.
  */
 sealed interface WlwdwDest {
-
-    /**
-     * First run: the consent page.
-     *
-     * Not a tab and not reached from the bar -- it is the start destination and
-     * is popped off the stack once the user agrees, so it appears exactly once
-     * per install. Whether it has already been answered is the data layer's
-     * question; this stage always shows it.
-     */
-    @Serializable
-    data object Consent : WlwdwDest
 
     /** Bottom bar tab 1: whether the device is reporting, and what the server last saw. */
     @Serializable

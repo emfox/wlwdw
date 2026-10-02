@@ -16,6 +16,12 @@
     <string name="wlwdw_title_settings">设置</string>
     <string name="wlwdw_action_settings">设置</string>
     <string name="wlwdw_action_back">返回</string>
+    <string name="wlwdw_action_ok">确定</string>
+    <string name="wlwdw_action_cancel">取消</string>
+
+    <!-- The reporting interval, used both as the status ring's caption and as
+         the settings row's value. -->
+    <string name="wlwdw_interval_every">每 %1$d 分钟</string>
 
     <!-- Navigation -->
     <string name="wlwdw_tab_status">状态</string>
@@ -72,10 +78,13 @@
     <string name="wlwdw_settings_device_group">本机设备</string>
     <string name="wlwdw_settings_device_id">设备 ID</string>
     <string name="wlwdw_settings_device_id_sub">服务端用它识别这台设备</string>
+    <string name="wlwdw_settings_device_id_none">尚未生成</string>
     <string name="wlwdw_settings_copy_id">复制设备 ID</string>
+    <string name="wlwdw_settings_id_copied">设备 ID 已复制</string>
     <string name="wlwdw_settings_server_group">服务器</string>
     <string name="wlwdw_settings_custom_host">使用自定义主机</string>
     <string name="wlwdw_settings_host">主机地址</string>
+    <string name="wlwdw_settings_host_hint">只填主机名，如 wlwdw.rpwt.org</string>
     <string name="wlwdw_settings_interval">上报频率</string>
     <string name="wlwdw_settings_diagnostics_group">诊断</string>
     <string name="wlwdw_settings_recent_reports">查看最近上报记录</string>
