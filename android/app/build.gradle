@@ -83,6 +83,14 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+    lint {
+        // The interface is Chinese and the English locale carries the product
+        // name only -- see the note in src/main/res/values-en/strings.xml. Lint
+        // reads that as 89 missing translations; the decision was deliberate, so
+        // the check is off rather than the file duplicated. Re-enable it the day
+        // the UI itself is translated.
+        disable += 'MissingTranslation'
+    }
     namespace 'org.rpwt.wlwdw'
 }
 
