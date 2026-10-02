@@ -64,7 +64,7 @@ object DemoData {
 
     val messagesToday = listOf(
         Message("妈妈", "到楼下了，下来帮我拿一下东西", "刚刚", unread = true, fromServer = false),
-        Message("服务器", "设备定位已恢复上报", "12:04", unread = false, fromServer = true),
+        Message("服务器", "设备定位已恢复上报", "12:04", unread = true, fromServer = true),
         Message("爸爸", "今天不用等我吃饭", "11:20", unread = false, fromServer = false),
     )
 
@@ -72,7 +72,12 @@ object DemoData {
         Message("服务器", "上报持续失败 3 次，请检查网络", "21:33", unread = false, fromServer = true),
     )
 
-    const val unreadCount = 2
+    /**
+     * Derived, never a literal: the badge and the unread rows have to agree, and
+     * a hand-kept count is the one thing that silently drifts out of step with
+     * the list it summarises.
+     */
+    val unreadCount = (messagesToday + messagesYesterday).count { it.unread }
 
     // --- Settings tab -------------------------------------------------------
 
