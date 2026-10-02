@@ -8,4 +8,9 @@
          dark one; see values-night/colors.xml). -->
     <color name="wlwdw_page">#F6F7F9</color>
 
+    <!-- Background layer of the launcher icon. White is how the favicon reads on
+         a page, and it is what makes the pin's pale disc look like a hole rather
+         than a second circle. -->
+    <color name="ic_launcher_background">#FFFFFF</color>
+
 </resources>
