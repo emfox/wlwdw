@@ -54,6 +54,20 @@ ksp = "2.3.12"
 # that talks to the same host every couple of minutes.
 ktor = "3.6.0"
 
+# --- Tests (src/test) ---
+# Plain JVM tests: no Robolectric and no device. That is possible because the
+# tracking loop is a plain coroutine whose three collaborators are interfaces
+# (ReportSender / LocationProvider / ReportLog), so a test can drive it without
+# a database, a Context or an HTTP server. JUnit 4 rather than 5 because AGP's
+# unit-test task is wired for it out of the box.
+junit = "4.13.2"
+# Has to equal the kotlinx-coroutines-core the app resolves -- the test artifact
+# and the core artifact are released together and are not compatible across
+# versions. 1.11.0 is what Ktor 3.6 and lifecycle 2.11 pull in today; re-check
+# with `./gradlew :app:dependencies --configuration debugRuntimeClasspath` the
+# day that changes, rather than bumping this on its own.
+kotlinxCoroutines = "1.11.0"
+
 [libraries]
 # --- Compose UI stack (the whole app UI; see the ui/ package) ---
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -89,6 +103,16 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 # @Serializable class into the request body and the response body back.
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+# --- Tests ---
+junit = { module = "junit:junit", version.ref = "junit" }
+# runTest and virtual time: the tracking loop sleeps for minutes between ticks,
+# and a test that actually waited would not be run.
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "kotlinxCoroutines" }
+# MockEngine: asserts on the exact request WlwdwApi makes, and answers with a
+# canned body -- including the HTTP 200 + {"result":"deny"} the server uses to
+# say "unknown device" without letting the status code be used to enumerate ids.
+ktor-client-mock = { module = "io.ktor:ktor-client-mock", version.ref = "ktor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

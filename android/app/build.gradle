@@ -147,6 +147,18 @@ dependencies {
     implementation libs.ktor.client.okhttp
     implementation libs.ktor.client.content.negotiation
     implementation libs.ktor.serialization.kotlinx.json
+
+    // --- Tests (src/test) ---
+    // Plain JUnit, run by `./gradlew test` with no emulator and no Robolectric.
+    // That is the point of the loop's collaborators being interfaces: the
+    // interesting decisions (a deny stops the loop, an upload failure does not)
+    // are testable without a device.
+    testImplementation libs.junit
+    testImplementation libs.kotlinx.coroutines.test
+    // MockEngine, for the two things only a real request can prove: the exact
+    // URL and body WlwdwApi builds, and that a HTTP 200 "deny" reads as
+    // "unknown device" rather than as success.
+    testImplementation libs.ktor.client.mock
 }
 // No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
 // 9.4 requires JDK 17+, so the former hardcoded JDK 11 toolchain was both
