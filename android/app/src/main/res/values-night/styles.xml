@@ -1,0 +1,11 @@
+<resources>
+
+    <!-- Dark variant of Theme.Wlwdw (see values/styles.xml). Only the parent
+         differs: Theme.Material is the dark counterpart of
+         Theme.Material.Light, which is what makes the pre-Compose launch window
+         dark instead of flashing white. -->
+    <style name="Theme.Wlwdw" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/wlwdw_page</item>
+    </style>
+
+</resources>

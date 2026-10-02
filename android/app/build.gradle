@@ -1,16 +1,17 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
 }
 
-// Local secrets: MQTT device credential, Baidu Map/Location API key and the
-// release signing keystore. Read from the untracked ../gradle-local.properties
-// (see gradle-local.properties.example); a missing file falls back to
-// placeholders so the project still builds from a fresh checkout without ever
-// committing a real secret. Keep MQTT_DEVICE_SHARED_SECRET identical to the
-// server-side .env of the wlwdw app, BAIDU_MAP_AK bound to this app's package
-// + signing SHA1 on the Baidu console, and the release keystore backed up
-// somewhere safe (it signs every distributed APK).
+// Local secrets: the MQTT device credential and the release signing keystore.
+// Read from the untracked ../gradle-local.properties (see
+// gradle-local.properties.example); a missing file falls back to placeholders
+// so the project still builds from a fresh checkout without ever committing a
+// real secret. Keep MQTT_DEVICE_SHARED_SECRET identical to the server-side
+// .env of the wlwdw app, and back the release keystore up somewhere safe (it
+// signs every distributed APK).
 def localProps = new Properties()
 def localPropsFile = file('../gradle-local.properties')
 if (localPropsFile.exists()) {
@@ -18,7 +19,6 @@ if (localPropsFile.exists()) {
 }
 def mqttDeviceSharedSecret = localProps.getProperty(
         'MQTT_DEVICE_SHARED_SECRET', 'wlwdw-device-secret-CHANGE-ME')
-def baiduMapAk = localProps.getProperty('BAIDU_MAP_AK', 'change_me_baidu_map_ak')
 
 // Release signing. The keystore path is relative to android/ (where
 // gradle-local.properties lives). If the file or passwords are absent the
@@ -43,12 +43,10 @@ android {
         targetSdkVersion 34
         buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
                 "\"${mqttDeviceSharedSecret}\""
-        manifestPlaceholders = [
-                'BAIDU_MAP_AK': baiduMapAk,
-        ]
     }
     buildFeatures {
         buildConfig true
+        compose true
     }
     signingConfigs {
         release {
@@ -92,18 +90,21 @@ tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile).configureEach
 }
 
 dependencies {
-    implementation libs.androidx.appcompat
-    implementation libs.material
-    implementation libs.androidx.preference
-    implementation libs.androidx.cursoradapter
-    implementation libs.androidx.localbroadcastmanager
-    implementation libs.baidu.map.sdk
-    implementation libs.baidu.location.sdk
-    // MQTT push over WSS to the self-hosted EMQX broker. HiveMQ client supports
-    // MQTT over WebSockets (Paho Java does not); the -shaded artifact bundles
-    // its transitive netty deps under a renamed package to avoid conflicts on
-    // Android. The Kotlin stdlib is added automatically by the Kotlin plugin.
-    implementation libs.hivemq.mqtt.client.shaded
+    // --- The rewritten UI (ui/ package): Compose single-activity app ---
+    // The BOM has to be imported before the compose artifacts so their versions
+    // resolve from it.
+    implementation platform(libs.compose.bom)
+    implementation libs.androidx.core.ktx
+    implementation libs.androidx.activity.compose
+    implementation libs.androidx.navigation.compose
+    implementation libs.compose.ui
+    implementation libs.compose.ui.graphics
+    implementation libs.compose.ui.tooling.preview
+    implementation libs.compose.foundation
+    implementation libs.compose.material3
+    implementation libs.compose.material.icons.extended
+    implementation libs.kotlinx.serialization.json
+    debugImplementation libs.compose.ui.tooling
 }
 // No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
 // 8.9 already requires JDK 17+, so the former hardcoded JDK 11 toolchain was

@@ -1,20 +1,15 @@
 <resources>
 
-    <!--
-        Base application theme, dependent on API level. This theme is replaced
-        by AppBaseTheme from res/values-vXX/styles.xml on newer devices.
-    -->
-    <style name="AppBaseTheme" parent="Theme.AppCompat.Light.DarkActionBar">
-        <!--
-            Theme customizations available in newer API levels can go in
-            res/values-vXX/styles.xml, while customizations related to
-            backward-compatibility can go here.
-        -->
-    </style>
+    <!-- Theme of the Compose UI (ui.WlwdwActivity). Compose draws its own
+         Material 3 surfaces and colours, so the only job left to the platform
+         theme is to have no ActionBar and to paint the launch window (the frame
+         before the first Compose composition) in the design's page colour.
+         The parent is a framework theme rather than a Material Components one:
+         that library belongs to the View system and this app no longer uses it.
 
-    <!-- Application theme. -->
-    <style name="AppTheme" parent="AppBaseTheme">
-        <!-- All customizations that are NOT specific to a particular API-level can go here. -->
+         The dark variant lives in values-night/styles.xml. -->
+    <style name="Theme.Wlwdw" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/wlwdw_page</item>
     </style>
 
 </resources>

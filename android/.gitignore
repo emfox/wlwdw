@@ -6,6 +6,9 @@
 .gradle/
 build/
 
+# Kotlin compiler's project-local cache, written by the Kotlin Gradle plugin.
+.kotlin/
+
 # Local configuration file (sdk path, etc)
 local.properties
 

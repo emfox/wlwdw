@@ -3,24 +3,20 @@
     android:versionCode="1"
     android:versionName="1.0">
 
-    <!-- Location: GPS + network geolocation (Baidu location SDK). The app is a
-         tracker; ACCESS_BACKGROUND_LOCATION is requested at runtime (Android
-         10+) when the user starts continuous location, so fixes keep flowing
-         while the screen is off. -->
+    <!-- Location: the app is a tracker, so it needs a fix while the screen is
+         off. ACCESS_BACKGROUND_LOCATION is requested at runtime (Android 10+)
+         when the user starts continuous location. -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <!-- Network geolocation (wifi/network state) + internet to reach the
-         server (HTTPS trail upload / message pull) and the MQTT broker (WSS). -->
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <!-- Reaching the server (trail upload / message pull) and the MQTT broker
+         over WSS. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- Realtime MQTT push foreground service + its notifications. The
-         FOREGROUND_SERVICE_DATA_SYNC permission is required since Android 14
-         (targetSdk 34) for a dataSync-type foreground service; the Baidu
-         location SDK's own :remote service runs as a location-type foreground
-         service when continuous location is on. -->
+    <!-- The two long-lived foreground services: continuous location and MQTT
+         push, plus the notifications they post. FOREGROUND_SERVICE_DATA_SYNC is
+         required since Android 14 (targetSdk 34) for a dataSync-type service.
+         See the targetSdk note in app/build.gradle. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
@@ -29,60 +25,23 @@
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
-        android:name=".LocationApplication"
         android:allowBackup="false"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme">
+        android:theme="@style/Theme.Wlwdw">
 
-        <uses-library
-            android:name="org.apache.http.legacy"
-            android:required="false" />
-
-        <service
-            android:name=".MqttPushService"
-            android:exported="false"
-            android:foregroundServiceType="dataSync" />
-
-        <!-- Baidu location SDK's internal service (separate :remote process).
-             foregroundServiceType is required since Android 14 (targetSdk 34)
-             for any service that may call startForeground(); the SDK does so
-             when location runs as a foreground service. -->
-        <service
-            android:name="com.baidu.location.f"
-            android:enabled="true"
-            android:exported="false"
-            android:foregroundServiceType="location"
-            android:process=":remote" />
-
-        <!-- Baidu Map/Location API key, injected at build time from the
-             untracked android/gradle-local.properties (see
-             gradle-local.properties.example). Never commit a real key here. -->
-        <meta-data
-            android:name="com.baidu.lbsapi.API_KEY"
-            android:value="${BAIDU_MAP_AK}" />
-
+        <!-- The single Activity; everything above it is Compose. -->
         <activity
-            android:name=".MapActivity"
-            android:label="@string/app_name"></activity>
-        <activity
-            android:name=".LocationActivity"
-            android:label="@string/app_name"></activity>
-        <activity
-            android:name=".MainActivity"
-            android:exported="true">
+            android:name=".ui.WlwdwActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.Wlwdw">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".SettingsActivity"
-            android:label="@string/title_activity_settings"></activity>
-        <activity
-            android:name=".MessageActivity"
-            android:label="@string/title_activity_message"></activity>
     </application>
 
 </manifest>

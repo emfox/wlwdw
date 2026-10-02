@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Window background of the Compose theme (see values/styles.xml,
+         Theme.Wlwdw). This only colours the launch window, before Compose has
+         drawn anything; the real page colour lives in the Compose theme. It is
+         the "page" design token (#F6F7F9 in the light theme, #111318 in the
+         dark one; see values-night/colors.xml). -->
+    <color name="wlwdw_page">#F6F7F9</color>
+
+</resources>

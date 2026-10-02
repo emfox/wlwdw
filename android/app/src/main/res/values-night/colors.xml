@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Dark variant of wlwdw_page: the "page" design token in the dark theme. -->
+    <color name="wlwdw_page">#111318</color>
+
+</resources>
