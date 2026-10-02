@@ -13,6 +13,17 @@ import kotlinx.serialization.Serializable
  */
 sealed interface WlwdwDest {
 
+    /**
+     * First run: the consent page.
+     *
+     * Not a tab and not reached from the bar -- it is the start destination and
+     * is popped off the stack once the user agrees, so it appears exactly once
+     * per install. Whether it has already been answered is the data layer's
+     * question; this stage always shows it.
+     */
+    @Serializable
+    data object Consent : WlwdwDest
+
     /** Bottom bar tab 1: whether the device is reporting, and what the server last saw. */
     @Serializable
     data object Status : WlwdwDest
@@ -26,7 +37,7 @@ sealed interface WlwdwDest {
     data object Messages : WlwdwDest
 
     /**
-     * Reached from the top bar, not a tab.
+     * Reached from the status screen's top bar, not a tab.
      *
      * The Material 3 navigation bar guidance allows 3-5 peer destinations and
      * rules out "accessing single tasks" and fewer than three entries, so

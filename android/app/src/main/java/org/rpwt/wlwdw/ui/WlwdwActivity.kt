@@ -9,9 +9,8 @@ import org.rpwt.wlwdw.ui.theme.WlwdwTheme
 /**
  * The single Activity of the rewritten UI; everything above it is Compose.
  *
- * It is the launcher, but the pre-rewrite Activities are still registered and
- * still work -- moving the LAUNCHER intent-filter in AndroidManifest.xml back
- * to MainActivity is all it takes to go back to the old entry point.
+ * It is the launcher and the only Activity: the pre-rewrite ones went out with
+ * the Baidu stack, so there is no second entry point to fall back to.
  */
 class WlwdwActivity : ComponentActivity() {
 

@@ -3,12 +3,96 @@
 
     <string name="app_name">GPS1S Client</string>
 
-    <!-- The Compose UI (org.rpwt.wlwdw.ui). -->
-    <string name="wlwdw_tab_status">状态</string>
-    <string name="wlwdw_tab_map">地图</string>
-    <string name="wlwdw_tab_messages">消息</string>
+    <!-- The Compose UI (org.rpwt.wlwdw.ui). Text that belongs to the interface
+         lives here; values that are really data (addresses, coordinates,
+         message bodies, the device id) live in ui/demo/DemoData.kt for now and
+         will come from the data layer later. -->
+
+    <string name="wlwdw_app_title">我来了我到了</string>
     <string name="wlwdw_title_settings">设置</string>
     <string name="wlwdw_action_settings">设置</string>
     <string name="wlwdw_action_back">返回</string>
-    <string name="wlwdw_placeholder_not_implemented">界面将在下一阶段实现</string>
+
+    <!-- Navigation -->
+    <string name="wlwdw_tab_status">状态</string>
+    <string name="wlwdw_tab_map">地图</string>
+    <string name="wlwdw_tab_messages">消息</string>
+
+    <!-- Status screen: ring captions -->
+    <string name="wlwdw_ring_reporting">正在上报</string>
+    <string name="wlwdw_ring_stopped">已停止</string>
+    <string name="wlwdw_ring_stopped_caption">未在追踪</string>
+    <string name="wlwdw_ring_retrying">上报异常</string>
+    <string name="wlwdw_ring_retrying_caption">重试中</string>
+    <string name="wlwdw_ring_permission">缺少权限</string>
+    <string name="wlwdw_ring_permission_caption">无法后台定位</string>
+    <string name="wlwdw_ring_push_offline">推送离线</string>
+    <string name="wlwdw_ring_push_caption">上报正常</string>
+    <string name="wlwdw_ring_no_fix">定位失败</string>
+    <string name="wlwdw_ring_no_fix_caption">显示上次位置</string>
+
+    <!-- Status screen: the rest -->
+    <string name="wlwdw_last_report">最后上报 · %1$s</string>
+    <string name="wlwdw_last_success">最后成功上报 · %1$s</string>
+    <string name="wlwdw_location_stale">位置可能已变化</string>
+    <string name="wlwdw_link_upload">服务器上报</string>
+    <string name="wlwdw_link_push">消息推送</string>
+    <string name="wlwdw_link_ok">正常</string>
+    <string name="wlwdw_link_online">在线</string>
+    <string name="wlwdw_link_failing">失败 · 连接超时</string>
+    <string name="wlwdw_link_reconnecting">重连中</string>
+    <string name="wlwdw_link_offline">离线</string>
+    <string name="wlwdw_start_tracking">开始追踪</string>
+    <string name="wlwdw_stop_tracking">停止追踪</string>
+
+    <!-- Status screen: background-location notice -->
+    <string name="wlwdw_perm_title">后台定位权限未开启</string>
+    <string name="wlwdw_perm_body">熄屏后位置会停止上报。需要把定位权限改成「始终允许」。</string>
+    <string name="wlwdw_perm_action">去开启 ›</string>
+
+    <!-- Map screen -->
+    <string name="wlwdw_map_my_location">我的位置</string>
+    <string name="wlwdw_map_locate">定位到我的位置</string>
+    <string name="wlwdw_map_layers">切换图层</string>
+    <string name="wlwdw_map_placeholder">地图将在此渲染（天地图 WMTS 瓦片）</string>
+    <string name="wlwdw_map_self">本机</string>
+
+    <!-- Messages screen -->
+    <string name="wlwdw_messages_mark_all_read">全部已读</string>
+    <string name="wlwdw_messages_today">今天</string>
+    <string name="wlwdw_messages_yesterday">昨天</string>
+    <string name="wlwdw_messages_empty_title">还没有消息</string>
+    <string name="wlwdw_messages_empty_body">家人发来的消息和上报异常提醒会出现在这里。</string>
+
+    <!-- Settings screen -->
+    <string name="wlwdw_settings_device_group">本机设备</string>
+    <string name="wlwdw_settings_device_id">设备 ID</string>
+    <string name="wlwdw_settings_device_id_sub">服务端用它识别这台设备</string>
+    <string name="wlwdw_settings_copy_id">复制设备 ID</string>
+    <string name="wlwdw_settings_server_group">服务器</string>
+    <string name="wlwdw_settings_custom_host">使用自定义主机</string>
+    <string name="wlwdw_settings_host">主机地址</string>
+    <string name="wlwdw_settings_interval">上报频率</string>
+    <string name="wlwdw_settings_diagnostics_group">诊断</string>
+    <string name="wlwdw_settings_recent_reports">查看最近上报记录</string>
+    <string name="wlwdw_settings_recent_reports_sub">含原始坐标与失败原因</string>
+    <string name="wlwdw_settings_logs">本机日志</string>
+    <string name="wlwdw_settings_about_group">关于</string>
+    <string name="wlwdw_settings_version">版本</string>
+    <string name="wlwdw_settings_privacy">隐私政策</string>
+
+    <!-- First-run consent -->
+    <string name="wlwdw_consent_tagline">让家人知道你在哪里</string>
+    <string name="wlwdw_consent_point_location">位置信息只用于本应用的定位上报，供家人查看</string>
+    <string name="wlwdw_consent_point_contacts">不会读取通讯录、照片、文件或通话记录</string>
+    <string name="wlwdw_consent_point_background">后台定位只在你主动开启追踪后才启用</string>
+    <string name="wlwdw_consent_point_stop">随时可以在状态页停止上报</string>
+    <string name="wlwdw_consent_agree">同意并继续</string>
+    <string name="wlwdw_consent_decline">不同意</string>
+    <string name="wlwdw_consent_fine">继续即表示你已阅读并同意《隐私政策》</string>
+
+    <!-- Temporary: the stage 1 demo affordance that walks the status matrix.
+         Remove together with ui/demo/DemoData.kt. -->
+    <string name="wlwdw_demo_status">演示状态：%1$s</string>
+
 </resources>
