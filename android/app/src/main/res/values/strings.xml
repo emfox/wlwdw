@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The product name, as the launcher and recents label. The English form is
-         in values-en. This is deliberately not the same string as the in-app
-         title below: the product is named for what it is, while the interface
-         addresses the user in the voice the design chose. -->
+    <!-- The product name. Used for the launcher and recents label, and for the
+         title the interface shows (the consent headline and the status top bar):
+         one name everywhere, so the app does not introduce itself twice. The
+         English form is in values-en. -->
     <string name="app_name">物联网定位</string>
 
     <!-- The Compose UI (org.rpwt.wlwdw.ui). Text that belongs to the interface
@@ -13,7 +13,6 @@
          the data layer or, where nothing produces them yet, from
          ui/demo/DemoData.kt. -->
 
-    <string name="wlwdw_app_title">我来了我到了</string>
     <string name="wlwdw_title_settings">设置</string>
     <string name="wlwdw_action_settings">设置</string>
     <string name="wlwdw_action_back">返回</string>
@@ -65,6 +64,7 @@
     <string name="wlwdw_link_pending">未接入</string>
     <string name="wlwdw_start_tracking">开始追踪</string>
     <string name="wlwdw_stop_tracking">停止追踪</string>
+
 
     <!-- How long ago something happened. Used for the last report and for a fix
          that is only shown as the previous one. -->

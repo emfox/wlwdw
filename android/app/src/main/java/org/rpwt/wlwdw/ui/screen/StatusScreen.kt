@@ -81,7 +81,7 @@ fun StatusScreen(
         TopAppBar(
             title = {
                 Text(
-                    text = stringResource(R.string.wlwdw_app_title),
+                    text = stringResource(R.string.app_name),
                     style = MaterialTheme.typography.titleMedium,
                 )
             },

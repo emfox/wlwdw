@@ -78,7 +78,7 @@ fun ConsentScreen(
 
         Spacer(Modifier.height(18.dp))
         Text(
-            text = stringResource(R.string.wlwdw_app_title),
+            text = stringResource(R.string.app_name),
             style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface,
         )
