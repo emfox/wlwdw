@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug builds only.
+
+  The app always talks HTTPS to a real server; this exists so a debug build can
+  be pointed at a plain-HTTP stub on the development machine
+  (http://10.0.2.2:<port>, the emulator's route to the host) and the exact
+  request bytes checked. Cleartext is allowed for that one address and nothing
+  else, and the release build does not see this file at all.
+-->
+<network-security-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">10.0.2.2</domain>
+        <domain includeSubdomains="false">localhost</domain>
+    </domain-config>
+</network-security-config>

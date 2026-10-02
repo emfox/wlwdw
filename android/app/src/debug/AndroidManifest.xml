@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Debug-only manifest overlay. Its one job is to point the debug build at the
+  cleartext exception in src/debug/res/xml/network_security_config.xml; the main
+  manifest, and therefore every release APK, keeps the platform default.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application android:networkSecurityConfig="@xml/network_security_config" />
+
+</manifest>
