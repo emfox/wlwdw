@@ -7,28 +7,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
+import org.rpwt.wlwdw.data.ReportRepository
+import org.rpwt.wlwdw.data.model.Report
+import org.rpwt.wlwdw.data.model.ReportFailure
 import org.rpwt.wlwdw.data.net.ReportOutcome
 import org.rpwt.wlwdw.data.net.WlwdwApi
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
 import org.rpwt.wlwdw.location.Fix
 import org.rpwt.wlwdw.location.LocationSource
 import org.rpwt.wlwdw.ui.model.DeviceStatus
-
-/** Why the last attempt did not put a position on the server. */
-sealed interface ReportFailure {
-
-    /** Location is not granted, so there is nothing to report. */
-    data object Permission : ReportFailure
-
-    /** Granted, but no provider produced a position. */
-    data object NoFix : ReportFailure
-
-    /** The upload did not get through. Retried on the next tick. */
-    data class Upload(val reason: String) : ReportFailure
-
-    /** The server refused the request itself: a bug or a bad coordinate. */
-    data class Refused(val message: String?) : ReportFailure
-}
 
 /**
  * What the tracking screen shows, as one value.
@@ -37,6 +24,10 @@ sealed interface ReportFailure {
  * screen, because the ring's wording depends on them: "reporting" and "will
  * stop as soon as the screen goes off" are different things to tell the user,
  * and only one of them is a problem.
+ *
+ * [lastSuccessAt] is read back from the report log when the app opens, so it is
+ * the answer to "when did this last work" and not "when did it last work since
+ * the app was opened".
  */
 data class TrackingState(
     val running: Boolean = false,
@@ -46,19 +37,17 @@ data class TrackingState(
     val lastAttemptAt: Long? = null,
     val lastSuccessAt: Long? = null,
     val failure: ReportFailure? = null,
-    /** The server answered `deny`: this device id is not registered there. */
-    val unregistered: Boolean = false,
 ) {
     /**
      * The status matrix entry this state is in.
      *
-     * Order matters. [unregistered] first because it survives the loop stopping
-     * -- the fix is not to retry but to register the device, and a screen
-     * reading "已停止" would send the user looking in the wrong place.
+     * Order matters. [ReportFailure.Unregistered] first because it survives the
+     * loop stopping -- the fix is not to retry but to register the device, and a
+     * screen reading "已停止" would send the user looking in the wrong place.
      */
     val status: DeviceStatus
         get() = when {
-            unregistered -> DeviceStatus.DeviceUnregistered
+            failure is ReportFailure.Unregistered -> DeviceStatus.DeviceUnregistered
             !running -> DeviceStatus.Stopped
             !hasForeground || !hasBackground -> DeviceStatus.PermissionMissing
             failure is ReportFailure.NoFix -> DeviceStatus.LocationFailed
@@ -68,7 +57,7 @@ data class TrackingState(
 }
 
 /**
- * The tracking loop: fix, upload, wait, repeat.
+ * The tracking loop: fix, upload, log, wait, repeat.
  *
  * This is a plain coroutine rather than a service so that the whole thing can
  * be reasoned about and tested without an Android lifecycle. Moving it into a
@@ -83,6 +72,7 @@ data class TrackingState(
 class ReportingEngine(
     private val api: WlwdwApi,
     private val location: LocationSource,
+    private val reports: ReportRepository,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -100,13 +90,31 @@ class ReportingEngine(
     }
 
     /**
+     * Read the log's last accepted report into the state.
+     *
+     * Kept separate from [run] because the answer to "when did this last work"
+     * does not change when the app is restarted, and a cold start that says
+     * "还没有成功上报" while the log holds a report from two minutes ago is
+     * simply wrong. Called once when the app opens, and again when the loop
+     * starts.
+     */
+    suspend fun restore() {
+        val last = reports.lastAcceptedAt() ?: return
+        _state.update { it.copy(lastSuccessAt = last) }
+    }
+
+    /**
      * Report until cancelled.
      *
      * [prefs] is read fresh on every tick rather than captured once, so a
      * settings change is picked up by the running loop.
      */
     suspend fun run(prefs: suspend () -> WlwdwPrefs) {
-        _state.value = TrackingState(running = true)
+        restore()
+        // Only the failure is cleared: it is a statement about the attempt that
+        // is about to happen, while the last fix and the last success are facts
+        // that survive both a restart and a stop.
+        _state.update { it.copy(running = true, failure = null) }
         try {
             while (currentCoroutineContext().isActive) {
                 val settings = prefs()
@@ -123,54 +131,69 @@ class ReportingEngine(
     private enum class Outcome { CONTINUE, STOP }
 
     private suspend fun tick(settings: WlwdwPrefs): Outcome {
+        // One instant for the whole attempt: the row that gets logged and the
+        // time the screen shows have to be the same fact.
+        val at = now()
         val foreground = location.hasForegroundPermission()
         val background = location.hasBackgroundPermission()
         _state.update {
             it.copy(
                 hasForeground = foreground,
                 hasBackground = background,
-                lastAttemptAt = now(),
+                lastAttemptAt = at,
             )
         }
 
         if (!foreground) {
-            _state.update { it.copy(failure = ReportFailure.Permission) }
-            return Outcome.CONTINUE
+            return failed(ReportFailure.Permission, null, at)
         }
 
         val fix = location.current()
         if (fix == null) {
             // The previous fix stays on screen, marked old by the UI.
-            _state.update { it.copy(failure = ReportFailure.NoFix) }
-            return Outcome.CONTINUE
+            return failed(ReportFailure.NoFix, null, at)
         }
         _state.update { it.copy(fix = fix) }
 
         return when (val result = api.report(settings.serverHost, settings.deviceId, fix.lat, fix.lng)) {
             ReportOutcome.Accepted -> {
-                _state.update {
-                    it.copy(lastSuccessAt = now(), failure = null, unregistered = false)
-                }
+                _state.update { it.copy(lastSuccessAt = at, failure = null) }
+                reports.record(attempt(at, fix, null))
                 Outcome.CONTINUE
             }
 
-            ReportOutcome.DeviceUnknown -> {
-                // Stop: every further attempt gets the same answer, and a device
-                // that is not registered is a configuration problem, not a
-                // transient one.
-                _state.update { it.copy(unregistered = true, failure = null) }
-                Outcome.STOP
-            }
+            // Stop: every further attempt gets the same answer, and a device
+            // that is not registered is a configuration problem, not a
+            // transient one.
+            ReportOutcome.DeviceUnknown -> failed(ReportFailure.Unregistered, fix, at, Outcome.STOP)
 
-            is ReportOutcome.Rejected -> {
-                _state.update { it.copy(failure = ReportFailure.Refused(result.message)) }
-                Outcome.CONTINUE
-            }
+            is ReportOutcome.Rejected -> failed(ReportFailure.Refused(result.message), fix, at)
 
-            is ReportOutcome.Unreachable -> {
-                _state.update { it.copy(failure = ReportFailure.Upload(result.reason)) }
-                Outcome.CONTINUE
-            }
+            is ReportOutcome.Unreachable -> failed(ReportFailure.Upload(result.reason), fix, at)
         }
     }
+
+    /**
+     * Put [failure] on screen and in the log, which are two different audiences
+     * for the same fact and would otherwise drift apart.
+     */
+    private suspend fun failed(
+        failure: ReportFailure,
+        fix: Fix?,
+        at: Long,
+        outcome: Outcome = Outcome.CONTINUE,
+    ): Outcome {
+        _state.update { it.copy(failure = failure) }
+        reports.record(attempt(at, fix, failure))
+        return outcome
+    }
+
+    private fun attempt(at: Long, fix: Fix?, failure: ReportFailure?) = Report(
+        at = at,
+        latitude = fix?.lat,
+        longitude = fix?.lng,
+        accuracyMetres = fix?.accuracyMetres,
+        provider = fix?.provider,
+        failure = failure,
+    )
 }

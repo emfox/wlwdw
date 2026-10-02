@@ -36,8 +36,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import java.util.Locale
 import org.rpwt.wlwdw.R
+import org.rpwt.wlwdw.data.model.ReportFailure
 import org.rpwt.wlwdw.location.Fix
-import org.rpwt.wlwdw.tracking.ReportFailure
 import org.rpwt.wlwdw.tracking.TrackingState
 import org.rpwt.wlwdw.ui.component.Callout
 import org.rpwt.wlwdw.ui.component.StatusPill
@@ -349,12 +349,20 @@ private fun ringCaption(status: DeviceStatus, reportIntervalMinutes: Int): Strin
  * It is the only number that answers "can my family see me", so it counts
  * *successful* reports only. A device whose uploads have been failing for an
  * hour must not show the time of the attempt that failed.
+ *
+ * "最后上报" only while the ring above says 正在上报, where the two readings of
+ * the phrase collapse into one. Anywhere else -- stopped, retrying, no
+ * permission -- "成功" is doing real work and is spelled out.
  */
 @Composable
 private fun heroLine(state: TrackingState): String {
     val last = state.lastSuccessAt ?: return stringResource(R.string.wlwdw_last_never)
     return stringResource(
-        if (state.failure == null) R.string.wlwdw_last_report else R.string.wlwdw_last_success,
+        if (state.status == DeviceStatus.Reporting) {
+            R.string.wlwdw_last_report
+        } else {
+            R.string.wlwdw_last_success
+        },
         relativeTime(last),
     )
 }

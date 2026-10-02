@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.rpwt.wlwdw.data.MessageRepository
+import org.rpwt.wlwdw.data.ReportRepository
 import org.rpwt.wlwdw.data.model.Message
 import org.rpwt.wlwdw.data.net.WlwdwApi
 import org.rpwt.wlwdw.data.prefs.PreferencesRepository
@@ -35,10 +36,17 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val prefs = PreferencesRepository(application)
     private val messageStore = MessageRepository(application)
     private val location = LocationSource(application)
-    private val engine = ReportingEngine(WlwdwApi(), location)
+    private val engine = ReportingEngine(WlwdwApi(), location, ReportRepository(application))
 
     /** The job running [ReportingEngine.run]; null when tracking is off. */
     private var trackingJob: Job? = null
+
+    init {
+        // Read the report log before the first frame, so the status screen can
+        // say when it last worked even though this process has never reported
+        // anything itself.
+        viewModelScope.launch { engine.restore() }
+    }
 
     val settings: StateFlow<WlwdwPrefs?> = flow {
         // Seed before the first emission, so the id is already there the first
