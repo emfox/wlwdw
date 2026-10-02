@@ -67,19 +67,18 @@ sealed interface ReportOutcome {
 /**
  * The wlwdw HTTP API, as far as the device uses it.
  *
- * The client is injected so a test can hand in Ktor's MockEngine and assert on
- * the exact request; the default is the real one.
+ * The one implementation of [ReportSender] that is not a test double. The
+ * client is injected so a test can hand in Ktor's MockEngine and assert on the
+ * exact request; the default is the real one.
  */
-class WlwdwApi(private val client: HttpClient = defaultClient()) {
+class WlwdwApi(private val client: HttpClient = defaultClient()) : ReportSender {
 
     /**
-     * Report one fix.
-     *
      * [host] is the `host[:port]` from the settings, and may carry a scheme:
      * the pre-rewrite app hardcoded `https://`, which left a self-hosted server
      * on plain HTTP unreachable with no way for the user to say so.
      */
-    suspend fun report(host: String, devid: String, lat: Double, lng: Double): ReportOutcome {
+    override suspend fun report(host: String, devid: String, lat: Double, lng: Double): ReportOutcome {
         val url = "${baseUrl(host)}/trail/new"
         return try {
             val reply: ServerReply = client.post(url) {

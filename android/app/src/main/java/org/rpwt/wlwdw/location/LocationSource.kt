@@ -34,41 +34,35 @@ data class Fix(
 /**
  * Where the device is, from the platform's location service.
  *
+ * The one implementation of [LocationProvider] that is not a test double.
+ *
  * Deliberately not FusedLocationProviderClient: that would pull in Google Play
  * Services, which is both a privacy cost for a tracker and a hard dependency
  * that does not exist on AOSP builds (including the emulator this is tested
  * on). `LocationManagerCompat` is enough for "where am I, every few minutes".
  */
-class LocationSource(private val context: Context) {
+class LocationSource(private val context: Context) : LocationProvider {
 
     private val manager: LocationManager?
         get() = context.getSystemService(LocationManager::class.java)
 
-    /** Granted while the app is in use. */
-    fun hasForegroundPermission(): Boolean =
+    override fun hasForegroundPermission(): Boolean =
         granted(Manifest.permission.ACCESS_FINE_LOCATION) ||
             granted(Manifest.permission.ACCESS_COARSE_LOCATION)
 
-    /**
-     * Granted to run with the screen off.
-     *
-     * Always true below Android 10, where the permission did not exist and
-     * being granted location at all was enough.
-     */
-    fun hasBackgroundPermission(): Boolean =
+    /** Always true below Android 10, where the permission did not exist. */
+    override fun hasBackgroundPermission(): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.Q ||
             granted(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
 
     /**
-     * The best fix available now, or null if none can be had.
-     *
      * Providers are tried in order rather than asking one: `gps` is the only
      * source that is both present on every device and a true WGS-84 fix, but it
      * can take a while indoors, and `network` answers immediately with a coarse
      * one. A report with a 2 km fix beats no report. The last resort is the
      * last known position, which the caller can see is old from [Fix.atMillis].
      */
-    suspend fun current(): Fix? {
+    override suspend fun current(): Fix? {
         val manager = manager ?: return null
         for (provider in PROVIDER_ORDER) {
             if (!isEnabled(manager, provider)) continue

@@ -6,13 +6,14 @@ import org.rpwt.wlwdw.data.db.WlwdwDatabase
 import org.rpwt.wlwdw.data.model.Report
 
 /**
- * The report log, as the app uses it.
+ * The report log, backed by the `report` table.
  *
- * It exists to keep Room out of the tracking loop: the loop hands over a
- * [Report] and never learns that there is a `report` table, which is what would
- * otherwise be the first crack in the layering.
+ * The one implementation of [ReportLog] that is not a test double. It exists to
+ * keep Room out of the tracking loop: the loop hands over a [Report] and never
+ * learns that there is a `report` table, which is what would otherwise be the
+ * first crack in the layering.
  */
-class ReportRepository(context: Context) {
+class ReportRepository(context: Context) : ReportLog {
 
     private val dao = WlwdwDatabase.get(context).reports()
 
@@ -23,13 +24,13 @@ class ReportRepository(context: Context) {
      * cost is irrelevant, and a log that is only trimmed by some other job is a
      * log that grows without bound the day that job is removed.
      *
-     * Best effort on purpose. This is diagnostics; the tracking loop is the
-     * product, and a device whose storage is full must not stop reporting
-     * because a row about the report could not be written. The failure is
-     * therefore dropped rather than thrown -- the alternative is a tracker that
-     * goes quiet for a reason nobody can see on screen.
+     * Best effort on purpose, as [ReportLog] asks for. This is diagnostics; the
+     * tracking loop is the product, and a device whose storage is full must not
+     * stop reporting because a row about the report could not be written. The
+     * failure is therefore dropped rather than thrown -- the alternative is a
+     * tracker that goes quiet for a reason nobody can see on screen.
      */
-    suspend fun record(report: Report) {
+    override suspend fun record(report: Report) {
         runCatching {
             dao.insert(
                 ReportEntity(
@@ -47,13 +48,10 @@ class ReportRepository(context: Context) {
     }
 
     /**
-     * When the last report was accepted, or null if none ever was.
-     *
      * This is what the status screen starts from, so that "last report 47
-     * minutes ago" survives a restart. Never reporting is a real answer and is
-     * kept distinct from "we do not know yet".
+     * minutes ago" survives a restart of the app.
      */
-    suspend fun lastAcceptedAt(): Long? = dao.lastAcceptedAt()
+    override suspend fun lastAcceptedAt(): Long? = dao.lastAcceptedAt()
 
     private companion object {
         /**

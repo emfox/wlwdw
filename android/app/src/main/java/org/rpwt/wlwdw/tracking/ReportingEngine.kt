@@ -7,14 +7,14 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
-import org.rpwt.wlwdw.data.ReportRepository
+import org.rpwt.wlwdw.data.ReportLog
 import org.rpwt.wlwdw.data.model.Report
 import org.rpwt.wlwdw.data.model.ReportFailure
 import org.rpwt.wlwdw.data.net.ReportOutcome
-import org.rpwt.wlwdw.data.net.WlwdwApi
+import org.rpwt.wlwdw.data.net.ReportSender
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
 import org.rpwt.wlwdw.location.Fix
-import org.rpwt.wlwdw.location.LocationSource
+import org.rpwt.wlwdw.location.LocationProvider
 import org.rpwt.wlwdw.ui.model.DeviceStatus
 
 /**
@@ -68,11 +68,16 @@ data class TrackingState(
  * The loop is driven by the settings it reads each tick, so changing the
  * interval or the server takes effect on the next report instead of needing a
  * restart.
+ *
+ * Its three collaborators are interfaces ([ReportSender], [LocationProvider],
+ * [ReportLog]) for the same reason it is a plain coroutine: a JVM test can then
+ * drive the whole loop -- including "a deny stops it" and "an upload failure
+ * does not" -- with no device, no database and no HTTP server.
  */
 class ReportingEngine(
-    private val api: WlwdwApi,
-    private val location: LocationSource,
-    private val reports: ReportRepository,
+    private val sender: ReportSender,
+    private val location: LocationProvider,
+    private val reports: ReportLog,
     private val now: () -> Long = System::currentTimeMillis,
 ) {
 
@@ -155,7 +160,7 @@ class ReportingEngine(
         }
         _state.update { it.copy(fix = fix) }
 
-        return when (val result = api.report(settings.serverHost, settings.deviceId, fix.lat, fix.lng)) {
+        return when (val result = sender.report(settings.serverHost, settings.deviceId, fix.lat, fix.lng)) {
             ReportOutcome.Accepted -> {
                 _state.update { it.copy(lastSuccessAt = at, failure = null) }
                 reports.record(attempt(at, fix, null))
