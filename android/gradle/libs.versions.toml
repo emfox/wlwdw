@@ -54,6 +54,13 @@ ksp = "2.3.12"
 # that talks to the same host every couple of minutes.
 ktor = "3.6.0"
 
+# --- Push (the push/ package) ---
+# MQTT over WSS to the self-hosted EMQX broker. The -shaded artifact is the one
+# to use: it relocates netty's packages, without which they collide with other
+# things on an Android classpath. Paho is not an option here -- it has no
+# WebSocket transport, and no release since 2018.
+hivemqMqttClient = "1.4.0"
+
 # --- Tests (src/test) ---
 # Plain JVM tests: no Robolectric and no device. That is possible because the
 # tracking loop is a plain coroutine whose three collaborators are interfaces
@@ -103,6 +110,9 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 # @Serializable class into the request body and the response body back.
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+# --- Push ---
+hivemq-mqtt-client-shaded = { module = "com.hivemq:hivemq-mqtt-client-shaded", version.ref = "hivemqMqttClient" }
 
 # --- Tests ---
 junit = { module = "junit:junit", version.ref = "junit" }

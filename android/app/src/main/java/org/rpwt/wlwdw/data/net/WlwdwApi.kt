@@ -5,6 +5,7 @@ import io.ktor.client.call.body
 import io.ktor.client.engine.okhttp.OkHttp
 import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.http.ContentType
@@ -33,6 +34,34 @@ data class ServerReply(
     val result: String? = null,
     val message: String? = null,
 )
+
+/**
+ * The envelope `/message/{id}/{devid}` answers with.
+ *
+ * Separate from [ServerReply] because its `message` is an object (`time` plus
+ * `content`) and not the error string the other endpoints put there. The
+ * pre-rewrite handler read it with `JSONObject.getString`, which cannot read an
+ * object, so every push it pulled ended in its own catch block and nothing was
+ * ever shown.
+ */
+@Serializable
+data class MessageReply(
+    val code: Int = 0,
+    val success: Boolean = false,
+    val message: MessageBody? = null,
+)
+
+@Serializable
+data class MessageBody(val time: String = "", val content: String = "")
+
+/**
+ * A message body the server handed over.
+ *
+ * Not a row and not the [org.rpwt.wlwdw.data.model.Message] a list item shows:
+ * the id came from the push and the arrival time belongs to this device, so
+ * neither is something the server's answer contains.
+ */
+data class PulledMessage(val serverTime: String, val content: String)
 
 /**
  * What became of one report.
@@ -96,6 +125,32 @@ class WlwdwApi(private val client: HttpClient = defaultClient()) : ReportSender 
             throw e
         } catch (e: Exception) {
             ReportOutcome.Unreachable(e.message ?: e::class.simpleName.orEmpty())
+        }
+    }
+
+    /**
+     * Pull one message body.
+     *
+     * A push carries only `{"id": ...}`: the text lives on the server, which
+     * checks the devid before handing it over. A missing message, one addressed
+     * to another device, and an unreadable answer are all the same thing to the
+     * caller -- there is nothing to show -- so they share one answer, null.
+     * (The first two reply with `message` as a string, which does not fit
+     * [MessageReply] and so lands in the catch below. The outcome is the same.)
+     */
+    suspend fun pullMessage(host: String, devid: String, id: String): PulledMessage? {
+        val url = "${baseUrl(host)}/message/$id/$devid"
+        return try {
+            val reply: MessageReply = client.get(url).body()
+            if (reply.success && reply.message != null) {
+                PulledMessage(reply.message.time, reply.message.content)
+            } else {
+                null
+            }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            null
         }
     }
 

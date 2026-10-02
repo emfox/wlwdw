@@ -141,12 +141,17 @@ dependencies {
     ksp libs.androidx.room.compiler
 
     // --- The network layer (data/net package) ---
-    // Only the report call exists so far; the message pull and the MQTT
-    // handshake will reuse this same client.
+    // The report call and the message pull share one client; the MQTT link has
+    // its own transport and does not go through Ktor.
     implementation libs.ktor.client.core
     implementation libs.ktor.client.okhttp
     implementation libs.ktor.client.content.negotiation
     implementation libs.ktor.serialization.kotlinx.json
+
+    // --- The push link (push/ package) ---
+    // MQTT over WebSockets, which is the only way through the front proxy that
+    // shares the server's hostname with the site.
+    implementation libs.hivemq.mqtt.client.shaded
 
     // --- Tests (src/test) ---
     // Plain JUnit, run by `./gradlew test` with no emulator and no Robolectric.

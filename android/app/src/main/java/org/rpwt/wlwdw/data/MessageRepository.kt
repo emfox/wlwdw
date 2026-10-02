@@ -51,6 +51,19 @@ class MessageRepository(context: Context) {
         )
     }
 
+    /**
+     * Store a message that arrived as a push from the server.
+     *
+     * Its own method rather than a sender string at the call site: "was this the
+     * server or a person" decides the colour of a list item, and the answer has
+     * to be the same string everywhere or the colour stops meaning anything.
+     */
+    suspend fun storeFromServer(
+        content: String,
+        serverTime: String,
+        receivedAt: Long = System.currentTimeMillis(),
+    ) = store(sender = SERVER_SENDER, content = content, serverTime = serverTime, receivedAt = receivedAt)
+
     private fun toMessage(row: MessageEntity) = Message(
         id = row.id,
         sender = row.sender,

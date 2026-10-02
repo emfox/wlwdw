@@ -2,9 +2,12 @@ package org.rpwt.wlwdw.ui
 
 import android.Manifest
 import android.app.Activity
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,6 +28,7 @@ import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -148,6 +152,7 @@ private fun Tabs(
     val unreadCount = messages.count { it.unread }
 
     val tracking by appViewModel.tracking.collectAsStateWithLifecycle()
+    val push by appViewModel.push.collectAsStateWithLifecycle()
 
     // The permission can change while the app is in the background -- granting
     // "all the time" happens on a Settings page -- so re-read it whenever the
@@ -155,6 +160,25 @@ private fun Tabs(
     LifecycleResumeEffect(Unit) {
         appViewModel.refreshPermissions()
         onPauseOrDispose { }
+    }
+
+    // A message the user cannot see is not a message. Android 13 made showing a
+    // notification a runtime permission, and a denied one is silent: the push
+    // arrives, is stored, and nobody knows. Below 33 the permission does not
+    // exist, so asking is both pointless and refused.
+    val context = LocalContext.current
+    val notificationPermission = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { }
+    LaunchedEffect(Unit) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.POST_NOTIFICATIONS,
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            notificationPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
     }
 
     // Foreground and background are separate requests on purpose. From Android
@@ -231,6 +255,7 @@ private fun Tabs(
             composable<WlwdwDest.Status> {
                 StatusScreen(
                     state = tracking,
+                    push = push,
                     deviceId = settings.deviceId,
                     reportIntervalMinutes = settings.reportIntervalMinutes,
                     onOpenSettings = { navController.navigate(WlwdwDest.Settings) },

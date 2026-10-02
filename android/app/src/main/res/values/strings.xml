@@ -61,7 +61,13 @@
     <string name="wlwdw_link_refused">被服务器拒绝</string>
     <string name="wlwdw_link_reconnecting">重连中</string>
     <string name="wlwdw_link_offline">离线</string>
-    <string name="wlwdw_link_pending">未接入</string>
+
+    <!-- Push: the notification channel and the two notices posted on it. The
+         channel name is only ever shown on a fresh install. -->
+    <string name="wlwdw_channel_push">消息推送</string>
+    <string name="wlwdw_push_service_title">消息推送服务</string>
+    <string name="wlwdw_push_connecting">正在连接消息服务器…</string>
+    <string name="wlwdw_push_message_title">定位服务器发来消息</string>
     <string name="wlwdw_start_tracking">开始追踪</string>
     <string name="wlwdw_stop_tracking">停止追踪</string>
 

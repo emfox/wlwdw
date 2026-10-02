@@ -38,6 +38,7 @@ import java.util.Locale
 import org.rpwt.wlwdw.R
 import org.rpwt.wlwdw.data.model.ReportFailure
 import org.rpwt.wlwdw.location.Fix
+import org.rpwt.wlwdw.push.PushState
 import org.rpwt.wlwdw.tracking.TrackingState
 import org.rpwt.wlwdw.ui.component.Callout
 import org.rpwt.wlwdw.ui.component.StatusPill
@@ -63,6 +64,7 @@ import org.rpwt.wlwdw.ui.theme.statusColors
 @Composable
 fun StatusScreen(
     state: TrackingState,
+    push: PushState,
     deviceId: String,
     reportIntervalMinutes: Int,
     onOpenSettings: () -> Unit,
@@ -70,7 +72,7 @@ fun StatusScreen(
     onRequestPermission: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val status = state.status
+    val status = ringStatus(state, push)
     val tracking = state.running
 
     Column(
@@ -147,7 +149,7 @@ fun StatusScreen(
 
             WlwdwCard {
                 val upload = uploadLink(state)
-                val push = pushLink(state)
+                val pushLink = pushLink(push)
                 LinkRow(
                     label = stringResource(R.string.wlwdw_link_upload),
                     pill = stringResource(upload.textRes),
@@ -163,8 +165,8 @@ fun StatusScreen(
                 Spacer(Modifier.height(9.dp))
                 LinkRow(
                     label = stringResource(R.string.wlwdw_link_push),
-                    pill = stringResource(push.textRes),
-                    tone = push.tone,
+                    pill = stringResource(pushLink.textRes),
+                    tone = pushLink.tone,
                 )
             }
 
@@ -377,11 +379,33 @@ private fun uploadLink(state: TrackingState): LinkPresentation = when {
 }
 
 /**
- * The push link is not wired up yet -- MQTT is the next stage. Reporting it as
- * "online" would be the one thing this screen must not do, so it says what is
- * true instead.
+ * The push link, from the MQTT client's own state.
+ *
+ * Independent of [uploadLink] on purpose: the two links break for different
+ * reasons and are mended differently, and a device whose reports are all going
+ * through but whose inbox is dead must say so rather than looking healthy.
  */
-private fun pushLink(state: TrackingState): LinkPresentation = when {
-    !state.running -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
-    else -> LinkPresentation(R.string.wlwdw_link_pending, StatusTone.Idle)
+private fun pushLink(push: PushState): LinkPresentation = when (push) {
+    PushState.Connected -> LinkPresentation(R.string.wlwdw_link_online, StatusTone.Ok)
+    // Between attempts: the loop is always either connecting or waiting to
+    // retry, and both are worth saying out loud rather than as "normal".
+    PushState.Connecting -> LinkPresentation(R.string.wlwdw_link_reconnecting, StatusTone.Warn)
+    PushState.Failed -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Error)
+    PushState.Idle -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
 }
+
+/**
+ * What the ring says, given both links.
+ *
+ * [TrackingState.status] is decided by the reporting loop, which knows nothing
+ * about MQTT. "Every report is landing but no message can reach me" is the one
+ * state that needs both answers, and it is the only reason
+ * [DeviceStatus.PushOffline] exists -- so it is composed here, where both are
+ * available, rather than pushed down into the engine.
+ */
+private fun ringStatus(state: TrackingState, push: PushState): DeviceStatus =
+    if (state.status == DeviceStatus.Reporting && push != PushState.Connected) {
+        DeviceStatus.PushOffline
+    } else {
+        state.status
+    }

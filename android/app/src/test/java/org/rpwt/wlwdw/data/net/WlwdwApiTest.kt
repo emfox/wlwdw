@@ -18,6 +18,7 @@ import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
@@ -152,6 +153,56 @@ class WlwdwApiTest {
         val thrown = runCatching { server.api().report(HOST, DEVICE_ID, LAT, LNG) }.exceptionOrNull()
 
         assertTrue("expected a cancellation, got $thrown", thrown is CancellationException)
+    }
+
+    /**
+     * A push carries only an id, and the body is fetched with this device's own
+     * id in the path -- which is what stops one device from reading another's
+     * mail should a push ever be misdelivered.
+     */
+    @Test
+    fun `a message is pulled with the device id in the path`() = runTest {
+        val server = MockServer(
+            body = """{"code":100,"success":true,"message":{"time":"2026-10-02 18:04:31","content":"到家了没"}}""",
+        )
+
+        val pulled = server.api().pullMessage(HOST, DEVICE_ID, "42")
+
+        assertEquals(PulledMessage("2026-10-02 18:04:31", "到家了没"), pulled)
+        assertEquals(HttpMethod.Get, server.last.method)
+        assertEquals("https://$HOST/message/42/$DEVICE_ID", server.last.url.toString())
+    }
+
+    /**
+     * `message` is an object, not a string.
+     *
+     * That is the shape the server really sends, and it is the one thing the
+     * pre-rewrite handler could not read: it called `JSONObject.getString`,
+     * which throws on an object, so every push it received ended in its catch
+     * block and no message was ever shown.
+     */
+    @Test
+    fun `a message this device cannot have is not a message`() = runTest {
+        // Gone from the server: a real 404.
+        val missing = MockServer(
+            status = HttpStatusCode.NotFound,
+            body = """{"code":404,"success":false,"message":"Message not found"}""",
+        )
+        assertNull(missing.api().pullMessage(HOST, DEVICE_ID, "42"))
+
+        // Addressed to another device: a real 200, but not ours.
+        val foreign = MockServer(
+            body = """{"code":403,"success":false,"message":"Device Unauthorized"}""",
+        )
+        assertNull(foreign.api().pullMessage(HOST, DEVICE_ID, "42"))
+    }
+
+    /** Nothing to show is an answer, not an exception to handle at the call site. */
+    @Test
+    fun `a pull that never connected is null rather than a throw`() = runTest {
+        val server = MockServer(fail = { throw IOException("Connection refused") })
+
+        assertNull(server.api().pullMessage(HOST, DEVICE_ID, "42"))
     }
 
     private companion object {

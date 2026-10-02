@@ -31,6 +31,17 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@style/Theme.Wlwdw">
 
+        <!-- The MQTT push link. It keeps a connection to the broker and so has
+             to be a foreground service: it runs while the app is not on screen,
+             and Android only leaves a service alone under those conditions if
+             the user can see that it is running. Type is dataSync, as it was
+             before the rewrite; see the targetSdk note in app/build.gradle for
+             why the type is the thing pinning that version. -->
+        <service
+            android:name=".push.PushService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
         <!-- The single Activity; everything above it is Compose. -->
         <activity
             android:name=".ui.WlwdwActivity"

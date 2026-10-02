@@ -19,6 +19,8 @@ import org.rpwt.wlwdw.data.net.WlwdwApi
 import org.rpwt.wlwdw.data.prefs.PreferencesRepository
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
 import org.rpwt.wlwdw.location.LocationSource
+import org.rpwt.wlwdw.push.PushService
+import org.rpwt.wlwdw.push.PushState
 import org.rpwt.wlwdw.tracking.ReportingEngine
 import org.rpwt.wlwdw.tracking.TrackingState
 
@@ -46,6 +48,18 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         // say when it last worked even though this process has never reported
         // anything itself.
         viewModelScope.launch { engine.restore() }
+        // The push link starts as soon as the device has consented and so has an
+        // identity to authenticate as, not when a screen first wants a message:
+        // a message that arrives while the app is closed is the entire point.
+        //
+        // Read from the store directly rather than [settings]: this init block
+        // runs before the properties declared below it exist, and viewModelScope
+        // dispatches immediately, so the first body ran while `settings` was
+        // still null. That was a crash on launch, not a late start.
+        viewModelScope.launch {
+            prefs.prefs.first { it.consentAccepted }
+            PushService.start(application)
+        }
     }
 
     val settings: StateFlow<WlwdwPrefs?> = flow {
@@ -74,6 +88,15 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
      * out, and it is the thing that sent it.
      */
     val tracking: StateFlow<TrackingState> = engine.state
+
+    /**
+     * What the MQTT link is doing, straight from the service that owns it.
+     *
+     * Not mirrored into a second flow: there is one thing in the process that
+     * knows whether the broker can reach this device, and it is the thing
+     * holding the connection.
+     */
+    val push: StateFlow<PushState> = PushService.state
 
     fun startTracking() {
         if (trackingJob?.isActive == true) return
