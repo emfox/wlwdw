@@ -197,6 +197,33 @@ class WlwdwApiTest {
         assertNull(foreign.api().pullMessage(HOST, DEVICE_ID, "42"))
     }
 
+    /**
+     * The server answers `text/html`, not `application/json`.
+     *
+     * Every `new Response(json_encode(...))` in the Symfony app ships with the
+     * framework's default content type and never sets the JSON one, so the
+     * bytes on the wire are JSON labelled as HTML. The pre-rewrite client read
+     * the body as text and handed it to a parser, which does not care; a
+     * configured content negotiation does, and drops the reply on the floor.
+     */
+    @Test
+    fun `a reply labelled text html still parses`() = runTest {
+        val html = ContentType.Text.Html.toString()
+        val pulledServer = MockServer(
+            contentType = html,
+            body = """{"code":100,"success":true,"message":{"time":"2026-10-02 18:04:31","content":"到家了没"}}""",
+        )
+
+        assertEquals(
+            PulledMessage("2026-10-02 18:04:31", "到家了没"),
+            pulledServer.api().pullMessage(HOST, DEVICE_ID, "42"),
+        )
+
+        val reportServer = MockServer(contentType = html, body = """{"code":100,"success":true}""")
+
+        assertEquals(ReportOutcome.Accepted, reportServer.api().report(HOST, DEVICE_ID, LAT, LNG))
+    }
+
     /** Nothing to show is an answer, not an exception to handle at the call site. */
     @Test
     fun `a pull that never connected is null rather than a throw`() = runTest {
@@ -224,6 +251,7 @@ class WlwdwApiTest {
 private class MockServer(
     private val status: HttpStatusCode = HttpStatusCode.OK,
     private val body: String = "",
+    private val contentType: String = ContentType.Application.Json.toString(),
     private val fail: (() -> Nothing)? = null,
 ) {
 
@@ -236,7 +264,7 @@ private class MockServer(
             respond(
                 content = body,
                 status = status,
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString()),
+                headers = headersOf(HttpHeaders.ContentType, contentType),
             )
         }
         return WlwdwApi(

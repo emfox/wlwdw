@@ -8,11 +8,14 @@ import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
 import io.ktor.client.request.get
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 import io.ktor.serialization.kotlinx.json.json
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 /** The body `/trail/new` expects. Field names are the server's, not ours. */
@@ -113,7 +116,7 @@ class WlwdwApi(private val client: HttpClient = defaultClient()) : ReportSender 
             val reply: ServerReply = client.post(url) {
                 contentType(ContentType.Application.Json)
                 setBody(TrailReport(devid, lat, lng))
-            }.body()
+            }.readJson()
 
             when {
                 reply.result == "deny" -> ReportOutcome.DeviceUnknown
@@ -141,7 +144,7 @@ class WlwdwApi(private val client: HttpClient = defaultClient()) : ReportSender 
     suspend fun pullMessage(host: String, devid: String, id: String): PulledMessage? {
         val url = "${baseUrl(host)}/message/$id/$devid"
         return try {
-            val reply: MessageReply = client.get(url).body()
+            val reply: MessageReply = client.get(url).readJson()
             if (reply.success && reply.message != null) {
                 PulledMessage(reply.message.time, reply.message.content)
             } else {
@@ -153,6 +156,21 @@ class WlwdwApi(private val client: HttpClient = defaultClient()) : ReportSender 
             null
         }
     }
+
+    /**
+     * Read a reply as JSON whatever content type it arrived with.
+     *
+     * The server sends `text/html`: every endpoint returns `new Response(
+     * json_encode(...))` and never sets the JSON content type, so the bytes are
+     * JSON labelled as HTML. Ktor's content negotiation considers the type
+     * before it looks at the bytes and quietly refuses such a reply, which is
+     * how a push whose body is perfectly readable ends up as "no message".
+     * Taking the body as text and parsing it here is what the pre-rewrite
+     * client did, and it is still the only thing that does not care what the
+     * server calls its answer.
+     */
+    private suspend inline fun <reified T> HttpResponse.readJson(): T =
+        lenient.decodeFromString(bodyAsText())
 
     private fun baseUrl(host: String): String {
         val trimmed = host.trim().trimEnd('/')
@@ -171,13 +189,25 @@ class WlwdwApi(private val client: HttpClient = defaultClient()) : ReportSender 
  * unreachable host could sit there until the socket gave up, which in practice
  * meant the next report never happened.
  */
+/**
+ * One parser for every reply.
+ *
+ * Unknown keys are ignored so that a field the server grows does not stop this
+ * app from reading an answer it has always been able to read.
+ */
+private val lenient = Json { ignoreUnknownKeys = true }
+
 private fun defaultClient(): HttpClient = HttpClient(OkHttp) {
     // A non-2xx is a valid answer here -- the server uses the body, not the
     // status, to say what happened -- so let the caller parse it rather than
     // turning it into an exception.
     expectSuccess = false
+    // For what we send, not for what comes back: it is what turns a
+    // `TrailReport` into a JSON request body. Replies are read as text and
+    // parsed by hand (see `readJson`), because the server labels them
+    // `text/html` and this plugin would refuse them on the type alone.
     install(ContentNegotiation) {
-        json(Json { ignoreUnknownKeys = true })
+        json(lenient)
     }
     install(HttpTimeout) {
         connectTimeoutMillis = 15_000
