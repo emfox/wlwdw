@@ -42,6 +42,17 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- Continuous location reporting. Started and stopped by the tracking
+             button and nothing else, and type `location` for the same reason:
+             it reads the device's position, which is what the type is charged
+             for, and it is the one type with no daily time limit to hit. A
+             process killed while tracking is restarted (START_STICKY) so that
+             reports do not silently stop; a service the user stopped is not. -->
+        <service
+            android:name=".tracking.TrackingService"
+            android:exported="false"
+            android:foregroundServiceType="location" />
+
         <!-- The single Activity; everything above it is Compose. -->
         <activity
             android:name=".ui.WlwdwActivity"

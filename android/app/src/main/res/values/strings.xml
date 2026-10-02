@@ -68,6 +68,10 @@
     <string name="wlwdw_push_service_title">消息推送服务</string>
     <string name="wlwdw_push_connecting">正在连接消息服务器…</string>
     <string name="wlwdw_push_message_title">定位服务器发来消息</string>
+    <!-- The tracking loop's permanent notice. Its text is the status matrix's
+         own wording, reused from the ring captions above rather than written
+         again, so the notice and the screen cannot say different things. -->
+    <string name="wlwdw_tracking_service_title">位置上报服务</string>
     <string name="wlwdw_start_tracking">开始追踪</string>
     <string name="wlwdw_stop_tracking">停止追踪</string>
 

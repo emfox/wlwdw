@@ -79,20 +79,18 @@ class ReportingEngine(
     private val location: LocationProvider,
     private val reports: ReportLog,
     private val now: () -> Long = System::currentTimeMillis,
+    /**
+     * Where this engine writes what it is doing.
+     *
+     * Owned by the caller when one is handed in, which is what lets a
+     * foreground service own the loop while the screen reads the same value:
+     * there is still exactly one thing that knows whether a report went out,
+     * and it is the thing that sent it.
+     */
+    private val output: MutableStateFlow<TrackingState> = MutableStateFlow(TrackingState()),
 ) {
 
-    private val _state = MutableStateFlow(TrackingState())
-    val state: StateFlow<TrackingState> = _state.asStateFlow()
-
-    /** Called when the app learns the permission changed, so the ring can react at once. */
-    fun onPermissionsChanged() {
-        _state.update {
-            it.copy(
-                hasForeground = location.hasForegroundPermission(),
-                hasBackground = location.hasBackgroundPermission(),
-            )
-        }
-    }
+    val state: StateFlow<TrackingState> = output.asStateFlow()
 
     /**
      * Read the log's last accepted report into the state.
@@ -100,12 +98,13 @@ class ReportingEngine(
      * Kept separate from [run] because the answer to "when did this last work"
      * does not change when the app is restarted, and a cold start that says
      * "还没有成功上报" while the log holds a report from two minutes ago is
-     * simply wrong. Called once when the app opens, and again when the loop
-     * starts.
+     * simply wrong. Called once when the loop starts; the screen's cold start
+     * reads it through [org.rpwt.wlwdw.tracking.TrackingService], which can
+     * answer before any loop exists.
      */
     suspend fun restore() {
         val last = reports.lastAcceptedAt() ?: return
-        _state.update { it.copy(lastSuccessAt = last) }
+        output.update { it.copy(lastSuccessAt = last) }
     }
 
     /**
@@ -119,7 +118,7 @@ class ReportingEngine(
         // Only the failure is cleared: it is a statement about the attempt that
         // is about to happen, while the last fix and the last success are facts
         // that survive both a restart and a stop.
-        _state.update { it.copy(running = true, failure = null) }
+        output.update { it.copy(running = true, failure = null) }
         try {
             while (currentCoroutineContext().isActive) {
                 val settings = prefs()
@@ -129,7 +128,7 @@ class ReportingEngine(
             }
         } finally {
             // Also runs on cancellation, which is the normal way this ends.
-            _state.update { it.copy(running = false) }
+            output.update { it.copy(running = false) }
         }
     }
 
@@ -141,7 +140,7 @@ class ReportingEngine(
         val at = now()
         val foreground = location.hasForegroundPermission()
         val background = location.hasBackgroundPermission()
-        _state.update {
+        output.update {
             it.copy(
                 hasForeground = foreground,
                 hasBackground = background,
@@ -158,11 +157,11 @@ class ReportingEngine(
             // The previous fix stays on screen, marked old by the UI.
             return failed(ReportFailure.NoFix, null, at)
         }
-        _state.update { it.copy(fix = fix) }
+        output.update { it.copy(fix = fix) }
 
         return when (val result = sender.report(settings.serverHost, settings.deviceId, fix.lat, fix.lng)) {
             ReportOutcome.Accepted -> {
-                _state.update { it.copy(lastSuccessAt = at, failure = null) }
+                output.update { it.copy(lastSuccessAt = at, failure = null) }
                 reports.record(attempt(at, fix, null))
                 Outcome.CONTINUE
             }
@@ -188,7 +187,7 @@ class ReportingEngine(
         at: Long,
         outcome: Outcome = Outcome.CONTINUE,
     ): Outcome {
-        _state.update { it.copy(failure = failure) }
+        output.update { it.copy(failure = failure) }
         reports.record(attempt(at, fix, failure))
         return outcome
     }

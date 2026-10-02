@@ -9,9 +9,14 @@ import android.content.Intent
 import android.graphics.Color
 import org.rpwt.wlwdw.R
 import org.rpwt.wlwdw.ui.WlwdwActivity
+import org.rpwt.wlwdw.ui.model.DeviceStatus
 
 /**
- * The one notification channel, and the two notifications posted on it.
+ * The one notification channel, and the notifications posted on it.
+ *
+ * Every long-lived thing this app does is visible here, because a permanent
+ * background process the user cannot see is exactly what the platform's
+ * foreground-service rules exist to prevent.
  *
  * Ported from the pre-rewrite `NotificationUtils`. The channel id is unchanged
  * on purpose: it is the key Android files the user's settings under, so keeping
@@ -29,6 +34,9 @@ object WlwdwNotifications {
 
     /** The long-lived one, owned by the push service. */
     const val SERVICE_ID = 2001
+
+    /** The tracking loop's, owned by the tracking service. */
+    const val TRACKING_ID = 2002
 
     /** One per arrived message; a newer message replaces the previous notice. */
     const val MESSAGE_ID = 1000
@@ -62,6 +70,37 @@ object WlwdwNotifications {
             .setOngoing(true)
             .setContentIntent(openApp(context))
             .build()
+
+    /**
+     * The tracking loop's notice, which says what the loop is actually doing.
+     *
+     * The status is the same matrix the screen renders, so the notification and
+     * the ring cannot disagree about whether this device is being tracked. It
+     * is the state's own [DeviceStatus] rather than a second reading of the
+     * failure, which is how a notice ends up claiming everything is fine while
+     * every upload is being refused.
+     */
+    fun trackingNotification(context: Context, status: DeviceStatus): Notification =
+        Notification.Builder(context, CHANNEL_ID)
+            .setContentTitle(context.getString(R.string.wlwdw_tracking_service_title))
+            .setContentText(context.getString(statusText(status)))
+            .setSmallIcon(ICON)
+            .setOngoing(true)
+            .setContentIntent(openApp(context))
+            .build()
+
+    private fun statusText(status: DeviceStatus): Int = when (status) {
+        DeviceStatus.Reporting -> R.string.wlwdw_ring_reporting
+        DeviceStatus.PermissionMissing -> R.string.wlwdw_ring_permission
+        DeviceStatus.LocationFailed -> R.string.wlwdw_ring_no_fix
+        DeviceStatus.DeviceUnregistered -> R.string.wlwdw_ring_unregistered
+        DeviceStatus.Retrying -> R.string.wlwdw_ring_retrying
+        // The tracking loop never reports this one -- it is about the push
+        // link, which has its own notice -- but the pair belongs together when
+        // the connection is merely unhappy.
+        DeviceStatus.PushOffline -> R.string.wlwdw_ring_retrying
+        DeviceStatus.Stopped -> R.string.wlwdw_ring_stopped
+    }
 
     /** A message arrived. Tapping it opens the app, where the inbox is. */
     fun messageNotification(context: Context, content: String): Notification =

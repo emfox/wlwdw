@@ -3,7 +3,6 @@ package org.rpwt.wlwdw.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.emitAll
@@ -13,15 +12,12 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.rpwt.wlwdw.data.MessageRepository
-import org.rpwt.wlwdw.data.ReportRepository
 import org.rpwt.wlwdw.data.model.Message
-import org.rpwt.wlwdw.data.net.WlwdwApi
 import org.rpwt.wlwdw.data.prefs.PreferencesRepository
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
-import org.rpwt.wlwdw.location.LocationSource
 import org.rpwt.wlwdw.push.PushService
 import org.rpwt.wlwdw.push.PushState
-import org.rpwt.wlwdw.tracking.ReportingEngine
+import org.rpwt.wlwdw.tracking.TrackingService
 import org.rpwt.wlwdw.tracking.TrackingState
 
 /**
@@ -37,17 +33,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = PreferencesRepository(application)
     private val messageStore = MessageRepository(application)
-    private val location = LocationSource(application)
-    private val engine = ReportingEngine(WlwdwApi(), location, ReportRepository(application))
-
-    /** The job running [ReportingEngine.run]; null when tracking is off. */
-    private var trackingJob: Job? = null
 
     init {
         // Read the report log before the first frame, so the status screen can
         // say when it last worked even though this process has never reported
-        // anything itself.
-        viewModelScope.launch { engine.restore() }
+        // anything itself. The answer lives in storage, so asking only works
+        // before the loop starts -- afterwards the loop owns it.
+        viewModelScope.launch { TrackingService.restoreLastSuccess(application) }
         // The push link starts as soon as the device has consented and so has an
         // identity to authenticate as, not when a screen first wants a message:
         // a message that arrives while the app is closed is the entire point.
@@ -83,11 +75,12 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * What the tracking screen shows.
      *
-     * The engine owns this rather than the ViewModel mirroring it into a second
-     * StateFlow: there is exactly one thing that knows whether a report went
-     * out, and it is the thing that sent it.
+     * The service owns this rather than the ViewModel: the loop has to outlive
+     * this screen, so the thing that runs it is the thing that knows whether a
+     * report went out. The screen and the permanent notification both read this
+     * one flow, which is why they cannot disagree.
      */
-    val tracking: StateFlow<TrackingState> = engine.state
+    val tracking: StateFlow<TrackingState> = TrackingService.state
 
     /**
      * What the MQTT link is doing, straight from the service that owns it.
@@ -99,28 +92,23 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     val push: StateFlow<PushState> = PushService.state
 
     fun startTracking() {
-        if (trackingJob?.isActive == true) return
-        // Read the permissions before the first tick so the ring shows the
-        // right wording immediately rather than after a fix attempt.
-        engine.onPermissionsChanged()
-        trackingJob = viewModelScope.launch {
-            // Read the settings fresh on every tick: a change to the interval or
-            // the server is then picked up by the loop that is already running.
-            engine.run { settings.filterNotNull().first() }
-        }
+        // Read the permissions before the service's first tick so the ring shows
+        // the right wording immediately rather than after a fix attempt.
+        TrackingService.permissionsChanged(getApplication())
+        TrackingService.start(getApplication())
     }
 
     fun stopTracking() {
-        trackingJob?.cancel()
-        trackingJob = null
-        // The loop's own finally block is what clears `running`. Wiping the
-        // whole state here would also throw away the last fix and the time of
-        // the last successful report, which are exactly what the screen shows
-        // once tracking has stopped.
+        // Stopping the service is what ends the loop: its own teardown cancels
+        // the coroutine, and the loop's finally block clears `running`. Wiping
+        // the whole state here would also throw away the last fix and the time
+        // of the last successful report, which are exactly what the screen
+        // shows once tracking has stopped.
+        TrackingService.stop(getApplication())
     }
 
     /** Called when the app may have just been granted (or lost) location. */
-    fun refreshPermissions() = engine.onPermissionsChanged()
+    fun refreshPermissions() = TrackingService.permissionsChanged(getApplication())
 
     fun acceptConsent() = viewModelScope.launch { prefs.setConsentAccepted(true) }
 
