@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
 }
@@ -29,18 +28,22 @@ def hasReleaseSigning = releaseKeystore.exists()
         && !localProps.getProperty('RELEASE_STORE_PASSWORD', '').isEmpty()
 
 android {
-    compileSdkVersion 36
+    // 37 comes with the AGP 9.4 upgrade: it is the highest API level AGP 9.4
+    // supports, and the Compose 1.12.x / core-ktx 1.19.x / navigation 2.10.x
+    // line requires minCompileSdk 37 in its AAR metadata. API 37 uses minor
+    // versioned platforms, installed here as platforms;android-37.0.
+    compileSdk = 37
 
     defaultConfig {
         applicationId "org.rpwt.wlwdw"
-        minSdkVersion 26
+        minSdk = 26
         // Deliberately 34, not 35+: at 35+ Android 15 limits dataSync
         // foreground services to 6h per 24h, which would kill the long-lived
         // MQTT push service on Android 15/16 devices (and forces edge-to-edge).
         // The service is long-lived message delivery, not data sync, so the way
         // off this pin is to re-declare it as specialUse (or connectedDevice) —
         // neither of those types has a time limit.
-        targetSdkVersion 34
+        targetSdk = 34
         buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
                 "\"${mqttDeviceSharedSecret}\""
     }
@@ -57,36 +60,37 @@ android {
         }
     }
     buildTypes {
+        // proguard-android-optimize.txt, not proguard-android.txt: AGP 9 rejects
+        // the latter outright because it carries -dontoptimize and so switches
+        // off most of R8. Minification is off in both build types today, so
+        // this only really decides what happens the day it is turned on.
         debug {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'
         }
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'
             signingConfig hasReleaseSigning ? signingConfigs.release : null
         }
     }
+    // 17 matches the JDK AGP 9.4 builds with (its compatibility table lists JDK
+    // 17 as both minimum and default). Kotlin's jvmTarget has to match these,
+    // or the Kotlin plugin fails configuration with a validation error.
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
     namespace 'org.rpwt.wlwdw'
 }
 
-// Kotlin is here so new code can be written in Kotlin from now on; the
-// existing Java sources are untouched. The plugin compiles Java and Kotlin
-// sources of the same module together, and Kotlin can call into the Java side,
-// so the port can be done file by file instead of as one big drop.
-//
-// jvmTarget must match the Java compileOptions above. The Kotlin plugin
-// validates that pairing at configuration time and fails when the two differ
-// (jvmTargetValidationMode defaults to ERROR). Kotlin's own default is 1.8
-// today, but pinning it explicitly keeps the two aligned if that default ever
-// moves. Note the `.set(...)` call — jvmTarget is a Property<JvmTarget>, not a
-// plain field, so a Groovy `=` assignment would not bind to it.
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile).configureEach {
-    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+// Kotlin compiler options. With built-in Kotlin this is the kotlin{} extension
+// rather than the old android.kotlinOptions{} block, which AGP 9 removed.
+// jvmTarget must match the Java compileOptions above.
+kotlin {
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 
 dependencies {
@@ -107,5 +111,5 @@ dependencies {
     debugImplementation libs.compose.ui.tooling
 }
 // No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
-// 8.9 already requires JDK 17+, so the former hardcoded JDK 11 toolchain was
-// both unnecessary and forced a JDK download on machines without one.)
+// 9.4 requires JDK 17+, so the former hardcoded JDK 11 toolchain was both
+// unnecessary and forced a JDK download on machines without one.)

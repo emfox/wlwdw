@@ -1,21 +1,34 @@
 // Root build script. Plugin versions live in gradle/libs.versions.toml; the
-// `apply false` entries below put AGP and the Kotlin plugin on the build
-// classpath without applying them here — the :app module opts in.
+// `apply false` entry below puts AGP on the build classpath without applying it
+// here — the :app module opts in.
+//
+// AGP 9.0 and later compile Kotlin themselves ("built-in Kotlin"), so the
+// org.jetbrains.kotlin.android plugin is gone from this project. AGP 9.4.1
+// bundles KGP 2.2.10 but uses whatever KGP is on the build classpath when a
+// newer one is there, so the classpath entry below is the one place that
+// decides the Kotlin compiler version. It has to match `kotlin` in
+// gradle/libs.versions.toml: that entry now feeds only the Compose and
+// serialization compiler plugins, and those ship with Kotlin, so a mismatch
+// between the two fails the build. The version catalog is not visible inside a
+// buildscript block (Gradle documents this), hence the literal version here —
+// change it together with the catalog entry.
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.jetbrains.kotlin:kotlin-gradle-plugin:2.4.20'
+    }
+}
+
 plugins {
     alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
 }
 
 allprojects {
     repositories {
         mavenCentral()
         google()
-    }
-    gradle.projectsEvaluated {
-        tasks.withType(JavaCompile).tap {
-            configureEach {
-                options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-            }
-        }
     }
 }

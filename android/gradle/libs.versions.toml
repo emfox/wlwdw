@@ -2,35 +2,33 @@
 # versions. Build scripts refer to entries as `libs.<dotted-alias>`, so a
 # version is only ever written down here.
 #
-# Version policy: this file backs P0 of the Android refactor. AGP is held at
-# 8.9.1 and the Gradle wrapper at 8.11.1 on purpose — moving the build chain
-# forward is a separate change that has to be verified on its own. Kotlin is
-# introduced at 2.4.20 so new code can be written in Kotlin from now on; the
-# Kotlin Gradle plugin compiles Java and Kotlin sources of the same module
-# together, so the port can proceed file by file instead of as one big drop.
+# Version policy: everything sits at the newest stable release the build chain
+# supports. AGP 9.4 is the ceiling for API 37 — its release notes say "the
+# maximum API level that AGP 9.4 supports is API level 37", so compileSdk 37
+# and AGP 9.4 are the pair to move together. Requirements read off the AGP 9.4
+# compatibility table (2026-10-02): Gradle >= 9.6.0, JDK >= 17, KGP >= 2.2.10,
+# SDK Build Tools >= 36.0.0.
+#
+# Kotlin version: AGP 9 compiles Kotlin built-in and 9.4.1 bundles KGP 2.2.10,
+# but it honours a newer KGP if one is on the build classpath — which is what
+# the buildscript block in the root build.gradle is for. This entry therefore
+# feeds only the Compose and serialization compiler plugins (they ship with
+# Kotlin and must match the compiler); the compiler itself comes from that
+# classpath. The two have to agree or the build fails, so change them together.
 
 [versions]
-agp = "8.9.1"
+agp = "9.4.1"
 kotlin = "2.4.20"
 
 # Jetpack Compose. The BOM is the only place a compose version is written down:
 # every androidx.compose.* artifact below is version-less and resolved by it.
-#
-# These are the newest versions that still work with AGP 8.9.1 / compileSdk 36 --
-# deliberate ceilings, not stale values. The next step up in every one of these
-# lines (compose 1.12.x, core-ktx 1.19.x, navigation 2.10.x) declares
-# minAndroidGradlePluginVersion 9.1.0 and minCompileSdk 37 in its AAR metadata,
-# so the build stops in :app:checkDebugAarMetadata. Moving the build chain up is
-# a change of its own; until then this is the ceiling. Checked against the AAR
-# metadata on 2026-10-02:
-#   compose 1.11.4, material3 1.4.0, navigation 2.9.8 -> minAgp 8.6.0
-#   core-ktx 1.18.0, activity-compose 1.13.0         -> minAgp 8.9.1
-# material3 is 1.4.0 in every BOM from 2025.10 onwards, so this ceiling still
-# carries the M3 Expressive navigation components the design asks for.
-composeBom = "2026.06.01"
+# The BOM carries compose-ui 1.12.1, material3 1.4.0 and material-icons 1.7.8;
+# material3 has been 1.4.0 since 2025.10 while ui keeps moving, so the M3
+# Expressive navigation components the design asks for are unaffected by bumps.
+composeBom = "2026.09.00"
 activityCompose = "1.13.0"
-navigationCompose = "2.9.8"
-coreKtx = "1.18.0"
+navigationCompose = "2.10.2"
+coreKtx = "1.19.1"
 # Needed by the type-safe navigation routes (@Serializable destination objects).
 kotlinxSerialization = "1.11.0"
 
@@ -53,7 +51,9 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+# No kotlin-android entry: AGP 9.0 and later compile Kotlin themselves, and
+# applying org.jetbrains.kotlin.android alongside built-in Kotlin fails with
+# "Cannot add extension with name 'kotlin'".
 # Required since Kotlin 2.0: the Compose compiler ships as a Kotlin plugin and
 # its version has to track the Kotlin version, not the compose-bom.
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
