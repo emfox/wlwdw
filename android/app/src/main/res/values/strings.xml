@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">GPS1S Client</string>
+    <!-- The product name, as the launcher and recents label. The English form is
+         in values-en. This is deliberately not the same string as the in-app
+         title below: the product is named for what it is, while the interface
+         addresses the user in the voice the design chose. -->
+    <string name="app_name">物联网定位</string>
 
     <!-- The Compose UI (org.rpwt.wlwdw.ui). Text that belongs to the interface
          lives here; values that are really data (addresses, coordinates,

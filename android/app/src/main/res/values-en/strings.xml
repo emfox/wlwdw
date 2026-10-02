@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The product's English name. Only the label is translated for now: the
+         interface itself is Chinese-only, so every other string falls back to
+         the default resources rather than being duplicated here. -->
+    <string name="app_name">Wlwdw Client</string>
+
+</resources>
