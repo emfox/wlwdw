@@ -103,9 +103,27 @@ class LocationSource(private val context: Context) {
     /** The newest fix any provider is still holding, however old it is. */
     private fun lastKnown(manager: LocationManager): Fix? =
         PROVIDER_ORDER
-            .mapNotNull { provider -> runCatching { manager.getLastKnownLocation(provider) }.getOrNull() }
+            .mapNotNull { provider -> lastKnownFrom(manager, provider) }
             .maxByOrNull { it.time }
             ?.let(::toFix)
+
+    /**
+     * One provider's last known fix.
+     *
+     * Both catches are the same two conditions [requestOnce] handles, for the
+     * same reason: the permission can be revoked and a provider can disappear
+     * between the check in [current] and the call here. Catching them by name
+     * rather than with a blanket `runCatching` is also what tells a reader --
+     * and lint -- that the permission question has been answered.
+     */
+    private fun lastKnownFrom(manager: LocationManager, provider: String): Location? =
+        try {
+            manager.getLastKnownLocation(provider)
+        } catch (e: SecurityException) {
+            null
+        } catch (e: IllegalArgumentException) {
+            null
+        }
 
     private fun isEnabled(manager: LocationManager, provider: String): Boolean =
         runCatching { manager.isProviderEnabled(provider) }.getOrDefault(false)
