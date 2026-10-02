@@ -39,4 +39,12 @@ class DefaultControllerTest extends AbstractAppTestCase
 
         self::assertResponseIsSuccessful();
     }
+
+    public function testMainTiandituPageRendersForRegularUser(): void
+    {
+        $client = $this->loginAs('viewer');
+        $client->request('GET', '/main/tianditu');
+
+        self::assertResponseIsSuccessful();
+    }
 }

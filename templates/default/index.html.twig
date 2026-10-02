@@ -50,6 +50,11 @@
 	src="{{ asset('js/markerwithlabel_packed.js') }}"></script>
 <script type="text/javascript"
 	src="{{ asset('js/wlwdw-map/google.js') }}"></script>
+{% elseif maptype == 'tianditu' %}
+<script type="text/javascript"
+	src="https://api.tianditu.gov.cn/api?v=4.0&tk={{ tianditu_map_api_key }}"></script>
+<script type="text/javascript"
+	src="{{ asset('js/wlwdw-map/tianditu.js') }}"></script>
 {% else %}
 <script type="text/javascript"
 	src="https://api.map.baidu.com/api?v=3.0&ak={{ baidu_map_api_key }}"></script>
