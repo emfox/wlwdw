@@ -1,3 +1,13 @@
+// Where the plugin DSL resolves AGP and the Kotlin plugin from. google() is
+// listed explicitly because AGP is not published to the Gradle Plugin Portal.
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+
 plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
 }

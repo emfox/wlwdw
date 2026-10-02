@@ -1,4 +1,7 @@
-apply plugin: 'com.android.application'
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+}
 
 // Local secrets: MQTT device credential, Baidu Map/Location API key and the
 // release signing keystore. Read from the untracked ../gradle-local.properties
@@ -34,6 +37,7 @@ android {
         // Deliberately 34, not 35+: at 35+ Android 15 limits dataSync
         // foreground services to 6h per 24h, which would kill the long-lived
         // MQTT push service on Android 15/16 devices (and forces edge-to-edge).
+        // See wlwdw-android-refactor.md §3-A for the way off this pin.
         targetSdkVersion 34
         buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
                 "\"${mqttDeviceSharedSecret}\""
@@ -70,19 +74,34 @@ android {
     namespace 'org.rpwt.wlwdw'
 }
 
+// Kotlin is here so new code can be written in Kotlin from now on; the
+// existing Java sources are untouched. The plugin compiles Java and Kotlin
+// sources of the same module together, and Kotlin can call into the Java side,
+// so the port can be done file by file instead of as one big drop.
+//
+// jvmTarget must match the Java compileOptions above. The Kotlin plugin
+// validates that pairing at configuration time and fails when the two differ
+// (jvmTargetValidationMode defaults to ERROR). Kotlin's own default is 1.8
+// today, but pinning it explicitly keeps the two aligned if that default ever
+// moves. Note the `.set(...)` call — jvmTarget is a Property<JvmTarget>, not a
+// plain field, so a Groovy `=` assignment would not bind to it.
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile).configureEach {
+    compilerOptions.jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+}
+
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.8.0'
-    implementation 'com.baidu.lbsyun:BaiduMapSDK_Map:8.2.0'
-    implementation 'com.baidu.lbsyun:BaiduMapSDK_Location_All:9.6.9'
-    implementation 'androidx.preference:preference:1.2.1'
-    implementation 'androidx.cursoradapter:cursoradapter:1.0.0' // SimpleCursorAdapter in MessageActivity
-    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0' // MapActivity
-    implementation 'com.google.android.material:material:1.14.0'
+    implementation libs.androidx.appcompat
+    implementation libs.material
+    implementation libs.androidx.preference
+    implementation libs.androidx.cursoradapter
+    implementation libs.androidx.localbroadcastmanager
+    implementation libs.baidu.map.sdk
+    implementation libs.baidu.location.sdk
     // MQTT push over WSS to the self-hosted EMQX broker. HiveMQ client supports
     // MQTT over WebSockets (Paho Java does not); the -shaded artifact bundles
     // its transitive netty deps under a renamed package to avoid conflicts on
-    // Android.
-    implementation 'com.hivemq:hivemq-mqtt-client-shaded:1.4.0'
+    // Android. The Kotlin stdlib is added automatically by the Kotlin plugin.
+    implementation libs.hivemq.mqtt.client.shaded
 }
 // No java toolchain pinned: compilation follows the Gradle daemon JVM. (AGP
 // 8.9 already requires JDK 17+, so the former hardcoded JDK 11 toolchain was

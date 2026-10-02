@@ -1,0 +1,51 @@
+# Gradle version catalog — the single source of truth for plugin and dependency
+# versions. Build scripts refer to entries as `libs.<dotted-alias>`, so a
+# version is only ever written down here.
+#
+# Version policy: this file backs P0 of the Android refactor. AGP is held at
+# 8.9.1 and the Gradle wrapper at 8.11.1 on purpose — moving the build chain
+# forward is a separate change that has to be verified on its own. Kotlin is
+# introduced at 2.4.20 so new code can be written in Kotlin from now on while
+# the existing Java sources stay as they are; AGP compiles mixed Java/Kotlin
+# modules, so the port can proceed file by file instead of as one big drop.
+
+[versions]
+agp = "8.9.1"
+kotlin = "2.4.20"
+
+appcompat = "1.8.0"
+material = "1.14.0"
+preference = "1.2.1"
+cursoradapter = "1.0.0"
+localbroadcastmanager = "1.1.0"
+
+# Baidu Map/Location keys are bound to this app's package + signing SHA1 on the
+# Baidu console, so a version bump has to be re-checked against that binding.
+baidu-map = "8.2.0"
+baidu-location = "9.6.9"
+
+# MQTT over WSS to the self-hosted EMQX broker.
+hivemq-mqtt-client = "1.4.0"
+
+[libraries]
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+material = { module = "com.google.android.material:material", version.ref = "material" }
+androidx-preference = { module = "androidx.preference:preference", version.ref = "preference" }
+
+# Only used by MessageActivity's SimpleCursorAdapter; retires together with the
+# SQLiteOpenHelper layer once Room lands (P1).
+androidx-cursoradapter = { module = "androidx.cursoradapter:cursoradapter", version.ref = "cursoradapter" }
+# Deprecated upstream and only used by MapActivity to pass messages around;
+# retires with Flow/SharedFlow (P1).
+androidx-localbroadcastmanager = { module = "androidx.localbroadcastmanager:localbroadcastmanager", version.ref = "localbroadcastmanager" }
+
+baidu-map-sdk = { module = "com.baidu.lbsyun:BaiduMapSDK_Map", version.ref = "baidu-map" }
+baidu-location-sdk = { module = "com.baidu.lbsyun:BaiduMapSDK_Location_All", version.ref = "baidu-location" }
+
+# Do NOT switch to the plain (non -shaded) coordinate: the shading is what keeps
+# netty's packages from colliding with anything else on the Android classpath.
+hivemq-mqtt-client-shaded = { module = "com.hivemq:hivemq-mqtt-client-shaded", version.ref = "hivemq-mqtt-client" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }

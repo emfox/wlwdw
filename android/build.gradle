@@ -1,12 +1,9 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-buildscript {
-    repositories {
-        mavenCentral()
-        google()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.9.1'
-    }
+// Root build script. Plugin versions live in gradle/libs.versions.toml; the
+// `apply false` entries below put AGP and the Kotlin plugin on the build
+// classpath without applying them here — the :app module opts in.
+plugins {
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.kotlin.android) apply false
 }
 
 allprojects {
