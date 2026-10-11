@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.view.ViewGroup
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebView
@@ -19,7 +20,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
@@ -63,6 +68,8 @@ fun PrivacyScreen(
             .build()
     }
     val background = MaterialTheme.colorScheme.surface
+    // Bumped when the renderer dies, which is what makes a fresh WebView be built.
+    var generation by remember { mutableIntStateOf(0) }
 
     Column(
         modifier = modifier
@@ -86,14 +93,21 @@ fun PrivacyScreen(
             },
         )
 
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx -> createPrivacyWebView(ctx, assetLoader, background.toArgb()) },
-            // The page paints its own background, but repainting the view keeps
-            // a light rectangle from showing through if the theme flips while
-            // the page is still loading.
-            update = { it.setBackgroundColor(background.toArgb()) },
-        )
+        // Keyed on the generation so a dead renderer gets a fresh WebView: the old one
+        // cannot be reused once its process is gone.
+        key(generation) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx ->
+                    createPrivacyWebView(ctx, assetLoader, background.toArgb()) { generation++ }
+                },
+                // The page paints its own background, but repainting the view keeps
+                // a light rectangle from showing through if the theme flips while
+                // the page is still loading.
+                update = { it.setBackgroundColor(background.toArgb()) },
+                onRelease = { it.destroy() },
+            )
+        }
     }
 }
 
@@ -109,6 +123,7 @@ private fun createPrivacyWebView(
     context: Context,
     assetLoader: WebViewAssetLoader,
     background: Int,
+    onRendererGone: () -> Unit,
 ): WebView = WebView(context).apply {
     layoutParams = ViewGroup.LayoutParams(
         ViewGroup.LayoutParams.MATCH_PARENT,
@@ -126,29 +141,55 @@ private fun createPrivacyWebView(
     // the one page that must be readable the one page that cannot be enlarged.
     settings.textZoom = (resources.configuration.fontScale * 100).toInt()
 
-    webViewClient = object : WebViewClientCompat() {
-        // Everything under /assets/ comes from the loader; nothing else in the
-        // document is fetched except the fonts the OS already has.
-        override fun shouldInterceptRequest(
-            view: WebView,
-            request: WebResourceRequest,
-        ): WebResourceResponse? = assetLoader.shouldInterceptRequest(request.url)
-
-        override fun shouldOverrideUrlLoading(
-            view: WebView,
-            request: WebResourceRequest,
-        ): Boolean {
-            val url = request.url
-            if (url.host == AssetHost) return false
-            // mailto: cannot be handled here at all, and there is no reason to
-            // browse inside a legal document. Hand it to whatever the user has.
-            // Consumed either way: letting the WebView try would replace the
-            // policy with an error page, which is worse than nothing happening.
-            runCatching { view.context.startActivity(Intent(Intent.ACTION_VIEW, url)) }
-                .onFailure { Log.w(LogTag, "no activity for $url", it) }
-            return true
-        }
-    }
+    webViewClient = PrivacyWebViewClient(assetLoader, onRendererGone)
 
     loadUrl(PrivacyPageUrl)
+}
+
+/**
+ * The policy page's client. A named class rather than an object literal, so the
+ * render-process-gone policy is somewhere a reader can find it.
+ *
+ * The suppression is a false positive: androidx.webkit 1.17 ships a lint check that reports
+ * every WebViewClient as missing `onRenderProcessGone`, this one included -- the method is
+ * right below. See AnkiDroid #22091, where the same report blocks a webkit upgrade.
+ */
+@Suppress("MissingOnRenderProcessGone")
+private class PrivacyWebViewClient(
+    private val assetLoader: WebViewAssetLoader,
+    private val onRendererGone: () -> Unit,
+) : WebViewClientCompat() {
+
+    // Everything under /assets/ comes from the loader; nothing else in the document is
+    // fetched except the fonts the OS already has.
+    override fun shouldInterceptRequest(
+        view: WebView,
+        request: WebResourceRequest,
+    ): WebResourceResponse? = assetLoader.shouldInterceptRequest(request.url)
+
+    override fun shouldOverrideUrlLoading(
+        view: WebView,
+        request: WebResourceRequest,
+    ): Boolean {
+        val url = request.url
+        if (url.host == AssetHost) return false
+        // mailto: cannot be handled here at all, and there is no reason to browse inside a
+        // legal document. Hand it to whatever the user has. Consumed either way: letting the
+        // WebView try would replace the policy with an error page, which is worse than
+        // nothing happening.
+        runCatching { view.context.startActivity(Intent(Intent.ACTION_VIEW, url)) }
+            .onFailure { Log.w(LogTag, "no activity for $url", it) }
+        return true
+    }
+
+    /*
+     * Not implementing this kills the whole app: the default handling takes the process
+     * down with the renderer, so a WebView crash becomes "the app closed". Returning true
+     * says it was handled, and the dead view is replaced by the screen.
+     */
+    override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+        Log.w(LogTag, "render process gone (crashed=${detail.didCrash()})")
+        onRendererGone()
+        return true
+    }
 }

@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.ViewGroup
 import android.webkit.ConsoleMessage
 import android.webkit.JavascriptInterface
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -32,6 +33,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -123,10 +125,15 @@ fun MapScreen(
     }
 
     Box(modifier = modifier.fillMaxSize()) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx -> createMapWebView(ctx, assetLoader, bridge) },
-        )
+        // Keyed on the generation so a dead renderer gets a fresh WebView: the old one
+        // cannot be reused once its process is gone.
+        key(bridge.generation) {
+            AndroidView(
+                modifier = Modifier.fillMaxSize(),
+                factory = { ctx -> createMapWebView(ctx, assetLoader, bridge) },
+                onRelease = { it.destroy() },
+            )
+        }
 
         // Top centre: the tracking chip. It has to exist here because splitting
         // the app into tabs means the map can no longer see the status screen.
@@ -206,6 +213,10 @@ private class MapPageBridge {
     var attempt by mutableStateOf(0)
         internal set
 
+    /** Bumped when the renderer dies, which is what makes the screen build a new WebView. */
+    var generation by mutableStateOf(0)
+        internal set
+
     private var view: WebView? = null
     private var loaded = false
     private var payload = EMPTY_MAP_PAYLOAD
@@ -240,6 +251,19 @@ private class MapPageBridge {
         loaded = false
         attempt++
         view?.reload()
+    }
+
+    /**
+     * The page's renderer process is gone. The WebView is unusable from here on, so it is
+     * dropped and the screen builds another one -- which loads the shell itself, so this
+     * is the same path as a reload that starts from a blank view.
+     */
+    fun rendererGone() {
+        view = null
+        loaded = false
+        boot = MapBoot.Loading
+        generation++
+        attempt++
     }
 
     /** Re-frame the map on everything it is showing. */
@@ -303,18 +327,7 @@ private fun createMapWebView(
         BridgeName,
     )
 
-    webViewClient = object : WebViewClientCompat() {
-        // Everything under /assets/ is served by the loader, which is what gives
-        // the page an https origin instead of the "null" one file:// produces.
-        override fun shouldInterceptRequest(
-            view: WebView,
-            request: WebResourceRequest,
-        ): WebResourceResponse? = assetLoader.shouldInterceptRequest(request.url)
-
-        override fun onPageFinished(view: WebView, url: String) {
-            bridge.pageLoaded()
-        }
-    }
+    webViewClient = MapWebViewClient(assetLoader, bridge)
 
     // The page is the one part of this app that has no test and no stack trace
     // of its own, so its console goes to logcat under a tag of its own. The map
@@ -328,6 +341,43 @@ private fun createMapWebView(
 
     bridge.attach(this)
     loadUrl(MapShellUrl)
+}
+
+/**
+ * The map page's client. A named class rather than an object literal, so the
+ * render-process-gone policy is somewhere a reader can find it.
+ *
+ * The suppression is a false positive: androidx.webkit 1.17 ships a lint check that reports
+ * every WebViewClient as missing `onRenderProcessGone`, this one included -- the method is
+ * right below. See AnkiDroid #22091, where the same report blocks a webkit upgrade.
+ */
+@Suppress("MissingOnRenderProcessGone")
+private class MapWebViewClient(
+    private val assetLoader: WebViewAssetLoader,
+    private val bridge: MapPageBridge,
+) : WebViewClientCompat() {
+
+    // Everything under /assets/ is served by the loader, which is what gives the page an
+    // https origin instead of the "null" one file:// produces.
+    override fun shouldInterceptRequest(
+        view: WebView,
+        request: WebResourceRequest,
+    ): WebResourceResponse? = assetLoader.shouldInterceptRequest(request.url)
+
+    override fun onPageFinished(view: WebView, url: String) {
+        bridge.pageLoaded()
+    }
+
+    /*
+     * Not implementing this kills the whole app: the default handling takes the process
+     * down with the renderer, so a WebView crash becomes "the app closed". Returning true
+     * says it was handled, and the dead view is replaced by the screen.
+     */
+    override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+        Log.w(MapLogTag, "render process gone (crashed=${detail.didCrash()})")
+        bridge.rendererGone()
+        return true
+    }
 }
 
 
