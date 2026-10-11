@@ -95,7 +95,7 @@ data class ServiceNotice(@StringRes val titleRes: Int, @StringRes val textRes: I
  * [tracking] is the *intent* (`WlwdwPrefs.trackingEnabled`), not whether the
  * loop is running this instant. They differ when the loop has stopped itself on
  * a refusal, and in that case the notice must still say why -- reading the loop
- * would show "已停止", which sends the user looking in the wrong place.
+ * would show "stopped", which sends the user looking in the wrong place.
  */
 fun serviceNotice(tracking: Boolean, state: TrackingState, push: PushState): ServiceNotice =
     if (tracking) {

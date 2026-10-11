@@ -24,9 +24,9 @@ interface ReportLog {
     /**
      * When the last report was accepted, or null if none ever was.
      *
-     * Never reporting is a real answer and is kept distinct from "not read
-     * yet": the status screen says "还没有成功上报" for one and "last success 47
-     * minutes ago" for the other.
+     * Never reporting is a real answer, kept distinct from "not read yet": the
+     * status screen shows a "nothing reported yet" line for one and a relative
+     * "last success" time for the other.
      */
     suspend fun lastAcceptedAt(): Long?
 }

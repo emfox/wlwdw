@@ -43,7 +43,7 @@ data class TrackingState(
      *
      * Order matters. [ReportFailure.Unregistered] first because it survives the
      * loop stopping -- the fix is not to retry but to register the device, and a
-     * screen reading "已停止" would send the user looking in the wrong place.
+     * screen showing "stopped" would send the user looking in the wrong place.
      */
     val status: DeviceStatus
         get() = when {
@@ -96,9 +96,9 @@ class ReportingEngine(
      * Read the log's last accepted report into the state.
      *
      * Kept separate from [run] because the answer to "when did this last work"
-     * does not change when the app is restarted, and a cold start that says
-     * "还没有成功上报" while the log holds a report from two minutes ago is
-     * simply wrong. Called once when the loop starts; the screen's cold start
+     * does not change when the app is restarted, and a cold start claiming
+     * "nothing reported yet" while the log holds a report from two minutes ago
+     * is simply wrong. Called once when the loop starts; the screen's cold start
      * reads it through [org.rpwt.wlwdw.service.WlwdwService], which can
      * answer before any loop exists.
      */

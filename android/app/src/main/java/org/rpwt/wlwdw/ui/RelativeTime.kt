@@ -5,7 +5,7 @@ import androidx.compose.ui.res.stringResource
 import org.rpwt.wlwdw.R
 
 /**
- * "3 分钟前" for a timestamp, coarse on purpose.
+ * A coarse relative time for a timestamp ("3 minutes ago"), on purpose.
  *
  * The screen answers "can my family see me", and that question is answered by
  * the order of magnitude -- seconds of precision would imply a freshness this

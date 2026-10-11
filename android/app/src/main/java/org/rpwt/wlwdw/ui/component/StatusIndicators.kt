@@ -119,7 +119,7 @@ fun StatusRing(
 }
 
 /**
- * A small pill carrying one status word ("正常", "重连中"). Also used for the
+ * A small pill carrying one status word ("normal", "reconnecting"). Also used for the
  * floating tracking chip on the map and in the messages bar -- same shape and
  * size, different place.
  */

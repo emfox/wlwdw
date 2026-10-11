@@ -46,8 +46,8 @@ import org.rpwt.wlwdw.ui.theme.WlwdwDimens
  * The report log, newest first: what this device tried to send, and what came
  * of it.
  *
- * This is where the old location screen's four readouts went -- 获取时间,
- * 获取状态, GPS坐标, 定位精度, plus the error the old screen showed as a bare
+ * This is where the old location screen's four readouts went -- time, status,
+ * GPS coordinates and accuracy -- plus the error the old screen showed as a bare
  * code. They were moved rather than deleted because they are the only view of
  * the thing that breaks: the loop's own state says what is happening now, and
  * this says what happened at 03:40 last night, when nobody was watching.
@@ -127,8 +127,8 @@ fun ReportsScreen(
  *
  * The time is the device's own wall clock to the second, not the relative
  * wording the product screens use: the question this page answers is "what
- * happened at 03:40", and "7 小时前" cannot be lined up against anything
- * outside the phone. The relative form is kept beside it because it is what
+ * happened at 03:40", and a relative "7 hours ago" cannot be lined up against
+ * anything outside the phone. The relative form stays beside it because it is what
  * says at a glance whether the newest row is current.
  */
 @Composable

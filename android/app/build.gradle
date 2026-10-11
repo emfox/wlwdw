@@ -28,16 +28,16 @@ if (localPropsFile.exists()) {
 def mqttDeviceSharedSecret = localProps.getProperty(
         'MQTT_DEVICE_SHARED_SECRET', 'wlwdw-device-secret-CHANGE-ME')
 
-// The 天地图 key the bundled map shell boots the JS API with.
+// The Tianditu key the bundled map shell boots the JS API with.
 //
 // The default is the key the website already ships. It is printed in the page
 // source of /main/tianditu, so it is not a secret, and a working default is
 // what makes a fresh checkout build a working map. Override it in
-// gradle-local.properties to point the app at a different 天地图 account --
+// gradle-local.properties to point the app at a different Tianditu account --
 // checked for emptiness as well as absence, because an unset property in that
 // file would otherwise arrive here as a key of "".
 //
-// The key is a "browser" type: 天地图 validates it on the User-Agent, not on
+// The key is a "browser" type: Tianditu validates it on the User-Agent, not on
 // the Referer, so a WebView (which is a browser) may use it from any origin.
 // That is also why neither a SHA-1 nor a package name is involved -- those
 // belong to the Android SDK key type, which this app does not use.

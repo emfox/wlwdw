@@ -97,7 +97,7 @@ function notify(state) {
 }
 
 /*
- * Called once by the app once the page is up, with the 天地图 key.
+ * Called once by the app once the page is up, with the Tianditu key.
  *
  * The key is injected rather than written into this file so the APK and the
  * website can be pointed at different keys without editing HTML, and because
@@ -111,7 +111,7 @@ window.wlwdwBoot = function (tk) {
 	sdk.src = 'https://api.tianditu.gov.cn/api?v=4.0&tk=' + encodeURIComponent(tk);
 	sdk.onload = function () {
 		try {
-			// core.js's entry point: hands the container to the 天地图 provider.
+			// core.js's entry point: hands the container to the Tianditu provider.
 			initMap();
 			sdkReady = true;
 			if (pending) {

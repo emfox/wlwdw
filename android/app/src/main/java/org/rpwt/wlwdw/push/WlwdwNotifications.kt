@@ -112,10 +112,9 @@ object WlwdwNotifications {
     /**
      * A message arrived. Tapping it opens the inbox, not just the app.
      *
-     * The distinction is the whole point of a message notification: the one
-     * thing the user wants after seeing "定位服务器发来消息" is the message, and
-     * landing them on the status ring means they have to know that the inbox is
-     * the third tab.
+     * The distinction is the whole point of a message notification: after the
+     * "message from the location server" title the user wants the message, and
+     * landing them on the status ring means they have to find the inbox tab.
      */
     fun messageNotification(context: Context, content: String): Notification =
         Notification.Builder(context, CHANNEL_ID)

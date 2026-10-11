@@ -343,9 +343,9 @@ private fun ringCaption(status: DeviceStatus, reportIntervalMinutes: Int): Strin
  * *successful* reports only. A device whose uploads have been failing for an
  * hour must not show the time of the attempt that failed.
  *
- * "最后上报" only while the ring above says 正在上报, where the two readings of
- * the phrase collapse into one. Anywhere else -- stopped, retrying, no
- * permission -- "成功" is doing real work and is spelled out.
+ * The bare "last report" wording is used only while the ring above says
+ * "reporting", where the two readings of the phrase collapse into one. Anywhere
+ * else -- stopped, retrying, no permission -- the word "success" is spelled out.
  */
 @Composable
 private fun heroLine(state: TrackingState): String {

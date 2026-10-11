@@ -47,8 +47,8 @@ fun WlwdwCard(
  * the user, and the single action that fixes it.
  *
  * This is the direct answer to the old screen's bare error codes -- the design
- * asks for a sentence about the consequence ("熄屏后会停止上报") rather than a
- * restatement of the failure.
+ * asks for a sentence about the consequence ("reporting stops once the screen
+ * goes off") rather than a restatement of the failure.
  */
 @Composable
 fun Callout(

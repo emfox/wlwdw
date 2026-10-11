@@ -178,9 +178,9 @@ fun SettingsScreen(
             )
 
             GroupLabel(stringResource(R.string.wlwdw_settings_diagnostics_group))
-            // One row, not two. The design drew 查看最近上报记录 and 本机日志 as
-            // separate entries, but there is only one log: the row that said
-            // "3 条" had no store behind it and was showing an invented number,
+            // One row, not two. The design drew "recent reports" and "device log"
+            // as separate entries, but there is only one log: the row that showed
+            // a count had no store behind it and was showing an invented number,
             // and a second row listing the first row's rows is not a feature.
             // The count is the length of the list this opens, so the two cannot
             // disagree.

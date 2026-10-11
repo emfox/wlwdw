@@ -58,7 +58,7 @@ import org.rpwt.wlwdw.ui.component.statusTone
  * Tab 2: the map.
  *
  * The map is neither drawn here nor drawn natively: it is the website's own
- * JavaScript (`public/js/wlwdw-map/`) running in a WebView over the 天地图 JS
+ * JavaScript (`public/js/wlwdw-map/`) running in a WebView over the Tianditu JS
  * API. That layer is the part of this project that took the most iteration to
  * get right -- the coordinate strategy, which SDK classes are safe to touch
  * before `components.js` lands, the note layer having to be stacked separately,
@@ -113,7 +113,7 @@ fun MapScreen(
     LaunchedEffect(payload) { bridge.update(payload) }
 
     // Silence past this long means the SDK never arrived: no network, or
-    // 天地图 refusing the key. Either way the user gets a reason and a retry
+    // Tianditu refusing the key. Either way the user gets a reason and a retry
     // rather than a green rectangle.
     LaunchedEffect(bridge.attempt) {
         if (bridge.boot == MapBoot.Loading) {
@@ -318,7 +318,7 @@ private fun createMapWebView(
 
     // The page is the one part of this app that has no test and no stack trace
     // of its own, so its console goes to logcat under a tag of its own. The map
-    // JS and the 天地图 SDK both report failures there and nowhere else.
+    // JS and the Tianditu SDK both report failures there and nowhere else.
     webChromeClient = object : WebChromeClient() {
         override fun onConsoleMessage(message: ConsoleMessage): Boolean {
             Log.d(MapLogTag, "${message.message()} (${message.sourceId()}:${message.lineNumber()})")

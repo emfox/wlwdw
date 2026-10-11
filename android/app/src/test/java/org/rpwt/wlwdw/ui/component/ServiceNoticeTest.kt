@@ -43,8 +43,8 @@ class ServiceNoticeTest {
     @Test
     fun `a loop that stopped itself still says why`() {
         // The loop stops on a refusal and leaves the stored intent on. Reading
-        // the loop's own state here would say 已停止, which sends the user to the
-        // start button instead of to the server where the device has to be
+        // the loop's own state here would say "stopped", which sends the user to
+        // the start button instead of to the server where the device has to be
         // registered -- so the notice follows the intent, not the loop.
         val stopped = TrackingState(running = false, failure = ReportFailure.Unregistered)
 
