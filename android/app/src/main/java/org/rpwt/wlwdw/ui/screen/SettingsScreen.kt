@@ -70,7 +70,9 @@ fun SettingsScreen(
     onUseCustomHostChange: (Boolean) -> Unit,
     onCustomHostChange: (String) -> Unit,
     onReportIntervalChange: (Int) -> Unit,
+    onStartOnBootChange: (Boolean) -> Unit,
     onOpenReports: () -> Unit,
+    onOpenPrivacy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -158,6 +160,23 @@ fun SettingsScreen(
                 onClick = { editingInterval = true },
             )
 
+            GroupLabel(stringResource(R.string.wlwdw_settings_tracking_group))
+            SettingRow(
+                title = stringResource(R.string.wlwdw_settings_start_on_boot),
+                subtitle = stringResource(R.string.wlwdw_settings_start_on_boot_sub),
+                // Enabled whether or not the permission is there. The subtitle
+                // says what it needs; disabling the switch instead would leave
+                // the user no way to find out why, since the switch itself is
+                // how this screen explains what it does.
+                trailing = {
+                    Switch(
+                        checked = prefs.startOnBoot,
+                        onCheckedChange = onStartOnBootChange,
+                    )
+                },
+                showDivider = false,
+            )
+
             GroupLabel(stringResource(R.string.wlwdw_settings_diagnostics_group))
             // One row, not two. The design drew 查看最近上报记录 and 本机日志 as
             // separate entries, but there is only one log: the row that said
@@ -183,7 +202,7 @@ fun SettingsScreen(
             SettingRow(
                 title = stringResource(R.string.wlwdw_settings_privacy),
                 showDivider = false,
-                onClick = {},
+                onClick = onOpenPrivacy,
             )
 
             Spacer(Modifier.height(20.dp))

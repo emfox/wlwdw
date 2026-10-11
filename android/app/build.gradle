@@ -121,14 +121,15 @@ android {
     namespace 'org.rpwt.wlwdw'
 }
 
-// --- The map shell's assets -------------------------------------------------
-// `public/js/wlwdw-map/` is the single source of truth for how this project
-// draws a map -- the website loads it from a browser and the app loads the same
-// files in a WebView. Rather than keeping a second copy under src/main/assets
-// that would silently drift the first time someone edited a provider, the few
-// files the shell needs are copied into the build directory and that directory
-// is folded into the app's assets. Editing public/js/wlwdw-map/core.js and
-// rebuilding is all it takes for the app to pick the change up.
+// --- The website's assets, inside the APK -----------------------------------
+// `public/` is the single source of truth for two things the app reuses from
+// the website: how this project draws a map (`public/js/wlwdw-map/`), and the
+// privacy policy (`public/privacy.html`). The website serves them directly; the
+// app loads the same bytes out of its assets. Rather than keeping a second copy
+// under src/main/assets that would silently drift the first time someone edited
+// a provider or amended the policy, the files are copied into the build
+// directory and that directory is folded into the app's assets. Editing
+// `public/...` and rebuilding is all it takes for the app to pick it up.
 //
 // The layout under `web/` mirrors `public/`, so relative references inside the
 // JS (Marker_Pin, Anchor_Path + icon) resolve to the same paths they do on the
@@ -140,7 +141,7 @@ android {
 // Provider through the older SourceSet API instead is something AGP 9 refuses
 // outright -- it cannot tell generated files from static ones, and so cannot
 // wire the task dependency.
-abstract class SyncWebMapAssets extends org.gradle.api.DefaultTask {
+abstract class SyncWebAssets extends org.gradle.api.DefaultTask {
 
     /** The website's public/ directory. */
     @InputDirectory
@@ -155,7 +156,6 @@ abstract class SyncWebMapAssets extends org.gradle.api.DefaultTask {
 
     @TaskAction
     void sync() {
-        def src = source.get().asFile
         // Cleared first: a file deleted from public/ has to disappear from the
         // assets too, which a plain copy would leave behind.
         fs.delete { delete(destination) }
@@ -166,6 +166,9 @@ abstract class SyncWebMapAssets extends org.gradle.api.DefaultTask {
         copy('images', 'web/images',
                 ['Marker_Blank.png', 'Marker_Pin.png', 'Marker_Point.png'])
         copy('images/anchors', 'web/images/anchors', null)
+        // The privacy policy. One copy: the app reads it from here, and the
+        // website serves the same file at /privacy.html.
+        copy('.', 'web', ['privacy.html'])
     }
 
     // The parameters are deliberately not called from/into: a local of either
@@ -181,7 +184,7 @@ abstract class SyncWebMapAssets extends org.gradle.api.DefaultTask {
     }
 }
 
-def syncWebAssets = tasks.register('syncWebAssets', SyncWebMapAssets) {
+def syncWebAssets = tasks.register('syncWebAssets', SyncWebAssets) {
     source.set(file("${rootProject.projectDir}/../public"))
     destination.set(layout.buildDirectory.dir('wlwdw-web-assets'))
 }

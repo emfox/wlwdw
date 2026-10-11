@@ -23,6 +23,11 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- To be told the phone has restarted, so that tracking can resume when the
+         user has asked it to. Asking for the permission costs nothing; whether
+         anything happens at boot is the "start on boot" setting, off by
+         default. See BootReceiver. -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="false"
@@ -52,6 +57,19 @@
             android:name=".tracking.TrackingService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <!-- Restarts tracking after a reboot, if the user asked for that. It is
+             exported because a broadcast from the system has to be able to
+             reach it, and the only action it filters for,
+             ACTION_BOOT_COMPLETED, is protected, so no other app can send it. -->
+        <receiver
+            android:name=".tracking.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
 
         <!-- The single Activity; everything above it is Compose. -->
         <activity

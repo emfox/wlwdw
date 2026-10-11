@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隐私政策 · 物联网定位</title>
+<!--
+  The privacy policy, as one file.
+
+  It lives under public/ for two reasons: the website serves it directly at
+  /privacy.html (no controller, no route, nothing to deploy), and the Android
+  build copies it into the APK's assets with the same `syncWebAssets` task that
+  carries the map JS. One copy, so an amendment cannot land in the app and not
+  on the web, or the other way round.
+
+  Every statement here was checked against the code rather than the other way
+  around. If you change what the app collects, sends or keeps, this file is
+  part of that change.
+-->
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;
+  --ink: #1b1f24;
+  --dim: #5b6572;
+  --line: #e3e6ea;
+  --accent: #0b6bcb;
+  --note-bg: #f6f7f9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #14171a;
+    --ink: #e8ebef;
+    --dim: #9aa4b0;
+    --line: #2a2f36;
+    --accent: #6cb0ff;
+    --note-bg: #1c2025;
+  }
+}
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.75 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+.wrap { max-width: 46em; margin: 0 auto; padding: 32px 20px 72px; }
+h1 { font-size: 24px; line-height: 1.35; margin: 0 0 6px; letter-spacing: -.01em; }
+h2 {
+  font-size: 17px; margin: 38px 0 10px; padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+h3 { font-size: 15px; margin: 22px 0 6px; }
+p { margin: 10px 0; }
+ul { margin: 10px 0; padding-left: 22px; }
+li { margin: 6px 0; }
+.meta { color: var(--dim); font-size: 14px; margin: 0 0 26px; }
+.meta div { margin: 2px 0; }
+code {
+  background: var(--note-bg); border-radius: 5px; padding: 1px 5px;
+  font-size: 13.5px; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+a { color: var(--accent); }
+.summary {
+  background: var(--note-bg); border: 1px solid var(--line); border-radius: 12px;
+  padding: 16px 18px; margin: 22px 0;
+}
+.summary p { margin: 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; margin: 12px 0; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--dim); font-weight: 600; font-size: 13.5px; }
+strong { font-weight: 600; }
+footer {
+  margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line);
+  color: var(--dim); font-size: 13.5px;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>隐私政策</h1>
+<div class="meta">
+  <div>应用：物联网定位（Wlwdw Client）</div>
+  <div>运营者：Emfox Zhou</div>
+  <div>生效日期：2026-10-11　·　版本 1.0</div>
+</div>
+
+<div class="summary">
+  <p>这个应用只做一件事：把你主动开启之后的位置，定时上报到你自己指定的服务器，供家人查看。
+  没有账号，没有密码，不读通讯录、照片、文件或通话记录，不含任何广告或统计组件。</p>
+</div>
+
+<h2>1. 收集哪些信息</h2>
+
+<h3>位置（经纬度）</h3>
+<p>只有两个条件同时满足时才会采集：<strong>你已同意本政策</strong>，并且
+<strong>你在状态页点了「开始追踪」</strong>。不点开始追踪，就不会采集任何位置。</p>
+<ul>
+  <li>采集频率由你设定：1 / 2 / 3 / 5 / 10 / 30 分钟，默认 2 分钟。</li>
+  <li>追踪开始后，即使屏幕关闭也会继续采集——这正是「始终允许」后台定位权限的用途。</li>
+  <li>在状态页点「停止追踪」后立即停止；之后不再采集，也不再上传。</li>
+  <li>坐标取自手机系统的定位能力（GPS 或网络定位），为 WGS-84 坐标，不做偏移处理。</li>
+</ul>
+
+<h3>设备 ID</h3>
+<p>首次安装时在本机<strong>随机生成</strong>的一串 UUID，例如 <code>4f8c1d20-…</code>。
+它不来自 IMEI、MAC 地址、Android ID、序列号或任何硬件标识，也不是手机号，无法用来识别你本人。
+它的唯一作用是让服务器区分「这条轨迹是哪台设备上报的」。</p>
+
+<h3>消息</h3>
+<p>服务器可以给这台设备推送通知（例如家人留言）。推送本身只含一个编号，正文由应用向服务器取回，
+随后保存在本机。</p>
+
+<h3>不收集的内容</h3>
+<p>通讯录、短信、通话记录、照片与相册、文件、已安装应用列表、剪贴板、麦克风、摄像头、
+你的任何账号或密码。应用没有登录功能，也不申请除下表之外的权限。</p>
+
+<h3>申请的权限及用途</h3>
+<table>
+  <tr><th>权限</th><th>用途</th></tr>
+  <tr><td>位置（精确 / 粗略）</td><td>取得当前位置</td></tr>
+  <tr><td>后台位置</td><td>屏幕关闭后继续上报；只在追踪已开启时生效</td></tr>
+  <tr><td>通知</td><td>显示运行状态与消息提醒</td></tr>
+  <tr><td>网络、前台服务、唤醒锁</td><td>维持上报与推送连接</td></tr>
+  <tr><td>开机启动</td><td>在你开启「开机自动开始追踪」后，重启手机时恢复上报。该开关<strong>默认关闭</strong></td></tr>
+</table>
+
+<h2>2. 这些信息用来做什么</h2>
+<p>只有两件事：把位置上报给服务器，供家人在网页地图上看到你在哪儿、去过哪儿；
+用设备 ID 判断轨迹归属并把消息送到正确的设备。</p>
+<p>不用于广告、用户画像、信用评估，也没有任何二次用途。应用内不含广告、统计或崩溃上报组件，
+运营者不会把你的信息出售或交换给任何人。</p>
+
+<h2>3. 信息发送给谁</h2>
+
+<h3>你自己的服务器</h3>
+<p>默认地址是 <code>wlwdw.rpwt.org</code>，可以在「设置 › 服务器」改成你自己的地址。
+每次上报发送的内容只有三项：<strong>设备 ID、纬度、经度</strong>。消息推送走 MQTT over TLS
+（443 端口），以设备 ID 作为用户名连接。所有通信都使用 TLS 加密。</p>
+<p>与任何联网服务一样，服务器在处理请求时能够获知请求来源的 IP 地址。本应用的服务器代码不记录 IP
+（生产环境仅在发生错误时写日志）。</p>
+
+<h3>天地图 —— 唯一的第三方</h3>
+<p>打开「地图」页时，地图由天地图的服务绘制：页面会从 <code>api.tianditu.gov.cn</code> 加载地图程序，
+并从 <code>t0</code>–<code>t7.tianditu.gov.cn</code> 请求地图瓦片。这意味着
+<strong>你在看地图时，你的 IP 地址和你所查看的地图范围会发送给天地图</strong>。
+这是本应用唯一的第三方，且只在你打开地图页时发生；天地图对这些数据的处理由其自身政策约束。
+如果你不希望如此，不打开地图页即可，其余功能不受影响。</p>
+
+<p>除上述之外，不向任何第三方共享、出售或转让你的信息。</p>
+
+<h2>4. 保存在哪里、保存多久</h2>
+<h3>手机上</h3>
+<ul>
+  <li><strong>上报记录</strong>：最多保存 1440 条，超出后最早的一条自动删除。按默认频率约合两天，按 1 分钟频率约合一天。</li>
+  <li><strong>消息</strong>：保存在本机，直到你卸载应用。</li>
+  <li><strong>设置</strong>：保存在本机。</li>
+</ul>
+<p>应用<strong>不参与 Android 的自动备份</strong>（<code>allowBackup="false"</code>），
+因此这些数据不会随系统的云备份离开这台手机。</p>
+
+<h3>服务器上</h3>
+<p>上报的位置记录由服务器保留，直到你或服务器管理员将其删除。保留时长取决于该服务器如何管理——
+如果服务器是你自己部署的，你完全掌握它。</p>
+
+<h2>5. 安全措施</h2>
+<ul>
+  <li>与服务器之间、与推送服务之间的通信全部使用 TLS 加密。</li>
+  <li>通知在锁屏界面上不显示内容。</li>
+  <li>只申请上表列出的权限，能不给的都不申请。</li>
+</ul>
+<p>需要说明的是：没有任何系统是绝对安全的。位置一旦上传到服务器，它就在服务器上了——
+请据此判断要把服务器放在哪里、给谁看。</p>
+
+<h2>6. 你的选择与控制</h2>
+<ul>
+  <li><strong>随时停止</strong>：状态页的「停止追踪」。停止后不再采集，也不再上传。</li>
+  <li><strong>重启后是否继续</strong>：设置里的「开机自动开始追踪」，<strong>默认关闭</strong>。
+    开启后，手机重启会自动恢复上报（前提是把定位权限设为「始终允许」，否则应用会跳过，不会自行开始）；
+    不开启则每次重启后需要你手动点「开始追踪」。</li>
+  <li><strong>压根不开始</strong>：不点「开始追踪」就永远不会采集位置。在首启页选「不同意」，应用会直接退出，
+    不采集任何信息。</li>
+  <li><strong>删除本机数据</strong>：卸载应用，本机全部数据随之删除。</li>
+  <li><strong>删除服务器上的数据</strong>：联系服务器管理员。如果服务器由你自己部署，直接清理数据库即可。</li>
+  <li><strong>撤回同意</strong>：卸载应用，或在系统设置中关闭位置权限，两者都会使采集停止。</li>
+</ul>
+
+<h2>7. 使用时必须让对方知情</h2>
+<p>本应用是用来「让家人知道彼此在哪里」的工具，前提是<strong>被追踪的一方知情并同意</strong>。
+请在安装和使用前告知对方，并取得同意。请勿在对方不知情的情况下安装或使用本应用。</p>
+
+<h2>8. 未成年人</h2>
+<p>本应用可以由监护人用于了解未成年家庭成员的位置，但应当取得该未成年人及其另一名监护人的同意，
+并让本人知晓正在被定位。本应用不面向未成年人单独提供服务。</p>
+
+<h2>9. 本政策的变更</h2>
+<p>本政策若有更新，会同时修改页面顶部的生效日期与版本号，应用内的这一页始终是最新版本。
+若变更涉及收集范围或用途的实质变化，会在应用内另行提示。</p>
+
+<h2>10. 联系方式</h2>
+<p>对本政策有疑问，或需要查询、更正、删除信息，请联系：</p>
+<ul>
+  <li>运营者：Emfox Zhou</li>
+  <li>邮箱：<a href="mailto:emfoxzhou@gmail.com">emfoxzhou@gmail.com</a></li>
+</ul>
+
+<footer>
+  本页面为应用内「隐私政策」与网站 /privacy.html 的同一份文件。
+</footer>
+
+</div>
+</body>
+</html>

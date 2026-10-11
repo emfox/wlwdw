@@ -42,6 +42,7 @@ class PreferencesRepository(private val context: Context) {
         val useCustomHost = booleanPreferencesKey("use_custom_host")
         val customHost = stringPreferencesKey("custom_host")
         val reportIntervalMinutes = intPreferencesKey("report_interval_minutes")
+        val startOnBoot = booleanPreferencesKey("start_on_boot")
     }
 
     val prefs: Flow<WlwdwPrefs> = context.prefsStore.data
@@ -104,6 +105,10 @@ class PreferencesRepository(private val context: Context) {
         context.prefsStore.edit { it[Keys.reportIntervalMinutes] = minutes }
     }
 
+    suspend fun setStartOnBoot(enabled: Boolean) {
+        context.prefsStore.edit { it[Keys.startOnBoot] = enabled }
+    }
+
     private fun toPrefs(prefs: Preferences) = WlwdwPrefs(
         deviceId = prefs[Keys.deviceId].orEmpty(),
         consentAccepted = prefs[Keys.consentAccepted] ?: false,
@@ -111,6 +116,9 @@ class PreferencesRepository(private val context: Context) {
         customHost = prefs[Keys.customHost] ?: WlwdwPrefs.DEFAULT_HOST,
         reportIntervalMinutes = prefs[Keys.reportIntervalMinutes]
             ?: WlwdwPrefs.DEFAULT_INTERVAL_MINUTES,
+        // Not seeded from the old app, which had no such setting: absent means
+        // off, which is the default this feature was asked for.
+        startOnBoot = prefs[Keys.startOnBoot] ?: false,
     )
 }
 

@@ -139,5 +139,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         prefs.setReportIntervalMinutes(minutes)
     }
 
+    fun setStartOnBoot(enabled: Boolean) = viewModelScope.launch { prefs.setStartOnBoot(enabled) }
+
     fun markAllRead() = viewModelScope.launch { messageStore.markAllRead() }
 }

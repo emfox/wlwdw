@@ -27,8 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
 import org.rpwt.wlwdw.R
 import org.rpwt.wlwdw.ui.theme.statusColors
@@ -50,6 +55,7 @@ import org.rpwt.wlwdw.ui.theme.statusColors
 fun ConsentScreen(
     onAgree: () -> Unit,
     onDecline: () -> Unit,
+    onOpenPrivacy: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -129,8 +135,24 @@ fun ConsentScreen(
         }
 
         Spacer(Modifier.height(12.dp))
+        // Read outside the builder: stringResource is @Composable and the
+        // AnnotatedString builder is not.
+        val finePrefix = stringResource(R.string.wlwdw_consent_fine)
+        val privacyLink = stringResource(R.string.wlwdw_consent_privacy_link)
+        val linkColor = MaterialTheme.colorScheme.primary
         Text(
-            text = stringResource(R.string.wlwdw_consent_fine),
+            text = buildAnnotatedString {
+                append(finePrefix)
+                withLink(
+                    LinkAnnotation.Clickable(
+                        tag = "privacy",
+                        styles = TextLinkStyles(SpanStyle(color = linkColor)),
+                        linkInteractionListener = { onOpenPrivacy() },
+                    ),
+                ) {
+                    append(privacyLink)
+                }
+            },
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,

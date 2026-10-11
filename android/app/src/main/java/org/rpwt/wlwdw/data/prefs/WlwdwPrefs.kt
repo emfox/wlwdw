@@ -25,6 +25,15 @@ data class WlwdwPrefs(
     val customHost: String,
     /** Reporting interval in minutes. */
     val reportIntervalMinutes: Int,
+    /**
+     * Whether to start reporting again after the phone reboots.
+     *
+     * Off unless the user turns it on. A tracker that silently starts sending
+     * its owner's position after every reboot is a decision about someone
+     * else's phone, and the person holding it should have made that decision
+     * deliberately.
+     */
+    val startOnBoot: Boolean,
 ) {
     /**
      * Where the server is, as the network layer needs it: `host[:port]`, no

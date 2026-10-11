@@ -125,6 +125,13 @@
     <string name="wlwdw_settings_host">主机地址</string>
     <string name="wlwdw_settings_host_hint">只填主机名，如 wlwdw.rpwt.org</string>
     <string name="wlwdw_settings_interval">上报频率</string>
+    <string name="wlwdw_settings_tracking_group">追踪</string>
+    <string name="wlwdw_settings_start_on_boot">开机自动开始追踪</string>
+    <!-- Names the one thing that has to be true for the switch to do anything:
+         a location foreground service cannot be created from a boot receiver
+         without it. Saying so here is cheaper than a switch that silently does
+         nothing. -->
+    <string name="wlwdw_settings_start_on_boot_sub">重启后自动恢复上报（需把定位权限设为「始终允许」）</string>
     <string name="wlwdw_settings_diagnostics_group">诊断</string>
     <string name="wlwdw_settings_recent_reports">查看最近上报记录</string>
     <string name="wlwdw_settings_recent_reports_sub">含原始坐标与失败原因</string>
@@ -157,6 +164,10 @@
     <string name="wlwdw_consent_point_stop">随时可以在状态页停止上报</string>
     <string name="wlwdw_consent_agree">同意并继续</string>
     <string name="wlwdw_consent_decline">不同意</string>
-    <string name="wlwdw_consent_fine">继续即表示你已阅读并同意《隐私政策》</string>
+    <!-- Split in two because the second half is a link: the policy used to be
+         named here with nothing behind it, and a consent line that points at a
+         document nobody can open is not consent. -->
+    <string name="wlwdw_consent_fine">继续即表示你已阅读并同意</string>
+    <string name="wlwdw_consent_privacy_link">《隐私政策》</string>
 
 </resources>

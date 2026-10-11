@@ -78,10 +78,12 @@ var zTreeObj = {
  *
  * Difference from the website: the data does not arrive over XHR. The website
  * fetches /anchor/list, /category/hierarchy and /trail/{catid} -- all of which
- * require a logged-in user. This app has no account and needs none: it draws
- * the positions it took itself, and the native side hands them over as JSON.
- * So `apply()` replaces `reloadAll()`, and everything downstream of it --
- * the provider, the projection, the label text -- is the same code.
+ * require a logged-in user -- and draws every unit it knows about, each with
+ * its history. This app has no account and needs none: it draws one thing, the
+ * position of the phone it is running on, taken from its own report log. So
+ * `apply()` replaces `reloadAll()` and carries a single point, and everything
+ * downstream of it -- the provider, the projection, the label text -- is the
+ * same code.
  */
 var sdkReady = false;
 var booted = false;
@@ -130,13 +132,13 @@ window.wlwdwBoot = function (tk) {
 };
 
 /*
- * Called by the app whenever the positions change, with:
+ * Called by the app whenever the position changes, with:
  *
- *   { me:    {title, lat, lng, updatetime:{date}} | null,
- *     trail: [{lat, lng, time}, ...] }        // time is epoch milliseconds
+ *   { me: {title, lat, lng, updatetime:{date}} | null }
  *
- * The shapes are the ones core.js's pointInfo()/timeLabel() already expect, so
- * no translation layer is needed on this side.
+ * The shape is the one core.js's `pointInfo()` already expects, so no
+ * translation layer is needed on this side. There is no history in the
+ * payload: this map answers "where is this phone now", and that is one point.
  */
 window.wlwdwApply = function (payload) {
 	if (!sdkReady) {
@@ -150,29 +152,22 @@ window.wlwdwApply = function (payload) {
 
 /* Ask the map to frame everything it is showing -- the "locate" button. */
 window.wlwdwFit = function () {
-	if (!sdkReady || !pending) return;
-	var points = (pending.trail || []).slice();
-	if (pending.me) points.push(pending.me);
-	if (points.length > 0) {
-		WlwdwMapProvider.fitBounds(points);
-	}
+	if (!sdkReady || !pending || !pending.me) return;
+	WlwdwMapProvider.fitBounds([pending.me]);
 };
 
 function draw(payload) {
 	pending = payload;
 
 	var me = payload.me ? [payload.me] : [];
-	var trail = payload.trail || [];
 
-	// redraw() clears and redraws the "current position" layer, so it comes
-	// first and the history is appended on top of it -- the same order the
-	// website's reloadOverlay() + addTrail() pair produces.
+	// redraw() clears and redraws the "current position" layer, which is the
+	// only layer this page uses. drawTrailPoints() is left alone: the history
+	// lives in the app's report log and on the diagnostics page, not here.
 	WlwdwMapProvider.redraw([], me);
-	WlwdwMapProvider.drawTrailPoints(trail);
 
-	var points = trail.concat(me);
-	if (points.length > 0) {
-		WlwdwMapProvider.fitBounds(points);
+	if (me.length > 0) {
+		WlwdwMapProvider.fitBounds(me);
 	}
 }
 </script>

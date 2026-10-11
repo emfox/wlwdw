@@ -45,12 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.webkit.WebViewAssetLoader
 import androidx.webkit.WebViewClientCompat
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.delay
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import org.rpwt.wlwdw.BuildConfig
 import org.rpwt.wlwdw.R
 import org.rpwt.wlwdw.data.model.Report
@@ -72,9 +67,10 @@ import org.rpwt.wlwdw.ui.component.statusTone
  *
  * Where the app differs from the website is the data. The website fetches
  * /anchor/list, /category/hierarchy and /trail/{catid}, all of which require a
- * logged-in user. A phone in the field has no account and needs none: it draws
- * the positions it took itself, handed to the page as JSON over the bridge
- * below. That is why there is no password anywhere in this app.
+ * logged-in user, and draws every unit it knows about plus their history. A
+ * phone in the field has no account and needs none, and it is looking at one
+ * device -- itself. So the page is handed a single position: where this phone
+ * is now. That is why there is no password anywhere in this app.
  *
  * The shell is `assets/web/index.html`; the JS it loads is synced out of
  * `public/` at build time by the `syncWebAssets` task, so the repository still
@@ -193,19 +189,6 @@ private const val MapLogTag = "WlwdwMap"
 /** What the page has told us about its own start-up. */
 private enum class MapBoot { Loading, Ready, Failed }
 
-/** The payload that means "nothing to draw"; the page's starting value too. */
-private const val EmptyPayload = """{"me":null,"trail":[]}"""
-
-/**
- * How many of the newest positions the map is given.
- *
- * The report log holds up to 1440 rows and the map draws a marker plus a text
- * label per point, so handing it all of them would put ~3000 overlays on the
- * SDK at once and make panning unusable. The newest few hundred are what anyone
- * actually reads as "the trail".
- */
-private const val MaxTrailPoints = 200
-
 /**
  * The WebView and the shell's callbacks, held together.
  *
@@ -225,7 +208,7 @@ private class MapPageBridge {
 
     private var view: WebView? = null
     private var loaded = false
-    private var payload = EmptyPayload
+    private var payload = EMPTY_MAP_PAYLOAD
 
     fun attach(webView: WebView) {
         view = webView
@@ -347,82 +330,6 @@ private fun createMapWebView(
     loadUrl(MapShellUrl)
 }
 
-/**
- * The map's data, in the shape `core.js` already understands.
- *
- * The field names are the website's on purpose: `pointInfo()` reads `title` and
- * `updatetime.date`, and `timeLabel()` reads `time` as epoch milliseconds.
- * Matching them here is what keeps the page free of a translation layer.
- */
-@Serializable
-private data class MapPayload(
-    val me: MapPin? = null,
-    val trail: List<MapPoint> = emptyList(),
-)
-
-@Serializable
-private data class MapPin(
-    val title: String,
-    val lat: Double,
-    val lng: Double,
-    val updatetime: MapTime,
-)
-
-@Serializable
-private data class MapTime(val date: String)
-
-@Serializable
-private data class MapPoint(val lat: Double, val lng: Double, val time: Long)
-
-private val mapJson = Json { encodeDefaults = true }
-
-private val mapTimeFormat: DateTimeFormatter =
-    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
-/**
- * Turn the report log into the page's payload.
- *
- * [reports] is newest-first, so the newest positioned row is the current
- * position and everything after it is history. The two are kept apart on
- * purpose: the website draws a pin for where a unit is and separate markers for
- * where it has been (`/trail/{catid}` holds the history), and sending the same
- * point as both would stack two icons and two labels on one spot.
- *
- * The history is re-reversed into chronological order, which is the order the
- * markers read in.
- *
- * Rows without coordinates are skipped rather than sent as zeros: an attempt
- * that failed before there was a fix has no position, and `0,0` is in the Gulf
- * of Guinea. This is also the rule the website's `placed()` applies.
- */
-private fun mapPayload(reports: List<Report>, title: String): String {
-    val placed = reports.filter { it.latitude != null && it.longitude != null }
-    if (placed.isEmpty()) return EmptyPayload
-
-    val newest = placed.first()
-    val trail = placed.drop(1).take(MaxTrailPoints).asReversed().map { report ->
-        MapPoint(
-            lat = report.latitude!!,
-            lng = report.longitude!!,
-            time = report.at,
-        )
-    }
-
-    return mapJson.encodeToString(
-        MapPayload(
-            me = MapPin(
-                title = title,
-                lat = newest.latitude!!,
-                lng = newest.longitude!!,
-                updatetime = MapTime(formatMapTime(newest.at)),
-            ),
-            trail = trail,
-        ),
-    )
-}
-
-private fun formatMapTime(at: Long): String =
-    Instant.ofEpochMilli(at).atZone(ZoneId.systemDefault()).format(mapTimeFormat)
 
 /** A message over the map: why it is not there, or that it is empty. */
 @Composable

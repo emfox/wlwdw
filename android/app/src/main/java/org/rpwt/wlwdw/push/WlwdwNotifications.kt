@@ -41,6 +41,29 @@ object WlwdwNotifications {
     /** One per arrived message; a newer message replaces the previous notice. */
     const val MESSAGE_ID = 1000
 
+    /**
+     * What a notification asks the app to open, when it asks for anything.
+     *
+     * The value is read by `WlwdwApp`; the name is the contract between it and
+     * this file. It is a string rather than a navigation type on purpose --
+     * nothing in push/ should have to know what the graph looks like.
+     */
+    const val EXTRA_OPEN = "org.rpwt.wlwdw.OPEN"
+
+    /** Open the inbox: what a message notification is for. */
+    const val OPEN_MESSAGES = "messages"
+
+    /**
+     * PendingIntent request codes.
+     *
+     * Two of them because request code is part of what identifies a
+     * PendingIntent and extras are not: two intents with the same code would
+     * be treated as the same pending intent, and the second one's extras would
+     * overwrite the first's.
+     */
+    private const val REQUEST_SERVICE = 0
+    private const val REQUEST_MESSAGE = 1
+
     fun createChannel(context: Context) {
         val channel = NotificationChannel(
             CHANNEL_ID,
@@ -68,7 +91,7 @@ object WlwdwNotifications {
             .setContentText(context.getString(R.string.wlwdw_push_connecting))
             .setSmallIcon(ICON)
             .setOngoing(true)
-            .setContentIntent(openApp(context))
+            .setContentIntent(openApp(context, REQUEST_SERVICE))
             .build()
 
     /**
@@ -86,7 +109,7 @@ object WlwdwNotifications {
             .setContentText(context.getString(statusText(status)))
             .setSmallIcon(ICON)
             .setOngoing(true)
-            .setContentIntent(openApp(context))
+            .setContentIntent(openApp(context, REQUEST_SERVICE))
             .build()
 
     private fun statusText(status: DeviceStatus): Int = when (status) {
@@ -102,7 +125,14 @@ object WlwdwNotifications {
         DeviceStatus.Stopped -> R.string.wlwdw_ring_stopped
     }
 
-    /** A message arrived. Tapping it opens the app, where the inbox is. */
+    /**
+     * A message arrived. Tapping it opens the inbox, not just the app.
+     *
+     * The distinction is the whole point of a message notification: the one
+     * thing the user wants after seeing "定位服务器发来消息" is the message, and
+     * landing them on the status ring means they have to know that the inbox is
+     * the third tab.
+     */
     fun messageNotification(context: Context, content: String): Notification =
         Notification.Builder(context, CHANNEL_ID)
             .setContentTitle(context.getString(R.string.wlwdw_push_message_title))
@@ -113,15 +143,27 @@ object WlwdwNotifications {
             // ignored. What the old code set is now configured on the channel
             // above, which is where it has to be to mean anything.
             .setAutoCancel(true)
-            .setContentIntent(openApp(context))
+            .setContentIntent(openApp(context, REQUEST_MESSAGE, OPEN_MESSAGES))
             .build()
 
-    private fun openApp(context: Context): PendingIntent = PendingIntent.getActivity(
-        context,
-        0,
-        Intent(context, WlwdwActivity::class.java),
-        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
-    )
+    /**
+     * The tap target of a notification.
+     *
+     * [FLAG_ACTIVITY_SINGLE_TOP] is what makes the difference between "the app
+     * opens" and "the app opens and then goes where it was asked to": without
+     * it a tap while the app is already on screen starts a second copy of it
+     * and `onNewIntent` is never called, so the extra is never read.
+     */
+    private fun openApp(context: Context, requestCode: Int, open: String? = null): PendingIntent =
+        PendingIntent.getActivity(
+            context,
+            requestCode,
+            Intent(context, WlwdwActivity::class.java).apply {
+                if (open != null) putExtra(EXTRA_OPEN, open)
+                addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            },
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
 
     private fun Context.notificationManager(): NotificationManager =
         getSystemService(NotificationManager::class.java)

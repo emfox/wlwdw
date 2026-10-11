@@ -49,4 +49,16 @@ sealed interface WlwdwDest {
      */
     @Serializable
     data object Reports : WlwdwDest
+
+    /**
+     * The privacy policy, reached from settings.
+     *
+     * A destination rather than a dialog because it is long and needs a scroll
+     * position of its own -- and because the settings row that opens it is
+     * making a promise that the text has to be somewhere to keep. It is also
+     * reachable from the first-run page, which does not go through this graph;
+     * see `WlwdwApp` for why the same screen is built in two places.
+     */
+    @Serializable
+    data object Privacy : WlwdwDest
 }

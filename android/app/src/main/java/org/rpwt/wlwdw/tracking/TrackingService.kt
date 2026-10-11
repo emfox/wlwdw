@@ -130,9 +130,12 @@ class TrackingService : Service() {
         /**
          * Start reporting.
          *
-         * Only legal while the app is in the foreground: Android 12+ refuses a
-         * background start, which is also why this is called from a tap rather
-         * than from a boot receiver.
+         * Normally called from a tap, because Android 12+ refuses a foreground
+         * service started from the background -- with one exemption that
+         * matters here, `ACTION_BOOT_COMPLETED`. That is the only other caller
+         * ([BootReceiver]), and it checks the permission this service needs
+         * before calling; see that class for why that check is the whole
+         * difference between "resumes after a reboot" and a crash loop.
          */
         fun start(context: Context) {
             context.startForegroundService(Intent(context, TrackingService::class.java))

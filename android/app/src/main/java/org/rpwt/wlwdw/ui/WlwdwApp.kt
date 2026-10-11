@@ -4,6 +4,7 @@ import android.Manifest
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
@@ -30,6 +31,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
@@ -48,10 +52,12 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import org.rpwt.wlwdw.R
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
+import org.rpwt.wlwdw.push.WlwdwNotifications
 import org.rpwt.wlwdw.ui.nav.WlwdwDest
 import org.rpwt.wlwdw.ui.screen.ConsentScreen
 import org.rpwt.wlwdw.ui.screen.MapScreen
 import org.rpwt.wlwdw.ui.screen.MessageScreen
+import org.rpwt.wlwdw.ui.screen.PrivacyScreen
 import org.rpwt.wlwdw.ui.screen.ReportsScreen
 import org.rpwt.wlwdw.ui.screen.SettingsScreen
 import org.rpwt.wlwdw.ui.screen.StatusScreen
@@ -111,6 +117,10 @@ fun WlwdwApp(
     // Not named `viewModel`: that would shadow the `viewModel()` factory used as
     // this very default, and a parameter cannot be resolved in its own default.
     appViewModel: AppViewModel = viewModel(),
+    /** What a notification asked to open, when the app was launched by one. */
+    requestedOpen: String? = null,
+    /** Called once [requestedOpen] has been acted on, to consume it. */
+    onOpenHandled: () -> Unit = {},
 ) {
     val settings by appViewModel.settings.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -125,14 +135,28 @@ fun WlwdwApp(
             color = MaterialTheme.colorScheme.surface,
         ) {}
 
-        !loaded.consentAccepted -> ConsentScreen(
-            onAgree = appViewModel::acceptConsent,
-            // Declining leaves the app. Forcing consent with a non-cancellable
-            // dialog is what the design rules out.
-            onDecline = { (context as? Activity)?.finish() },
-        )
+        !loaded.consentAccepted -> {
+            // The policy has to be readable *before* it is agreed to, and the
+            // consent page is a gate rather than a destination (see above), so
+            // there is no back stack here to push it onto. One flag plus the
+            // system back button is the whole of the navigation this gate
+            // needs; the screen itself is the same one settings opens.
+            var showingPrivacy by rememberSaveable { mutableStateOf(false) }
+            if (showingPrivacy) {
+                BackHandler { showingPrivacy = false }
+                PrivacyScreen(onBack = { showingPrivacy = false })
+            } else {
+                ConsentScreen(
+                    onAgree = appViewModel::acceptConsent,
+                    // Declining leaves the app. Forcing consent with a
+                    // non-cancellable dialog is what the design rules out.
+                    onDecline = { (context as? Activity)?.finish() },
+                    onOpenPrivacy = { showingPrivacy = true },
+                )
+            }
+        }
 
-        else -> Tabs(loaded, navController, appViewModel)
+        else -> Tabs(loaded, navController, appViewModel, requestedOpen, onOpenHandled)
     }
 }
 
@@ -141,6 +165,8 @@ private fun Tabs(
     settings: WlwdwPrefs,
     navController: NavHostController,
     appViewModel: AppViewModel,
+    requestedOpen: String?,
+    onOpenHandled: () -> Unit,
 ) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
@@ -161,6 +187,24 @@ private fun Tabs(
 
     val tracking by appViewModel.tracking.collectAsStateWithLifecycle()
     val push by appViewModel.push.collectAsStateWithLifecycle()
+
+    // A notification tap asks for a screen. Acted on once and then consumed, so
+    // this does not drag the user forward again on the next recomposition --
+    // backing out of the inbox has to leave it backed out.
+    //
+    // It runs here rather than in the Activity because this is the first place
+    // that has a NavController, and because it must not run before the consent
+    // gate: a notification tapped by someone who has not agreed to anything
+    // should still show them the page that asks.
+    LaunchedEffect(requestedOpen) {
+        if (requestedOpen == null) return@LaunchedEffect
+        when (requestedOpen) {
+            WlwdwNotifications.OPEN_MESSAGES -> navController.switchTab(WlwdwDest.Messages)
+        }
+        // Consumed even when it named nothing this build knows: an extra it
+        // does not understand now is not going to be understood later either.
+        onOpenHandled()
+    }
 
     // The permission can change while the app is in the background -- granting
     // "all the time" happens on a Settings page -- so re-read it whenever the
@@ -305,7 +349,9 @@ private fun Tabs(
                     onUseCustomHostChange = appViewModel::setUseCustomHost,
                     onCustomHostChange = appViewModel::setCustomHost,
                     onReportIntervalChange = appViewModel::setReportIntervalMinutes,
+                    onStartOnBootChange = appViewModel::setStartOnBoot,
                     onOpenReports = { navController.navigate(WlwdwDest.Reports) },
+                    onOpenPrivacy = { navController.navigate(WlwdwDest.Privacy) },
                 )
             }
             composable<WlwdwDest.Reports> {
@@ -313,6 +359,9 @@ private fun Tabs(
                     reports = reports,
                     onBack = { navController.popBackStack() },
                 )
+            }
+            composable<WlwdwDest.Privacy> {
+                PrivacyScreen(onBack = { navController.popBackStack() })
             }
         }
     }

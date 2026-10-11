@@ -104,6 +104,7 @@ class WlwdwApiTest {
             useCustomHost = false,
             customHost = "",
             reportIntervalMinutes = 2,
+            startOnBoot = false,
         )
         api.report(fresh.serverHost, DEVICE_ID, LAT, LNG)
         assertEquals("https://${WlwdwPrefs.DEFAULT_HOST}/trail/new", server.last.url.toString())

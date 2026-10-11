@@ -267,6 +267,7 @@ private val PREFS = WlwdwPrefs(
     useCustomHost = true,
     customHost = "10.0.2.2:8080",
     reportIntervalMinutes = 2,
+    startOnBoot = false,
 )
 
 /** The server, reduced to the one answer it gives. */
