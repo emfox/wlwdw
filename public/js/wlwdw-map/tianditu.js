@@ -42,13 +42,13 @@
 		return icon(url, layout.size, layout.size, layout.anchor[0], layout.anchor[1]);
 	}
 
-	// DivIcon negates iconAnchor into marginLeft / -marginTop, so "right dx, up dy"
-	// needs (-dx, dy). iconSize 0 is deliberate: `.labels` sizes itself.
-	function textLabel(text, dx, dy) {
+	// A label beside a point: the shared element positions itself, and anchor (1, 1) is
+	// the same wrapper compensation pinName uses. iconSize 0 is deliberate.
+	function sideLabel(text) {
 		return new T.DivIcon({
-			html: '<span class="labels">' + text + '</span>',
+			html: WlwdwMap.core.sideLabel(text),
 			iconSize: new T.Point(0, 0),
-			iconAnchor: new T.Point(-dx, dy)
+			iconAnchor: new T.Point(1, 1)
 		});
 	}
 
@@ -165,7 +165,7 @@
 
 		keep(new T.Marker(p, {icon: pointIcon(Marker_Pin)}));
 
-		var time = keep(new T.Marker(p, {icon: textLabel(WlwdwMap.core.timeLabel(point.time), 10, 5)}));
+		var time = keep(new T.Marker(p, {icon: sideLabel(WlwdwMap.core.timeLabel(point.time))}));
 		time.addEventListener('click', function () {
 			map.removeOverLay(time);
 		});
@@ -177,7 +177,7 @@
 
 		keep(new T.Marker(p, {icon: pointIcon(Anchor_Path + point.icon)}));
 
-		var name = keep(new T.Marker(p, {icon: textLabel(point.title, 10, 5)}));
+		var name = keep(new T.Marker(p, {icon: sideLabel(point.title)}));
 		name.addEventListener('click', function () {
 			map.removeOverLay(name);
 		});

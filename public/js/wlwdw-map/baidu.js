@@ -142,16 +142,23 @@
 		keep(line);
 	}
 
+	// A label beside a point: the shared element carries the offset, so the label itself
+	// only marks the coordinate. BMap's default padding and border are stripped for the
+	// same reason as the name label -- they would shift the element by 2px.
+	function sideLabel(text, p) {
+		var label = new BMap.Label(WlwdwMap.core.sideLabel(text),
+			{position: p, offset: new BMap.Size(0, 0)});
+		label.setStyle({padding: '0', border: 'none', backgroundColor: 'transparent'});
+		return label;
+	}
+
 	// Trail point: icon + time label; the label hides on click
 	function drawTrailPoint(point) {
 		var p = toPoint(point);
 
 		keep(new BMap.Marker(p, {icon: icon(Marker_Pin)}));
 
-		var label = new BMap.Label(WlwdwMap.core.timeLabel(point.time), {
-			position: p,
-			offset: new BMap.Size(10, -5)
-		});
+		var label = sideLabel(WlwdwMap.core.timeLabel(point.time), p);
 		label.addEventListener('click', function () {
 			this.hide();
 		});
@@ -164,10 +171,7 @@
 
 		keep(new BMap.Marker(p, {icon: icon(Anchor_Path + point.icon)}));
 
-		var label = new BMap.Label(point.title, {
-			position: p,
-			offset: new BMap.Size(10, -5)
-		});
+		var label = sideLabel(point.title, p);
 		label.addEventListener('click', function () {
 			this.hide();
 		});

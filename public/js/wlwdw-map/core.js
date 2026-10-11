@@ -73,6 +73,17 @@ var WlwdwMap = (function () {
 		return '<span class="labels" style="' + style + '">' + text + '</span>';
 	}
 
+	/* Trail and reference labels sit beside their icon rather than on it. The distance is
+	 * one decision for all providers: `right` px and `up` px away from the point. */
+	var side = {right: 10, up: 5};
+
+	/* HTML for a label beside a point. It positions itself, so a provider only has to put
+	 * the element's origin on the coordinate -- the same rule as pinLabel. */
+	function sideLabel(text) {
+		return '<span class="labels" style="position:absolute;left:' + side.right + 'px;top:-'
+			+ side.up + 'px">' + text + '</span>';
+	}
+
 	/* ---- entry points the page templates call ---- */
 
 	function initMap() {
@@ -134,7 +145,9 @@ var WlwdwMap = (function () {
 			pointInfo: pointInfo,
 			timeLabel: timeLabel,
 			pin: pin,
-			pinLabel: pinLabel
+			pinLabel: pinLabel,
+			side: side,
+			sideLabel: sideLabel
 		}
 	};
 })();
