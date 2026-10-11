@@ -135,6 +135,17 @@ class WlwdwService : Service() {
     private var claimedTypes = 0
 
     /**
+     * Whether the current tracking intent has already been acted on.
+     *
+     * A loop can end by itself (a refusal), and that must not read as "never started": the
+     * next emission of the settings/push flow would launch it again. At boot the push link
+     * emits several times while it connects, which turned one self-stop into four starts
+     * inside a second. Only a fresh intent -- or an explicit start, the documented way back
+     * from a self-stop -- starts the loop again.
+     */
+    private var loopArmed = false
+
+    /**
      * The notice last posted, so a later start can re-promote with the same
      * answer instead of walking back to the floor.
      *
@@ -185,7 +196,7 @@ class WlwdwService : Service() {
         // stopped itself: the stored intent is already true in that case, so
         // writing it again changes nothing and nothing would wake the loop.
         if (intent?.action == ACTION_START_TRACKING) {
-            scope.launch { syncTracking() }
+            scope.launch { syncTracking(rearm = true) }
         }
         Log.i(TAG, "service started")
         return START_STICKY
@@ -236,24 +247,33 @@ class WlwdwService : Service() {
      * Also called directly when the button is pressed, which is the only way to
      * re-arm a loop that stopped itself: the intent is already true then, so the
      * settings flow does not emit and the collector never wakes.
+     *
+     * [rearm] is that explicit start. It clears [loopArmed] so the loop is launched
+     * again -- but only when nothing is running, or pressing the button mid-loop would
+     * put a second one in place and every report would go out twice.
      */
-    private suspend fun syncTracking() = trackingLock.withLock {
+    private suspend fun syncTracking(rearm: Boolean = false) = trackingLock.withLock {
         val prefs = prefsStore.prefs.first()
         // Consent as well as the switch. The switch can only be turned on from
         // behind the consent gate, so this cannot fail today -- which is exactly
         // why it is written down: "never report without consent" should not
         // depend on the current shape of the navigation graph.
         val wanted = prefs.trackingEnabled && prefs.consentAccepted
-        when {
-            wanted && trackingLoop?.isActive != true -> {
+        if (rearm && trackingLoop?.isActive != true) loopArmed = false
+        when (loopAction(wanted, loopArmed)) {
+            LoopAction.START -> {
+                loopArmed = true
                 Log.i(TAG, "tracking loop starting")
                 trackingLoop = scope.launch { engine.run { prefsStore.prefs.first() } }
             }
 
-            !wanted && trackingLoop?.isActive == true -> {
+            LoopAction.STOP -> {
+                loopArmed = false
                 Log.i(TAG, "tracking loop stopping")
                 trackingLoop?.cancel()
             }
+
+            LoopAction.NONE -> Unit
         }
     }
 
@@ -415,3 +435,22 @@ internal fun foregroundTypes(trackingRequested: Boolean, hasLocationPermission: 
     } else {
         ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
     }
+
+/** What the service should do about the reporting loop. */
+internal enum class LoopAction { START, STOP, NONE }
+
+/**
+ * The decision itself, extracted so it can be tested: this is the fix for a defect that only
+ * showed up on a device at boot.
+ *
+ * [armed] is what makes "start" happen once per intent instead of once per emission. A loop
+ * that ended on its own leaves the intent true and nothing running, so without it every
+ * later emission of the settings flow launched the loop again -- and on a device that is not
+ * registered, where the loop stops on its first attempt, the push link's connection churn
+ * produced four starts inside a second.
+ */
+internal fun loopAction(wanted: Boolean, armed: Boolean): LoopAction = when {
+    wanted && !armed -> LoopAction.START
+    !wanted && armed -> LoopAction.STOP
+    else -> LoopAction.NONE
+}
