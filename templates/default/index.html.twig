@@ -12,9 +12,8 @@
 }
 
 #map {
-	/* 不用 float：当页面出现垂直滚动条时，JS 按视口硬编码的 float 宽度
-	   会超过容器可用宽度导致 #map 换行掉到左侧栏下方。
-	   这里用 margin-left 让位 + 块级自动宽度，可随滚动条自适应且永不换行。 */
+	/* margin-left + block width instead of a float: a hard-coded float width would
+	   exceed the container once a vertical scrollbar appears and wrap #map. */
 	margin-left: 180px;
 	overflow: hidden;
 }
@@ -39,8 +38,8 @@
 <script type="text/javascript"
 	src="{{ asset('vendor/proj4/proj4.js') }}"></script>
 
-{# 地图分两层：core 是与厂商无关的共享层，provider 只有绘制差异。
-   新增一种地图 = 加一个 provider 文件 + 下面加一个分支，core 不用动。 #}
+{# Two layers: a vendor-neutral core plus a provider that only draws. A new map is one
+   provider file and one branch below; core stays untouched. #}
 <script type="text/javascript"
 	src="{{ asset('js/wlwdw-map/core.js') }}"></script>
 {% if maptype == 'google' %}
@@ -75,14 +74,14 @@ function wlwdwSetCookie(name, value) {
     document.cookie = name + '=' + encodeURIComponent(value) + '; path=/';
 }
 var zTreeObj;
-//zTree 的参数配置
+// zTree options
 var zTreeSetting = { callback:{onClick:zTreeOnClick,onExpand:logStatus,onCollapse:logStatus},
 		check:{enable:false,chkboxType:{ "Y" : "s", "N" : "" }},
 		data:{key:{name:"title"} },
 		view:{addDiyDom: addDiyDom} };
 var zNodes;
 var anchorNodes;
-// 地图对象与跟随标签由 provider 自己持有，这里不再需要 map / labelPos。
+// the provider owns the map and the hover label, so no map / labelPos here
 var nextRefresh;
 
 $(document).ready(function(){
@@ -99,7 +98,7 @@ $(document).ready(function(){
     reloadAll();
 });
 
-// 高斯投影与坐标文案已移入 js/wlwdw-map/core.js（两个 provider 共用同一份）。
+// the Gauss projection and the coordinate text moved to js/wlwdw-map/core.js
 function showSend(){
 	$('#divSend').show();
 	$('#showSend').hide();
@@ -165,9 +164,9 @@ function reloadAll(){
 })
 }
 
-// 后端对叶子节点输出 children: []，zTree 3.5.48+ 会把"存在空 children 数组"
-// 的节点误判为可展开的父节点（显示展开按钮但点开无内容）。
-// 递归清掉空 children，让叶子节点按叶子渲染（bottom_docu）。
+// The backend emits children: [] for leaves, and zTree 3.5.48+ then shows an expand
+// toggle that opens to nothing. Drop empty children recursively so leaves render as
+// leaves (bottom_docu).
 function cleanEmptyChildren(nodes) {
 	if(!nodes) return;
 	for (var i = 0; i < nodes.length; i++) {
@@ -200,8 +199,8 @@ function checkSize() {
 	var h = document.documentElement.clientHeight - $('#main').offset().top - $('#footer').height();
 	document.getElementById('aside').style.height = h + "px";
 	document.getElementById('map').style.height = h + "px";
-	// #map 的宽度不再由 JS 硬编码：交给 CSS margin-left + 块级自动宽度，
-	// 避免出现垂直滚动条（可用宽度收窄）时 float 换行导致地图被挤到下方。
+	// #map width comes from CSS (margin-left + block width), not from JS: a hard-coded
+	// float width wraps once a scrollbar narrows the container.
 	}
 
 function zTreeOnClick(event, treeId, treeNode) {
