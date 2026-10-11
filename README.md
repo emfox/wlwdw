@@ -39,6 +39,10 @@ cp .env.example .env \
        -e "s/^EMQX_API_KEY_SECRET=.*/EMQX_API_KEY_SECRET=$EMQX_API_KEY_SECRET/" .env \
   && rm -f .env.bak
 ```
+   Every value `sed` touches there is hex on purpose: a `&` in a replacement
+   stands for the matched text, so a line that contains `&` (like
+   `DATABASE_URL`) must not be rewritten that way -- see Troubleshooting.
+
    Then edit `.env` to set the map API keys (`TIANDITU_MAP_API_KEY` is the one
    the viewer opens on by default; `GOOGLE_MAP_API_KEY` and `BAIDU_MAP_API_KEY`
    back `/main/google` and `/main/baidu`) and, if you use realtime push,
@@ -121,7 +125,33 @@ match.
 
 ## Troubleshooting
 
-If you hit cache permission problems, clean the cache:
+### Every page that touches the database fails with `[2019] Unknown character set`
+
+The `DATABASE_URL` line in `.env` has been mangled. A `&` in a `sed`
+replacement expands to the whole matched line, so re-running one on a file
+that already has the line duplicates it:
+
+```bash
+sed -i "s|^DATABASE_URL=.*|DATABASE_URL=mysql://root:$DB_PASS@mysql:3306/wlwdw?serverVersion=8.4.4&charset=utf8mb4|" .env
+# -> ...?serverVersion=8.4.4DATABASE_URL=mysql://...&charset=utf8mb4charset=utf8mb4
+```
+
+DBAL parses that as `charset=utf8mb4charset=utf8mb4`, which no client library
+knows, so the connection never opens. Rewrite the line with no substitution
+(nothing is special that way) and drop the compiled config:
+
+```bash
+sed -i '/^DATABASE_URL=/d' .env
+printf '%s\n' 'DATABASE_URL="mysql://root:${DB_PASS}@mysql:3306/wlwdw?serverVersion=8.4.4&charset=utf8mb4"' >> .env
+php bin/console cache:clear
+```
+
+Run them where Symfony reads `.env` -- inside the container
+(`docker compose exec php sh -c '...'`) -- and keep the host copy in sync.
+
+### Cache permission problems
+
+Clean the cache:
 
 php bin/console cache:clear --env=dev
 chown -R www-data:www-data var/log
