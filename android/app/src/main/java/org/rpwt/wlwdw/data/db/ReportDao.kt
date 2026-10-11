@@ -3,13 +3,13 @@ package org.rpwt.wlwdw.data.db
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
+import kotlinx.coroutines.flow.Flow
 
 /**
  * The report log's queries.
  *
- * Deliberately three: write a row, read the last accepted one, and drop what is
- * past the cap. The diagnostics page that will list the rows is not built yet,
- * and a query nobody calls is a query nobody has checked.
+ * Deliberately four: write a row, read the last accepted one, list the log for
+ * the diagnostics page, and drop what is past the cap.
  */
 @Dao
 interface ReportDao {
@@ -25,6 +25,21 @@ interface ReportDao {
      */
     @Query("SELECT MAX(at) FROM report WHERE failure IS NULL")
     suspend fun lastAcceptedAt(): Long?
+
+    /**
+     * The whole log, newest first.
+     *
+     * Unbounded because the table is already capped by [prune]: that cap is
+     * this query's bound, and the diagnostics page counts what it lists -- a
+     * header reading "1440" over a list of 200 would be its own kind of lie.
+     *
+     * Newest first by `_id`, the order rows were written, rather than by `at`:
+     * the device clock can be corrected backwards between two attempts, and a
+     * log that silently reorders itself when that happens is harder to read
+     * than one that stays in the order things actually happened in.
+     */
+    @Query("SELECT * FROM report ORDER BY _id DESC")
+    fun observeAll(): Flow<List<ReportEntity>>
 
     /**
      * Keep the newest [keep] rows.

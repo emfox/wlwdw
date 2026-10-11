@@ -52,6 +52,7 @@ import org.rpwt.wlwdw.ui.nav.WlwdwDest
 import org.rpwt.wlwdw.ui.screen.ConsentScreen
 import org.rpwt.wlwdw.ui.screen.MapScreen
 import org.rpwt.wlwdw.ui.screen.MessageScreen
+import org.rpwt.wlwdw.ui.screen.ReportsScreen
 import org.rpwt.wlwdw.ui.screen.SettingsScreen
 import org.rpwt.wlwdw.ui.screen.StatusScreen
 
@@ -150,6 +151,13 @@ private fun Tabs(
     // list it summarises, so the two cannot disagree.
     val messages by appViewModel.messages.collectAsStateWithLifecycle()
     val unreadCount = messages.count { it.unread }
+
+    // Collected here for the same reason as the message list: settings shows
+    // the size of the log and the reports page shows the log itself, so the two
+    // have to be the same read. It also has to be alive on the settings screen,
+    // which is where the count is drawn and where the log flow would otherwise
+    // have nothing subscribed.
+    val reports by appViewModel.reports.collectAsStateWithLifecycle()
 
     val tracking by appViewModel.tracking.collectAsStateWithLifecycle()
     val push by appViewModel.push.collectAsStateWithLifecycle()
@@ -286,10 +294,18 @@ private fun Tabs(
             composable<WlwdwDest.Settings> {
                 SettingsScreen(
                     prefs = settings,
+                    reportCount = reports.size,
                     onBack = { navController.popBackStack() },
                     onUseCustomHostChange = appViewModel::setUseCustomHost,
                     onCustomHostChange = appViewModel::setCustomHost,
                     onReportIntervalChange = appViewModel::setReportIntervalMinutes,
+                    onOpenReports = { navController.navigate(WlwdwDest.Reports) },
+                )
+            }
+            composable<WlwdwDest.Reports> {
+                ReportsScreen(
+                    reports = reports,
+                    onBack = { navController.popBackStack() },
                 )
             }
         }

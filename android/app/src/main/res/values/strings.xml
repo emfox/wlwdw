@@ -127,10 +127,26 @@
     <string name="wlwdw_settings_diagnostics_group">诊断</string>
     <string name="wlwdw_settings_recent_reports">查看最近上报记录</string>
     <string name="wlwdw_settings_recent_reports_sub">含原始坐标与失败原因</string>
-    <string name="wlwdw_settings_logs">本机日志</string>
     <string name="wlwdw_settings_about_group">关于</string>
     <string name="wlwdw_settings_version">版本</string>
     <string name="wlwdw_settings_privacy">隐私政策</string>
+
+    <!-- Reports screen: the diagnostics page behind 设置 › 诊断. Where the old
+         location screen's four debug readouts went (获取时间 / 获取状态 /
+         GPS坐标 / 定位精度) plus the error the old screen showed as a code. -->
+    <string name="wlwdw_reports_title">上报记录</string>
+    <string name="wlwdw_reports_note">每行是一次上报尝试，成功和失败都记。日志只存在本机，超过上限的旧记录会被删除。坐标是设备原始定位（WGS-84）；网页地图按厂商做过偏移，差几十米是正常的。</string>
+    <string name="wlwdw_reports_empty_title">还没有上报记录</string>
+    <string name="wlwdw_reports_empty_body">开始追踪后，每次上报尝试都会记在这里——成功和失败都记。</string>
+    <string name="wlwdw_reports_count">%1$d 条</string>
+    <string name="wlwdw_reports_accepted">服务器已接受</string>
+    <string name="wlwdw_reports_no_position">未取到坐标</string>
+    <string name="wlwdw_reports_failed_permission">没有定位权限</string>
+    <string name="wlwdw_reports_failed_nofix">未取到坐标</string>
+    <string name="wlwdw_reports_failed_unregistered">设备未登记</string>
+    <string name="wlwdw_reports_failed_refused">被服务器拒绝</string>
+    <string name="wlwdw_reports_failed_upload">上传失败</string>
+    <string name="wlwdw_reports_failed_unknown">未知原因（%1$s）</string>
 
     <!-- First-run consent -->
     <string name="wlwdw_consent_tagline">让家人知道你在哪里</string>

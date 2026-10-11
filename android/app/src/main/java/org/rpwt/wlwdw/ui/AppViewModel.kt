@@ -12,7 +12,9 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import org.rpwt.wlwdw.data.MessageRepository
+import org.rpwt.wlwdw.data.ReportRepository
 import org.rpwt.wlwdw.data.model.Message
+import org.rpwt.wlwdw.data.model.Report
 import org.rpwt.wlwdw.data.prefs.PreferencesRepository
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
 import org.rpwt.wlwdw.push.PushService
@@ -33,6 +35,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
 
     private val prefs = PreferencesRepository(application)
     private val messageStore = MessageRepository(application)
+    private val reportLog = ReportRepository(application)
 
     init {
         // Read the report log before the first frame, so the status screen can
@@ -70,6 +73,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
      * composable that draws both.
      */
     val messages: StateFlow<List<Message>> = messageStore.observe()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /**
+     * The report log, for the diagnostics page and for the settings row that
+     * counts it.
+     *
+     * One flow for both, as with [messages]: the row's number is then a count
+     * of the list behind the page it opens, and the two cannot disagree.
+     *
+     * Read from storage rather than mirrored off [tracking], which is the
+     * reason this screen exists at all: the state holds the last attempt, and
+     * the question "did last night work" is asked the morning after.
+     */
+    val reports: StateFlow<List<Report>> = reportLog.observeAll()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /**

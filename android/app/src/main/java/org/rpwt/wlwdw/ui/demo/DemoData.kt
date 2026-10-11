@@ -5,9 +5,9 @@ package org.rpwt.wlwdw.ui.demo
  *
  * Everything here is invented. What has been deleted from this file is as
  * informative as what is left: the status matrix, the last-report times and the
- * coordinates all come from `tracking/ReportingEngine` now, and the message
- * list and the settings from the data layer. Only the map, which has no tile
- * source yet, and the settings screen's log row still stand in.
+ * coordinates all come from `tracking/ReportingEngine` now, the message list
+ * and the settings from the data layer, and the settings screen's log row from
+ * the report log. Only the map, which has no tile source yet, still stands in.
  */
 object DemoData {
 
@@ -24,13 +24,4 @@ object DemoData {
         Anchor("小明的手机", "12:01"),
         Anchor("家里", "11:47"),
     )
-
-    // --- Settings tab -------------------------------------------------------
-
-    /**
-     * Still a stand-in: nothing writes a log file yet. The settings screen's
-     * other values -- device id, host, reporting interval, version -- come from
-     * DataStore or from the build itself.
-     */
-    const val logCount = "3 条"
 }

@@ -38,4 +38,15 @@ sealed interface WlwdwDest {
      */
     @Serializable
     data object Settings : WlwdwDest
+
+    /**
+     * The raw report log, reached from settings.
+     *
+     * A second-level page rather than something in the bar: it is the four
+     * debug readouts the old location screen showed as bare labels (time,
+     * coordinates, accuracy, error), which are worth keeping for whoever
+     * maintains this and are noise to everyone else.
+     */
+    @Serializable
+    data object Reports : WlwdwDest
 }

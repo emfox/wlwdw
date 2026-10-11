@@ -32,6 +32,16 @@ sealed interface ReportFailure {
     data class Upload(val reason: String) : ReportFailure
 
     /**
+     * A code this build does not know.
+     *
+     * Only reachable by reading the log back (see [of]); the loop cannot
+     * produce one. It exists so that a row written by a version that knew a
+     * failure this one does not still reads as the failure it was -- rendering
+     * it as `null` would claim the server had accepted a position it never saw.
+     */
+    data class Unrecognized(val storedCode: String, val storedDetail: String?) : ReportFailure
+
+    /**
      * How this failure is written into the report log.
      *
      * Stable strings rather than `enumValueOf<ReportFailure>()`: they are what
@@ -45,6 +55,7 @@ sealed interface ReportFailure {
             Unregistered -> "unregistered"
             is Refused -> "refused"
             is Upload -> "upload"
+            is Unrecognized -> storedCode
         }
 
     /**
@@ -57,6 +68,26 @@ sealed interface ReportFailure {
         get() = when (this) {
             is Refused -> message
             is Upload -> reason
+            is Unrecognized -> storedDetail
             else -> null
         }
+
+    companion object {
+
+        /**
+         * Read a stored [code] back.
+         *
+         * The inverse of [code], so the two lists of strings have to stay in
+         * step: these are the values that are already on disk, and a mismatch
+         * shows up as rows that suddenly read "unknown" after an upgrade.
+         */
+        fun of(code: String, detail: String?): ReportFailure = when (code) {
+            "permission" -> Permission
+            "nofix" -> NoFix
+            "unregistered" -> Unregistered
+            "refused" -> Refused(detail)
+            "upload" -> Upload(detail.orEmpty())
+            else -> Unrecognized(code, detail)
+        }
+    }
 }

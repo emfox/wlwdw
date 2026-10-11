@@ -1,9 +1,12 @@
 package org.rpwt.wlwdw.data
 
 import android.content.Context
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import org.rpwt.wlwdw.data.db.ReportEntity
 import org.rpwt.wlwdw.data.db.WlwdwDatabase
 import org.rpwt.wlwdw.data.model.Report
+import org.rpwt.wlwdw.data.model.ReportFailure
 
 /**
  * The report log, backed by the `report` table.
@@ -52,6 +55,35 @@ class ReportRepository(context: Context) : ReportLog {
      * minutes ago" survives a restart of the app.
      */
     override suspend fun lastAcceptedAt(): Long? = dao.lastAcceptedAt()
+
+    /**
+     * The log, newest first, as the diagnostics page reads it.
+     *
+     * Not part of [ReportLog]: the loop only ever writes and asks when it last
+     * worked, and a reader on that interface would be a reader the loop does
+     * not need. Living here instead of on the entity also keeps the screen out
+     * of how a failure was flattened to fit in a column -- it gets a [Report]
+     * back, which is what it would have got had it been there when the attempt
+     * happened.
+     */
+    fun observeAll(): Flow<List<Report>> = dao.observeAll().map { rows -> rows.map { it.toReport() } }
+
+    /**
+     * The inverse of [record]'s flattening.
+     *
+     * A stored row is the only thing that survives a restart, so a failure is
+     * rebuilt rather than dropped: [ReportFailure.of] keeps a code this build
+     * does not recognise instead of returning null, because null on this type
+     * means "the server accepted the position".
+     */
+    private fun ReportEntity.toReport(): Report = Report(
+        at = at,
+        latitude = latitude,
+        longitude = longitude,
+        accuracyMetres = accuracy,
+        provider = provider,
+        failure = failure?.let { ReportFailure.of(it, detail) },
+    )
 
     private companion object {
         /**

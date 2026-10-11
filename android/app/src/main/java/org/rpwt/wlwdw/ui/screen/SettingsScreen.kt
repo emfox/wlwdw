@@ -43,7 +43,6 @@ import org.rpwt.wlwdw.BuildConfig
 import org.rpwt.wlwdw.R
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
 import org.rpwt.wlwdw.ui.component.SettingRow
-import org.rpwt.wlwdw.ui.demo.DemoData
 import org.rpwt.wlwdw.ui.theme.WlwdwDimens
 
 /**
@@ -65,10 +64,13 @@ import org.rpwt.wlwdw.ui.theme.WlwdwDimens
 @Composable
 fun SettingsScreen(
     prefs: WlwdwPrefs,
+    /** How many attempts the report log holds, for the diagnostics row. */
+    reportCount: Int,
     onBack: () -> Unit,
     onUseCustomHostChange: (Boolean) -> Unit,
     onCustomHostChange: (String) -> Unit,
     onReportIntervalChange: (Int) -> Unit,
+    onOpenReports: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -157,16 +159,18 @@ fun SettingsScreen(
             )
 
             GroupLabel(stringResource(R.string.wlwdw_settings_diagnostics_group))
+            // One row, not two. The design drew 查看最近上报记录 and 本机日志 as
+            // separate entries, but there is only one log: the row that said
+            // "3 条" had no store behind it and was showing an invented number,
+            // and a second row listing the first row's rows is not a feature.
+            // The count is the length of the list this opens, so the two cannot
+            // disagree.
             SettingRow(
                 title = stringResource(R.string.wlwdw_settings_recent_reports),
                 subtitle = stringResource(R.string.wlwdw_settings_recent_reports_sub),
-                onClick = {},
-            )
-            SettingRow(
-                title = stringResource(R.string.wlwdw_settings_logs),
-                value = DemoData.logCount,
+                value = stringResource(R.string.wlwdw_reports_count, reportCount),
                 showDivider = false,
-                onClick = {},
+                onClick = onOpenReports,
             )
 
             GroupLabel(stringResource(R.string.wlwdw_settings_about_group))
