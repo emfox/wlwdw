@@ -1,0 +1,132 @@
+# Rules R8 applies on top of AGP's proguard-android-optimize.txt.
+#
+# This file was referenced by build.gradle for two build types while not
+# existing, which was not an error only because nothing ran R8: the moment
+# minifyEnabled was turned on, the build would have failed at configuration.
+# It exists for that reason.
+#
+# The rule below is not a guess. It is the list AGP itself generated when R8
+# first ran on this app, from app/build/outputs/mapping/release/missing_rules.txt.
+# A rule goes in here when the build or a device says it is needed, with the
+# reason next to it: what broke, and how it showed.
+
+
+# --- The shaded Netty: reflection by name, not by reference -----------------
+#
+# Found by running the minified build on a device, not by building it. The
+# release APK launched and showed the consent screen, and died the moment
+# consent was accepted -- which is when the service starts and the MQTT client
+# is constructed:
+#
+#   Caused by: java.lang.IllegalArgumentException: Can't find '[toLeakAwareBuffer]' in g
+#       at yt2.a(...)
+#       at g.<clinit>(...)
+#
+# `toLeakAwareBuffer` is how Netty wraps a buffer for leak detection. It is
+# looked up through java.lang.reflect with the method *name* as a string
+# (`AbstractByteBufAllocator`, `PooledByteBufAllocator`, `UnpooledByteBufAllocator`
+# and `AdaptiveByteBufAllocator` all call it), and no shrinker can see a lookup
+# done that way. R8 renamed the method, the lookup found nothing, and the client
+# could not be built.
+#
+# This is why the rule is the blunt one. Any narrower version -- naming the one
+# method, or keeping names but still allowing removal -- fixes this lookup and
+# leaves the next one to be discovered the same way, on a device, one crash at a
+# time: Netty does this in several places (Unsafe accessors, platform detection,
+# the recycler). Keeping the shaded Netty's classes and members as they are is
+# the smallest rule that ends the whole family of failures, and the cost is
+# bounded and measurable: minification still removes every other dependency, and
+# the APK stays an order of magnitude smaller than the debug build.
+#
+# Note the relocation. HiveMQ's -shaded artifact moves Netty under
+# com.hivemq.client.internal.shaded, so a rule naming io.netty.** matches
+# nothing at all here.
+-keep class com.hivemq.client.internal.shaded.io.netty.** { *; }
+
+
+# --- Optional backends Netty probes for and copes without -------------------
+#
+# R8 treats a reference to a class that is not on the classpath as an error
+# rather than a warning, so every family has to be named. The first minified
+# build failed on 30 of these; adding the keep rule above changed the list to 13
+# different ones. That churn is why these rules are written per package: an
+# enumerated list of class names has to be regenerated whenever anything above
+# it changes, and a list that has to be regenerated is one that will eventually
+# be regenerated wrongly.
+#
+# Each of these is something Netty looks for at run time and does without, all
+# of it behind try/catch on NoClassDefFoundError:
+#
+#   ...netty.internal.tcnative     Netty's optional *native* TLS provider. Note
+#                                  that "OpenSsl" here is Netty's TLS
+#                                  implementation, not TLS itself: Android's TLS
+#                                  comes from the platform, and this app's MQTT
+#                                  link (mqtts, port 443+) works without it.
+#   org.apache.log4j, log4j.*      Optional logging backends. Netty's
+#                                  InternalLoggerFactory falls back through
+#                                  SLF4J to java.util.logging; importing log4j
+#                                  would be the bug, not this.
+#   org.eclipse.jetty.alpn, npn    Optional ALPN providers, only ever loaded on
+#                                  a JDK old enough to lack ALPN. Android
+#                                  provides it through the platform.
+#   com.aayushatharva.brotli4j     Optional Brotli codec. The broker link does
+#   com.github.luben.zstd          not negotiate Brotli or Zstd, and asking for
+#   com.jcraft.jzlib               one of them would throw at the call site.
+#   org.osgi.annotation.bundle     An OSGi annotation Netty's own classes carry.
+#
+# Note the relocation: HiveMQ's -shaded artifact moves Netty under
+# com.hivemq.client.internal.shaded, so a rule naming io.netty.** matches
+# nothing here.
+-dontwarn com.hivemq.client.internal.shaded.io.netty.internal.tcnative.**
+-dontwarn org.apache.log4j.**
+-dontwarn org.apache.logging.log4j.**
+-dontwarn org.eclipse.jetty.alpn.**
+-dontwarn org.eclipse.jetty.npn.**
+-dontwarn com.aayushatharva.brotli4j.**
+-dontwarn com.github.luben.zstd.**
+-dontwarn com.jcraft.jzlib.**
+-dontwarn org.osgi.annotation.bundle.**
+
+
+# --- Known and accepted, deliberately not silenced --------------------------
+#
+# Every minified build also prints this:
+#
+#   WARNING: ...base.jar: R8: Unexpected reference to missing service class:
+#   META-INF/services/reactor.blockhound.integration.BlockHoundIntegration
+#
+# HiveMQ's shaded artifact carries a ServiceLoader entry for Netty's BlockHound
+# integration, whose implementation class does not survive the relocation. It is
+# a warning rather than an error, and nothing in this app loads it -- Reactor is
+# not a dependency -- so the only effect is a line of build output. Left visible
+# on purpose: silencing a real inconsistency in a third-party artifact would
+# make the next, different one harder to notice.
+
+
+# --- Anything the WebView calls by name -------------------------------------
+#
+# No keep rule is added here, and that is a recorded decision rather than an
+# omission. `onMapState` is called from JavaScript, and no shrinker can see a
+# call made from a string -- if it were removed the bridge would go quiet.
+#
+# AGP is widely described as already keeping @JavascriptInterface members, and
+# the default rules file is named in build.gradle for that reason, but that file
+# could not be read on this machine to confirm it (getDefaultProguardFile()
+# points into the SDK or into an artifact extracted during the build, and
+# neither copy was on disk), so nothing here rests on it. The question is
+# settled from the output instead, after every release build:
+#
+#   unzip -p app/build/outputs/apk/release/app-release.apk classes.dex \
+#     | grep -c onMapState                       # want != 0
+#
+# and then on a device, tools/map_current_only.sh with APK_OVERRIDE pointing at
+# the release APK and FRESH_INSTALL=1 (the two build types are signed with
+# different keys, so the debug install has to be removed first). A stripped
+# bridge does not crash -- the page simply never reports ready and the map times
+# out into its "failed" state after 15 seconds.
+#
+# If that ever comes back negative, the rule goes here:
+#
+#   -keepclassmembers class * {
+#       @android.webkit.JavascriptInterface <methods>;
+#   }

@@ -64,6 +64,14 @@ android {
     defaultConfig {
         applicationId "org.rpwt.wlwdw"
         minSdk = 26
+        // Written out rather than left to Android's defaults, which is what the
+        // pre-rewrite app did for its whole life: a version that exists only by
+        // accident is one nobody can reason about, and the number a package
+        // manager compares when deciding whether an install is an upgrade is
+        // not a thing to leave implicit. These are the same values the default
+        // produced (1 / "1.0"), so no device's upgrade path changes.
+        versionCode = 1
+        versionName = "1.0"
         // Deliberately 34, not 35+: at 35+ Android 15 limits dataSync
         // foreground services to 6h per 24h, which would kill the long-lived
         // MQTT push service on Android 15/16 devices (and forces edge-to-edge).
@@ -91,14 +99,24 @@ android {
     buildTypes {
         // proguard-android-optimize.txt, not proguard-android.txt: AGP 9 rejects
         // the latter outright because it carries -dontoptimize and so switches
-        // off most of R8. Minification is off in both build types today, so
-        // this only really decides what happens the day it is turned on.
+        // off most of R8. So the rules file is the same in both build types and
+        // only `minifyEnabled` differs.
         debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'
         }
         release {
-            minifyEnabled false
+            // Shrinking, obfuscation and optimisation apply to this build type
+            // only. Debug stays unminified so a stack trace from it is readable
+            // and so the verification scripts can rely on class and method
+            // names -- at the cost that a defect introduced by shrinking can
+            // only ever show up here. That is why the release APK is exercised
+            // on a device and not merely built.
+            minifyEnabled true
+            // Drops resources nothing references. Only has an effect together
+            // with minifyEnabled, and it does not touch assets/ -- the map's JS
+            // and the privacy policy live there and are never candidates.
+            shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.txt'
             signingConfig hasReleaseSigning ? signingConfigs.release : null
         }
