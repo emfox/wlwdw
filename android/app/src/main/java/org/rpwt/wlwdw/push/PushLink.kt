@@ -1,10 +1,7 @@
 package org.rpwt.wlwdw.push
 
 import android.app.NotificationManager
-import android.app.Service
 import android.content.Context
-import android.content.Intent
-import android.os.IBinder
 import android.util.Log
 import com.hivemq.client.mqtt.MqttClient
 import com.hivemq.client.mqtt.MqttGlobalPublishFilter
@@ -15,11 +12,8 @@ import java.nio.charset.StandardCharsets
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,17 +37,28 @@ import org.rpwt.wlwdw.data.prefs.PreferencesRepository
  * doze and real radios. Re-deriving them would cost weeks and buy nothing, so
  * the behaviour is copied and only the plumbing changed:
  *
- * - a `Thread` with a `volatile boolean` becomes a coroutine on [Dispatchers.IO],
- *   which is cancelled instead of having to be polled;
+ * - a `Thread` with a `volatile boolean` becomes a coroutine on the caller's
+ *   scope, which is cancelled instead of having to be polled;
  * - the blocking HiveMQ client is still the blocking one, because its reconnect
  *   is manual either way -- `automaticReconnect` would race this loop over the
  *   same client id and the two would kick each other off the broker.
+ *
+ * What changed in the merge is only *who owns the scope*. This used to derive
+ * from `Service`, so its lifetime was a foreground service's and its identity
+ * was an Android component. It is now a plain object the one foreground service
+ * ([org.rpwt.wlwdw.service.WlwdwService]) drives, because the two long-lived
+ * things this app does had to share a single notification -- and a foreground
+ * service shows exactly one, so they had to share a service. Everything from
+ * `connectLoop` down is unchanged.
  */
-class PushService : Service() {
+class PushLink(
+    private val context: Context,
+    /** The owner's scope. Cancelled by the owner; this class never cancels it. */
+    private val scope: CoroutineScope,
+) {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val prefsStore by lazy { PreferencesRepository(applicationContext) }
-    private val messages by lazy { MessageRepository(applicationContext) }
+    private val prefsStore by lazy { PreferencesRepository(context) }
+    private val messages by lazy { MessageRepository(context) }
     private val api = WlwdwApi()
 
     private var loop: Job? = null
@@ -61,25 +66,16 @@ class PushService : Service() {
     /** The live client, if a session is open. Only touched from the loop. */
     private var client: Mqtt3BlockingClient? = null
 
-    override fun onBind(intent: Intent?): IBinder? = null
-
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        // The channel has to exist before the notification that keeps this
-        // service in the foreground is posted, or Android drops it.
-        WlwdwNotifications.createChannel(this)
-        startForeground(WlwdwNotifications.SERVICE_ID, WlwdwNotifications.serviceNotification(this))
-
-        // startForegroundService can deliver more than one start; reconnecting
-        // a second time would give the broker two clients with one id.
+    /** Start the link. Idempotent: a second call while it runs does nothing. */
+    fun start() {
+        // Calling this twice would give the broker two clients with one id.
         if (loop?.isActive != true) {
             loop = scope.launch { connectLoop() }
         }
-        // Restarted after the process is killed, which for a push link is the
-        // normal way it comes back rather than an error to recover from.
-        return START_STICKY
     }
 
-    override fun onDestroy() {
+    /** Stop the link and drop the session. */
+    fun stop() {
         loop?.cancel()
         // The loop disconnects in its own finally block, but cancelling does not
         // wait for that to run, and a kill between attempts has no open session
@@ -87,14 +83,12 @@ class PushService : Service() {
         client?.let { runCatching { it.disconnect() } }
         client = null
         report(PushState.Idle)
-        scope.cancel()
-        super.onDestroy()
     }
 
     /**
      * Connect, receive, reconnect, forever.
      *
-     * Ends only by cancellation, which is what [onDestroy] does.
+     * Ends only by cancellation, which is what [stop] does.
      */
     private suspend fun connectLoop() {
         prefsStore.ensureSeeded()
@@ -244,8 +238,8 @@ class PushService : Service() {
         // survivable -- crashing the service that carries every future one is
         // not.
         runCatching {
-            getSystemService(NotificationManager::class.java)
-                .notify(WlwdwNotifications.MESSAGE_ID, WlwdwNotifications.messageNotification(this, content))
+            context.getSystemService(NotificationManager::class.java)
+                .notify(WlwdwNotifications.MESSAGE_ID, WlwdwNotifications.messageNotification(context, content))
         }
     }
 
@@ -267,23 +261,12 @@ class PushService : Service() {
         /**
          * What the push link is doing, for the status screen.
          *
-         * A process-wide value rather than something bound or injected: the
-         * service is the only writer and the UI the only reader, and they are
+         * A process-wide value rather than something bound or injected: this
+         * class is the only writer and the UI the only reader, and they are
          * in the same process -- which is why the pre-rewrite app could get by
          * with no state at all and just a notification nobody could query.
          */
         val state: StateFlow<PushState> = linkState.asStateFlow()
-
-        /**
-         * Start the link.
-         *
-         * Only legal while the app is in the foreground: Android 12+ refuses to
-         * start a foreground service from the background, which is why this is
-         * called from the UI and not from a receiver.
-         */
-        fun start(context: Context) {
-            context.startForegroundService(Intent(context, PushService::class.java))
-        }
 
         /**
          * Exponential backoff between attempts: 1s, 2s, 4s ... capped at a

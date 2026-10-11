@@ -43,6 +43,7 @@ class PreferencesRepository(private val context: Context) {
         val customHost = stringPreferencesKey("custom_host")
         val reportIntervalMinutes = intPreferencesKey("report_interval_minutes")
         val startOnBoot = booleanPreferencesKey("start_on_boot")
+        val trackingEnabled = booleanPreferencesKey("tracking_enabled")
     }
 
     val prefs: Flow<WlwdwPrefs> = context.prefsStore.data
@@ -109,6 +110,18 @@ class PreferencesRepository(private val context: Context) {
         context.prefsStore.edit { it[Keys.startOnBoot] = enabled }
     }
 
+    /**
+     * Record that tracking should (or should not) be running.
+     *
+     * Permitted to be a no-op write of the value it already holds -- DataStore
+     * will not emit for it, which is why the service also takes an explicit
+     * command to (re)start the loop when the button is pressed. See
+     * `WlwdwService`.
+     */
+    suspend fun setTrackingEnabled(enabled: Boolean) {
+        context.prefsStore.edit { it[Keys.trackingEnabled] = enabled }
+    }
+
     private fun toPrefs(prefs: Preferences) = WlwdwPrefs(
         deviceId = prefs[Keys.deviceId].orEmpty(),
         consentAccepted = prefs[Keys.consentAccepted] ?: false,
@@ -119,6 +132,10 @@ class PreferencesRepository(private val context: Context) {
         // Not seeded from the old app, which had no such setting: absent means
         // off, which is the default this feature was asked for.
         startOnBoot = prefs[Keys.startOnBoot] ?: false,
+        // Also not seeded: the old app's tracking switch was live state, never
+        // written down, so an update deliberately starts with tracking off
+        // rather than guessing that it was on.
+        trackingEnabled = prefs[Keys.trackingEnabled] ?: false,
     )
 }
 

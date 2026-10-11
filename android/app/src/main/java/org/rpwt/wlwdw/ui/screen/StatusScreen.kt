@@ -1,6 +1,5 @@
 package org.rpwt.wlwdw.ui.screen
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -41,9 +40,12 @@ import org.rpwt.wlwdw.location.Fix
 import org.rpwt.wlwdw.push.PushState
 import org.rpwt.wlwdw.tracking.TrackingState
 import org.rpwt.wlwdw.ui.component.Callout
+import org.rpwt.wlwdw.ui.component.LinkPresentation
 import org.rpwt.wlwdw.ui.component.StatusPill
 import org.rpwt.wlwdw.ui.component.StatusRing
 import org.rpwt.wlwdw.ui.component.StatusTone
+import org.rpwt.wlwdw.ui.component.pushLink
+import org.rpwt.wlwdw.ui.component.ringStatus
 import org.rpwt.wlwdw.ui.component.statusTitle
 import org.rpwt.wlwdw.ui.component.statusTone
 import org.rpwt.wlwdw.ui.component.WlwdwCard
@@ -151,7 +153,9 @@ fun StatusScreen(
 
             WlwdwCard {
                 val upload = uploadLink(state)
-                val pushLink = pushLink(push)
+                // Not named `pushLink`: the local would shadow the function of
+                // that name from ui/component, which is what it is calling.
+                val pushRow = pushLink(push)
                 LinkRow(
                     label = stringResource(R.string.wlwdw_link_upload),
                     pill = stringResource(upload.textRes),
@@ -167,8 +171,8 @@ fun StatusScreen(
                 Spacer(Modifier.height(9.dp))
                 LinkRow(
                     label = stringResource(R.string.wlwdw_link_push),
-                    pill = stringResource(pushLink.textRes),
-                    tone = pushLink.tone,
+                    pill = stringResource(pushRow.textRes),
+                    tone = pushRow.tone,
                 )
             }
 
@@ -316,7 +320,9 @@ private fun LinkRow(label: String, pill: String, tone: StatusTone) {
 
 // The ring's colour and its word live in ui/component/StatusMatrix.kt: the
 // map's floating chip reports the same DeviceStatus, and a second `when` here
-// would be a second place to forget the next case.
+// would be a second place to forget the next case. The push link's wording and
+// the composition with it live there too, now that the permanent notification
+// reads the same pair.
 
 @Composable
 private fun ringCaption(status: DeviceStatus, reportIntervalMinutes: Int): String = when (status) {
@@ -354,43 +360,9 @@ private fun heroLine(state: TrackingState): String {
     )
 }
 
-private data class LinkPresentation(@StringRes val textRes: Int, val tone: StatusTone)
-
 private fun uploadLink(state: TrackingState): LinkPresentation = when {
     !state.running -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
     state.failure is ReportFailure.Upload -> LinkPresentation(R.string.wlwdw_link_failing, StatusTone.Error)
     state.failure is ReportFailure.Refused -> LinkPresentation(R.string.wlwdw_link_refused, StatusTone.Error)
     else -> LinkPresentation(R.string.wlwdw_link_ok, StatusTone.Ok)
 }
-
-/**
- * The push link, from the MQTT client's own state.
- *
- * Independent of [uploadLink] on purpose: the two links break for different
- * reasons and are mended differently, and a device whose reports are all going
- * through but whose inbox is dead must say so rather than looking healthy.
- */
-private fun pushLink(push: PushState): LinkPresentation = when (push) {
-    PushState.Connected -> LinkPresentation(R.string.wlwdw_link_online, StatusTone.Ok)
-    // Between attempts: the loop is always either connecting or waiting to
-    // retry, and both are worth saying out loud rather than as "normal".
-    PushState.Connecting -> LinkPresentation(R.string.wlwdw_link_reconnecting, StatusTone.Warn)
-    PushState.Failed -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Error)
-    PushState.Idle -> LinkPresentation(R.string.wlwdw_link_offline, StatusTone.Idle)
-}
-
-/**
- * What the ring says, given both links.
- *
- * [TrackingState.status] is decided by the reporting loop, which knows nothing
- * about MQTT. "Every report is landing but no message can reach me" is the one
- * state that needs both answers, and it is the only reason
- * [DeviceStatus.PushOffline] exists -- so it is composed here, where both are
- * available, rather than pushed down into the engine.
- */
-private fun ringStatus(state: TrackingState, push: PushState): DeviceStatus =
-    if (state.status == DeviceStatus.Reporting && push != PushState.Connected) {
-        DeviceStatus.PushOffline
-    } else {
-        state.status
-    }

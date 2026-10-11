@@ -17,9 +17,8 @@ import org.rpwt.wlwdw.data.model.Message
 import org.rpwt.wlwdw.data.model.Report
 import org.rpwt.wlwdw.data.prefs.PreferencesRepository
 import org.rpwt.wlwdw.data.prefs.WlwdwPrefs
-import org.rpwt.wlwdw.push.PushService
 import org.rpwt.wlwdw.push.PushState
-import org.rpwt.wlwdw.tracking.TrackingService
+import org.rpwt.wlwdw.service.WlwdwService
 import org.rpwt.wlwdw.tracking.TrackingState
 
 /**
@@ -42,10 +41,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         // say when it last worked even though this process has never reported
         // anything itself. The answer lives in storage, so asking only works
         // before the loop starts -- afterwards the loop owns it.
-        viewModelScope.launch { TrackingService.restoreLastSuccess(application) }
-        // The push link starts as soon as the device has consented and so has an
-        // identity to authenticate as, not when a screen first wants a message:
-        // a message that arrives while the app is closed is the entire point.
+        viewModelScope.launch { WlwdwService.restoreLastSuccess(application) }
+        // The background service starts as soon as the device has consented and
+        // so has an identity to authenticate as, not when a screen first wants a
+        // message: a message that arrives while the app is closed is the entire
+        // point. It carries the reporting loop too, which resumes by itself if
+        // the stored intent says tracking was on -- the process being killed is
+        // not the user stopping anything.
         //
         // Read from the store directly rather than [settings]: this init block
         // runs before the properties declared below it exist, and viewModelScope
@@ -53,7 +55,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         // still null. That was a crash on launch, not a late start.
         viewModelScope.launch {
             prefs.prefs.first { it.consentAccepted }
-            PushService.start(application)
+            WlwdwService.start(application)
         }
     }
 
@@ -92,40 +94,43 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     /**
      * What the tracking screen shows.
      *
-     * The service owns this rather than the ViewModel: the loop has to outlive
-     * this screen, so the thing that runs it is the thing that knows whether a
-     * report went out. The screen and the permanent notification both read this
-     * one flow, which is why they cannot disagree.
+     * The foreground service owns this rather than the ViewModel: the loop has
+     * to outlive this screen, so the thing that runs it is the thing that knows
+     * whether a report went out. The screen and the permanent notification both
+     * read this one flow, which is why they cannot disagree.
      */
-    val tracking: StateFlow<TrackingState> = TrackingService.state
+    val tracking: StateFlow<TrackingState> = WlwdwService.tracking
 
     /**
-     * What the MQTT link is doing, straight from the service that owns it.
+     * What the MQTT link is doing, straight from the component that owns it.
      *
      * Not mirrored into a second flow: there is one thing in the process that
      * knows whether the broker can reach this device, and it is the thing
-     * holding the connection.
+     * holding the connection. It is read through the service so a screen has one
+     * place to look for the app's background state.
      */
-    val push: StateFlow<PushState> = PushService.state
+    val push: StateFlow<PushState> = WlwdwService.push
 
     fun startTracking() {
-        // Read the permissions before the service's first tick so the ring shows
-        // the right wording immediately rather than after a fix attempt.
-        TrackingService.permissionsChanged(getApplication())
-        TrackingService.start(getApplication())
+        viewModelScope.launch {
+            // Read the permissions before the loop's first tick so the ring shows
+            // the right wording immediately rather than after a fix attempt.
+            WlwdwService.permissionsChanged(getApplication())
+            WlwdwService.startTracking(getApplication())
+        }
     }
 
     fun stopTracking() {
-        // Stopping the service is what ends the loop: its own teardown cancels
-        // the coroutine, and the loop's finally block clears `running`. Wiping
-        // the whole state here would also throw away the last fix and the time
-        // of the last successful report, which are exactly what the screen
-        // shows once tracking has stopped.
-        TrackingService.stop(getApplication())
+        // Stops the loop and nothing else: the service stays up for the push
+        // link, and the loop's own teardown clears `running`. Wiping the whole
+        // state here would also throw away the last fix and the time of the last
+        // successful report, which are exactly what the screen shows once
+        // tracking has stopped.
+        viewModelScope.launch { WlwdwService.stopTracking(getApplication()) }
     }
 
     /** Called when the app may have just been granted (or lost) location. */
-    fun refreshPermissions() = TrackingService.permissionsChanged(getApplication())
+    fun refreshPermissions() = WlwdwService.permissionsChanged(getApplication())
 
     fun acceptConsent() = viewModelScope.launch { prefs.setConsentAccepted(true) }
 

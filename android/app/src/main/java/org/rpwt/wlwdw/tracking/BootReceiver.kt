@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rpwt.wlwdw.data.prefs.PreferencesRepository
+import org.rpwt.wlwdw.service.WlwdwService
 
 /**
  * Starts reporting again after the phone reboots, if the user asked for that.
@@ -53,7 +54,14 @@ class BootReceiver : BroadcastReceiver() {
                 when (val decision = decide(appContext)) {
                     Decision.Start -> {
                         Log.i(TAG, "starting tracking after boot")
-                        TrackingService.start(appContext)
+                        // This also records the intent, so the service that comes
+                        // up reads the same answer it would have from the switch.
+                        // One consequence of the merge, worth stating: starting
+                        // the service also starts the push link, so a device with
+                        // "start on boot" on is now reachable for messages from
+                        // boot as well. That is a change from the two-service
+                        // build, where only tracking came back.
+                        WlwdwService.startTracking(appContext)
                     }
                     is Decision.Skip -> Log.i(TAG, "not starting after boot: ${decision.why}")
                 }

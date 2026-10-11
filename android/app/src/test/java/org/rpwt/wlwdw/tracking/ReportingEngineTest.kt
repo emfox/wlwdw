@@ -268,6 +268,9 @@ private val PREFS = WlwdwPrefs(
     customHost = "10.0.2.2:8080",
     reportIntervalMinutes = 2,
     startOnBoot = false,
+    // Irrelevant here -- the engine never reads it; the service decides from it
+    // whether to run the engine at all.
+    trackingEnabled = true,
 )
 
 /** The server, reduced to the one answer it gives. */

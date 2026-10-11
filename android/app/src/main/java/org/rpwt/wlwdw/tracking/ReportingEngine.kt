@@ -60,10 +60,10 @@ data class TrackingState(
  * The tracking loop: fix, upload, log, wait, repeat.
  *
  * This is a plain coroutine rather than a service so that the whole thing can
- * be reasoned about and tested without an Android lifecycle. Moving it into a
- * foreground service later is then a matter of who owns the scope, not of
- * rewriting the logic -- and the manifest already declares the permission that
- * service will need.
+ * be reasoned about and tested without an Android lifecycle. Who owns the scope
+ * is then a separate question, and the answer is
+ * [org.rpwt.wlwdw.service.WlwdwService] -- the one foreground service, which
+ * also carries the push link.
  *
  * The loop is driven by the settings it reads each tick, so changing the
  * interval or the server takes effect on the next report instead of needing a
@@ -99,7 +99,7 @@ class ReportingEngine(
      * does not change when the app is restarted, and a cold start that says
      * "还没有成功上报" while the log holds a report from two minutes ago is
      * simply wrong. Called once when the loop starts; the screen's cold start
-     * reads it through [org.rpwt.wlwdw.tracking.TrackingService], which can
+     * reads it through [org.rpwt.wlwdw.service.WlwdwService], which can
      * answer before any loop exists.
      */
     suspend fun restore() {

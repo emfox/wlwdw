@@ -34,6 +34,25 @@ data class WlwdwPrefs(
      * deliberately.
      */
     val startOnBoot: Boolean,
+    /**
+     * Whether tracking is supposed to be running.
+     *
+     * Not a screen setting: it is what the big button on the status screen
+     * writes, and it exists so that "should this device be reporting" survives
+     * the death of the process holding the loop. One foreground service now
+     * carries both the push link and the reporting loop and is always running,
+     * so a `START_STICKY` restart can no longer read the answer off the fact
+     * that it came back -- that used to work only because a service existed
+     * solely while tracking ran. Stored, the answer is the same after a
+     * restart, after a reboot (see `BootReceiver`) and after the user stops
+     * it, which is the case that matters: a service the user stopped must stay
+     * stopped.
+     *
+     * Distinct from `TrackingState.running`, which is the loop's own account of
+     * itself. They differ legitimately: the loop stops itself on a refusal and
+     * leaves the intent set, so the screen can offer to start it again.
+     */
+    val trackingEnabled: Boolean,
 ) {
     /**
      * Where the server is, as the network layer needs it: `host[:port]`, no
