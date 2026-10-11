@@ -1,32 +1,7 @@
 /**
- * 天地图 provider。
- *
- * 坐标系策略是**恒等**的：天地图底图用 CGCS2000，与 WGS-84 的差异约 15cm，在定位
- * 记录的精度上可以忽略，所以显示与取点都不做换算。这是第三种策略 —— 百度恒 BD-09、
- * Google 随地图类型在 GCJ-02/WGS-84 间切换、这里恒等 —— 也再次说明换算必须由
- * provider 负责：核心层不该知道这种规则。
- *
- * 三个落地细节和另外两个 provider 不一样，都是被这个 SDK 的加载方式逼出来的：
- *
- *  1. 只用主包（api?v=4.0）里**同步**可用的类：T.Map / T.Marker / T.Icon /
- *     T.DivIcon / T.Polyline / T.InfoWindow / T.Control.Zoom / T.Control.Scale。
- *     SDK 用 createElement + appendChild 异步注入 components.js，所以 T.Label 和
- *     地图类型切换用的 TMAP_* 常量在 init() 跑的时候**可能还没定义**；new T.Label
- *     会让整个 ready 处理器抛异常、地图完全不显示。因此文字标注一律用
- *     Marker + DivIcon（DivIcon 把 html 写进 div 的 innerHTML），也就没有加地图
- *     类型控件 —— 卫星图切换要等 components.js，值得单独处理。
- *
- *  2. 跟随鼠标的坐标标签用**普通 DOM**，不用覆盖物。它每 mousemove 都要改文字，而
- *     Marker 没有公开的"改图标内容"入口（setIcon 会重建图标并重新注册
- *     mouseover/mouseout，等于把监听泄漏又引进来）。事件对象自带 containerPoint，
- *     直接把一个 div 摆进地图容器最省事，也不必在平移缩放时重投影。
- *
- *  3. 单位名标签跟着拖拽走，靠 Marker.setLngLat() 只重算位置、不重建 DOM；内容不变
- *     就不碰图标。
- *
- * 与 baidu.js 的一处简化：天地图的覆盖物按 Leaflet 的 pane 分层（popupPane 在
- * markerPane 之上），不存在百度那种"覆盖物按加入顺序排、悬停标签会被压住"的问题，
- * 所以 baidu.js 里重绘后重新提一遍标签的补救在这里是多余的。
+ * Tianditu provider. Coordinates are identity (the base map is CGCS2000, ~15 cm off
+ * WGS-84). Use only main-bundle classes at init time: components.js is injected
+ * asynchronously, so T.Label and the TMAP_* constants may not exist yet.
  */
 (function () {
 
@@ -34,9 +9,8 @@
 	var hover;
 	var drawn = [];
 
-	/* ---- 坐标系 ---- */
+	/* ---- coordinates ---- */
 
-	// 恒等：天地图底图是 CGCS2000（≈WGS-84），无需纠偏。
 	function toNative(point) {
 		return {lat: point.lat, lng: point.lng};
 	}
@@ -45,15 +19,15 @@
 		return {lat: lnglat.getLat(), lng: lnglat.getLng()};
 	}
 
-	/* ---- 基础绘制 ---- */
+	/* ---- drawing primitives ---- */
 
-	// 注意 T.LngLat 的参数顺序是 (lng, lat)，与 WGS-84 数据点的 (lat, lng) 相反。
+	// T.LngLat takes (lng, lat), the opposite of our points
 	function toLngLat(point) {
 		var native = toNative(point);
 		return new T.LngLat(native.lng, native.lat);
 	}
 
-	// 尺寸与锚点取自 core.js 的 pin：三家 provider 共用同一份构图，谁也不另写一份。
+	// sizes and anchors come from core.pin
 	function icon(url, w, h, anchorX, anchorY) {
 		return new T.Icon({
 			iconUrl: url,
@@ -62,15 +36,14 @@
 		});
 	}
 
-	// 32x32、锚底边中点的图标（历史点与参考点），参数同 icon()。
+	// the 32x32 bottom-centre icon used by trail points and anchors
 	function pointIcon(url) {
 		var layout = WlwdwMap.core.pin.icon;
 		return icon(url, layout.size, layout.size, layout.anchor[0], layout.anchor[1]);
 	}
 
-	// DivIcon 把 iconAnchor 实现成 marginLeft / -marginTop 的**取负**（见主包里 Icon.er），
-	// 所以想"向右 dx、向上 dy"得传 (-dx, dy)。统一按人话传，换算只此一处。
-	// iconSize 传 0 是故意的：div 不设尺寸，宽度交给 .labels 的内容撑开。
+	// DivIcon negates iconAnchor into marginLeft / -marginTop, so "right dx, up dy"
+	// needs (-dx, dy). iconSize 0 is deliberate: `.labels` sizes itself.
 	function textLabel(text, dx, dy) {
 		return new T.DivIcon({
 			html: '<span class="labels">' + text + '</span>',
@@ -79,14 +52,8 @@
 		});
 	}
 
-	// 单位名标签：内容由 core.js 给（那个元素自己把中心对到原点上），这里只负责
-	// 把它的原点放回坐标。两处天地图特有的换算，都是实测出来的：
-	//
-	//  1. DivIcon 的包裹 div 自带 1px 边框（.tdt-div-icon），而块级子元素的起点是
-	//     它的 **padding box**（CSS 规定绝对定位祖先是包含块时取内边距边），所以
-	//     锚点得往里挪 1px。按上面那条取负规则，往里挪 1px = 传 (1, 1)。
-	//  2. iconSize 传 (0,0)：div 的宽度算 0，宽度交给内容的 inline-block 自己撑开
-	//     （见 core.pinLabel 的样式说明）。
+	// The wrapper div carries a 1px border and a block child starts at its padding box,
+	// hence iconAnchor(1, 1) — measured, not guessed.
 	function pinName(text) {
 		return new T.DivIcon({
 			html: WlwdwMap.core.pinLabel(text, false),
@@ -95,8 +62,7 @@
 		});
 	}
 
-	// 记录本层画过的覆盖物。removeOverLay 对已经移除的图层是空操作，所以标签被点掉
-	// 之后依然留在 drawn 里也不会出错。
+	// removeOverLay on an already-removed overlay is a no-op, so stale entries are safe
 	function keep(overlay) {
 		map.addOverLay(overlay);
 		drawn.push(overlay);
@@ -110,7 +76,7 @@
 		drawn.length = 0;
 	}
 
-	/* ---- provider 契约实现 ---- */
+	/* ---- provider contract ---- */
 
 	function init(containerId) {
 		map = new T.Map(containerId);
@@ -120,10 +86,8 @@
 		map.addControl(new T.Control.Zoom());
 		map.addControl(new T.Control.Scale());
 
-		// 跟随鼠标的坐标标签，只在 init 建一次（见 core.js 契约里的说明）。
-		// 不做 mouseout 隐藏：地图上有折线时 mouseover 不一定触发，隐藏之后就再也不
-		// 出现了（baidu.js 踩过，这里沿用它的取舍）。这里多挂一个 mouseout 也不会
-		// 泄漏，但它带来的行为更差，索性不挂。
+		// Built once in init. No mouseout hiding: with a polyline on the map mouseover
+		// does not always fire, and the label would then never come back.
 		hover = document.createElement('div');
 		hover.className = 'labels';
 		hover.style.position = 'absolute';
@@ -134,7 +98,7 @@
 		document.getElementById(containerId).appendChild(hover);
 
 		map.addEventListener('mousemove', function (e) {
-			// containerPoint 是相对地图容器左上角的像素坐标，直接当 left/top 用。
+			// containerPoint is already relative to the map container
 			hover.style.left = (e.containerPoint.x + 12) + 'px';
 			hover.style.top = (e.containerPoint.y - 35) + 'px';
 			hover.innerHTML = WlwdwMap.core.hoverText(fromNative(e.lnglat));
@@ -159,10 +123,9 @@
 		map.setViewport(points.map(toLngLat));
 	}
 
-	/* ---- 三种点位的画法 ---- */
+	/* ---- the three point kinds ---- */
 
-	// 单位当前点：图标 + 一张透明图标做的拖拽手柄 + 挂在手柄上的单位名标签
-	// + 一条跟随拖动的引线。构图（各覆盖物多大、锚在哪）见 core.js 的 pin。
+	// Current position: icon + transparent-icon drag handle + unit name + leader line
 	function drawPin(point) {
 		var p = toLngLat(point);
 		var layout = WlwdwMap.core.pin;
@@ -173,17 +136,12 @@
 			marker.openInfoWindow(infoWindow);
 		});
 
-		// 单位名：天地图没有 Marker.setLabel，所以它是个独立的标注点，自己居中
-		// （见 pinName），于是落在手柄方框里，拖拽时要自己跟过去。
-		//
-		// ⚠️ 顺序：标签要**先**建、手柄后建。标签的包裹 div 是个 2x2 的点（iconSize
-		// 传 0 加 .tdt-div-icon 的 1px 边框），它落在坐标上正好是手柄的中心 —— 后建
-		// 的那个压在先建的上面，所以手柄最后加，压住那个点，整块手柄上的按压才都
-		// 落在手柄上（标签自己 pointer-events:none，但它拦不住包裹 div）。
+		// The name is a separate marker (no Marker.setLabel here) and centres itself.
+		// Order matters: name first, then handle — the name's wrapper div is a 2x2 dot
+		// sitting exactly on the handle's centre and is not covered by pointer-events.
 		var title = keep(new T.Marker(p, {icon: pinName(point.title)}));
 
-		// 手柄用透明图标、锚点在正中心 —— 方框以坐标为中心，和百度那边一致
-		// （百度是靠 Icon 的 anchor，这里靠 iconAnchor，参见 core.js 的 pin）。
+		// Transparent icon anchored at its centre, so the box is centred on the point
 		var handle = keep(new T.Marker(p, {
 			icon: icon(Marker_Blank, layout.handle.w, layout.handle.h,
 				layout.handle.anchor[0], layout.handle.anchor[1]),
@@ -201,7 +159,7 @@
 		});
 	}
 
-	// 历史点：图标 + 时间标签。标签点一下移除（沿用 baidu.js 的行为）。
+	// Trail point: icon + time label; clicking the label removes it
 	function drawTrailPoint(point) {
 		var p = toLngLat(point);
 
@@ -213,7 +171,7 @@
 		});
 	}
 
-	// 参考点：图标 + 名称标签。同上。
+	// Reference point: icon + name label; clicking the label removes it
 	function drawAnchor(point) {
 		var p = toLngLat(point);
 

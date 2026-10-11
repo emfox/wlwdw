@@ -1,10 +1,7 @@
 /**
- * Google Maps provider。
- *
- * 坐标系策略是**动态**的：Google 在路线图 / 地形图下显示 GCJ-02，卫星图 / 混合图下
- * 显示 WGS-84。所以跟随 maptypeid_changed 切换换算方向，切换后重绘一次。
- * 这一点和百度不同（百度不随地图类型改变坐标系），也是"换算必须由 provider 负责"
- * 的原因 —— 核心层不该知道这种规则。
+ * Google Maps provider. Coordinates are dynamic: GCJ-02 for roadmap/terrain, WGS-84 for
+ * satellite/hybrid, so the conversion direction follows maptypeid_changed and the map
+ * is redrawn after a switch.
  */
 (function () {
 
@@ -13,7 +10,7 @@
 	var coordsType = 'gcj';
 	var drawn = [];
 
-	/* ---- 坐标系 ---- */
+	/* ---- coordinates ---- */
 
 	function toNative(point) {
 		if (coordsType == 'gcj') {
@@ -29,14 +26,14 @@
 		return {lat: latLng.lat(), lng: latLng.lng()};
 	}
 
-	/* ---- 基础绘制 ---- */
+	/* ---- drawing primitives ---- */
 
 	function toLatLng(point) {
 		var native = toNative(point);
 		return new google.maps.LatLng(native.lat, native.lng);
 	}
 
-	// 尺寸与锚点取自 core.js 的 pin：三家 provider 共用同一份构图，谁也不另写一份。
+	// sizes and anchors come from core.pin
 	function icon(url) {
 		var layout = WlwdwMap.core.pin.icon;
 		return new google.maps.MarkerImage(url,
@@ -45,7 +42,7 @@
 			new google.maps.Point(layout.anchor[0], layout.anchor[1])); // anchor
 	}
 
-	// 记录本层画过的覆盖物。Google 没有"清空全部覆盖物"的接口，必须自己留账。
+	// No "clear all overlays" API here, so this layer keeps its own ledger
 	function keep(overlay) {
 		drawn.push(overlay);
 		return overlay;
@@ -58,7 +55,7 @@
 		drawn.length = 0;
 	}
 
-	/* ---- provider 契约实现 ---- */
+	/* ---- provider contract ---- */
 
 	function init(containerId) {
 		map = new google.maps.Map(document.getElementById(containerId), {
@@ -83,7 +80,7 @@
 			}
 		});
 
-		// 跟随鼠标的坐标标签，只在 init 建一次（见 core.js 契约里的说明）。
+		// Built once in init
 		labelPos = new MarkerWithLabel({
 			position: new google.maps.LatLng(0, 0),
 			icon: ' ',
@@ -134,9 +131,9 @@
 		}
 	}
 
-	/* ---- 三种点位的画法 ---- */
+	/* ---- the three point kinds ---- */
 
-	// 单位当前点：图标 + 可拖拽的名称标签 + 一条跟随拖动的引线
+	// Current position: icon + draggable name label + leader line
 	function drawPin(point) {
 		var p = toLatLng(point);
 
@@ -148,11 +145,9 @@
 			zIndex: 1
 		}));
 
-		// 这里没有第二个覆盖物当手柄：MarkerWithLabel 的标签本身就是拖拽面。
-		// 所以内容用 core.pinLabel(text, true) —— 那个元素自己居中（于是名称的
-		// 中心落在坐标上，与百度/天地图的手柄方框中心同一个位置），而且它必须
-		// 保留指针事件（它就是被拖的东西）。labelClass 留空：外观归 .labels
-		// 那个 span，套在外面的 div 再加一层边框会变成双层框。
+		// No separate handle here: the MarkerWithLabel label *is* the drag surface, so it
+		// keeps pointer events and uses pinLabel(text, true). labelClass stays empty — the
+		// shared span already carries the look, and the wrapper div would add a second frame.
 		var label = keep(new MarkerWithLabel({
 			position: p,
 			icon: ' ',
@@ -186,7 +181,7 @@
 		});
 	}
 
-	// 历史点：图标 + 时间标签。Google 侧标签可拖动、点击隐藏（沿用原行为）。
+	// Trail point: icon + time label; the label is draggable and hides on click
 	function drawTrailPoint(point) {
 		var p = toLatLng(point);
 
@@ -212,7 +207,7 @@
 		});
 	}
 
-	// 参考点：图标 + 名称标签。Google 侧标签可拖动且点击无响应（沿用原行为）。
+	// Reference point: icon + name label; the label is draggable, clicks do nothing
 	function drawAnchor(point) {
 		var p = toLatLng(point);
 
