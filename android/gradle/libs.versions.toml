@@ -54,6 +54,15 @@ ksp = "2.3.12"
 # that talks to the same host every couple of minutes.
 ktor = "3.6.0"
 
+# --- Map (ui/screen/MapScreen) ---
+# The map is the website's own JS (public/js/wlwdw-map) running in a WebView,
+# and the shell that hosts it is served through WebViewAssetLoader rather than
+# file://. That gives the page a real https origin
+# (appassets.androidplatform.net) instead of the "null" origin file:// produces,
+# so the tile server sees an ordinary browser request and WebView's file-access
+# restrictions never have to be relaxed. This is the only reason webkit is here.
+webkit = "1.17.1"
+
 # --- Push (the push/ package) ---
 # MQTT over WSS to the self-hosted EMQX broker. The -shaded artifact is the one
 # to use: it relocates netty's packages, without which they collide with other
@@ -110,6 +119,9 @@ ktor-client-okhttp = { module = "io.ktor:ktor-client-okhttp", version.ref = "kto
 # @Serializable class into the request body and the response body back.
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+
+# --- Map ---
+androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 
 # --- Push ---
 hivemq-mqtt-client-shaded = { module = "com.hivemq:hivemq-mqtt-client-shaded", version.ref = "hivemqMqttClient" }

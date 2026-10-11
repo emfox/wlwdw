@@ -1,3 +1,10 @@
+import javax.inject.Inject
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.FileSystemOperations
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.TaskAction
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -20,6 +27,24 @@ if (localPropsFile.exists()) {
 }
 def mqttDeviceSharedSecret = localProps.getProperty(
         'MQTT_DEVICE_SHARED_SECRET', 'wlwdw-device-secret-CHANGE-ME')
+
+// The 天地图 key the bundled map shell boots the JS API with.
+//
+// The default is the key the website already ships. It is printed in the page
+// source of /main/tianditu, so it is not a secret, and a working default is
+// what makes a fresh checkout build a working map. Override it in
+// gradle-local.properties to point the app at a different 天地图 account --
+// checked for emptiness as well as absence, because an unset property in that
+// file would otherwise arrive here as a key of "".
+//
+// The key is a "browser" type: 天地图 validates it on the User-Agent, not on
+// the Referer, so a WebView (which is a browser) may use it from any origin.
+// That is also why neither a SHA-1 nor a package name is involved -- those
+// belong to the Android SDK key type, which this app does not use.
+def tiandituMapKey = localProps.getProperty('TIANDITU_MAP_KEY', '').trim()
+if (!tiandituMapKey) {
+    tiandituMapKey = 'b5bb34da347fc471d4b0d9c453dd1f58'
+}
 
 // Release signing. The keystore path is relative to android/ (where
 // gradle-local.properties lives). If the file or passwords are absent the
@@ -48,6 +73,8 @@ android {
         targetSdk = 34
         buildConfigField 'String', 'MQTT_DEVICE_SHARED_SECRET',
                 "\"${mqttDeviceSharedSecret}\""
+        buildConfigField 'String', 'TIANDITU_MAP_KEY',
+                "\"${tiandituMapKey}\""
     }
     buildFeatures {
         buildConfig true
@@ -94,6 +121,81 @@ android {
     namespace 'org.rpwt.wlwdw'
 }
 
+// --- The map shell's assets -------------------------------------------------
+// `public/js/wlwdw-map/` is the single source of truth for how this project
+// draws a map -- the website loads it from a browser and the app loads the same
+// files in a WebView. Rather than keeping a second copy under src/main/assets
+// that would silently drift the first time someone edited a provider, the few
+// files the shell needs are copied into the build directory and that directory
+// is folded into the app's assets. Editing public/js/wlwdw-map/core.js and
+// rebuilding is all it takes for the app to pick the change up.
+//
+// The layout under `web/` mirrors `public/`, so relative references inside the
+// JS (Marker_Pin, Anchor_Path + icon) resolve to the same paths they do on the
+// website, and the JS itself needs no edit to run here.
+//
+// Why a hand-written task rather than Sync/Copy: the Variant API's
+// addGeneratedSourceDirectory() requires the task's output to be declared as a
+// DirectoryProperty, and Sync only exposes a File-typed destination. Passing a
+// Provider through the older SourceSet API instead is something AGP 9 refuses
+// outright -- it cannot tell generated files from static ones, and so cannot
+// wire the task dependency.
+abstract class SyncWebMapAssets extends org.gradle.api.DefaultTask {
+
+    /** The website's public/ directory. */
+    @InputDirectory
+    abstract DirectoryProperty getSource()
+
+    /** Where the app's assets are assembled; wired into the variants below. */
+    @OutputDirectory
+    abstract DirectoryProperty getDestination()
+
+    @Inject
+    abstract FileSystemOperations getFs()
+
+    @TaskAction
+    void sync() {
+        def src = source.get().asFile
+        // Cleared first: a file deleted from public/ has to disappear from the
+        // assets too, which a plain copy would leave behind.
+        fs.delete { delete(destination) }
+
+        copy('js/wlwdw-map', 'web/js/wlwdw-map', ['core.js', 'tianditu.js'])
+        copy('vendor/jquery', 'web/vendor/jquery', ['jquery.min.js'])
+        copy('vendor/proj4', 'web/vendor/proj4', ['proj4.js'])
+        copy('images', 'web/images',
+                ['Marker_Blank.png', 'Marker_Pin.png', 'Marker_Point.png'])
+        copy('images/anchors', 'web/images/anchors', null)
+    }
+
+    // The parameters are deliberately not called from/into: a local of either
+    // name shadows CopySpec's own methods inside the closure, and the call
+    // then fails as "no signature of method: java.lang.String.call()".
+    private void copy(String sourceDir, String targetDir, List<String> only) {
+        def out = destination.get().asFile
+        fs.copy {
+            from(new File(source.get().asFile, sourceDir))
+            into(new File(out, targetDir))
+            only?.each { include(it) }
+        }
+    }
+}
+
+def syncWebAssets = tasks.register('syncWebAssets', SyncWebMapAssets) {
+    source.set(file("${rootProject.projectDir}/../public"))
+    destination.set(layout.buildDirectory.dir('wlwdw-web-assets'))
+}
+
+// Belt and braces: the primary wiring is the variant below, but the preBuild
+// hook makes the ordering visible in a task list too.
+tasks.named('preBuild').configure { dependsOn(syncWebAssets) }
+
+androidComponents {
+    onVariants(selector().all()) { variant ->
+        variant.sources.assets?.addGeneratedSourceDirectory(syncWebAssets) { it.destination }
+    }
+}
+
 // Kotlin compiler options. With built-in Kotlin this is the kotlin{} extension
 // rather than the old android.kotlinOptions{} block, which AGP 9 removed.
 // jvmTarget must match the Java compileOptions above.
@@ -127,6 +229,11 @@ dependencies {
     implementation libs.compose.material.icons.extended
     implementation libs.kotlinx.serialization.json
     debugImplementation libs.compose.ui.tooling
+
+    // --- The map (ui/screen/MapScreen) ---
+    // WebViewAssetLoader only. The map itself is the website's own JS, which
+    // the syncWebAssets task above copies out of public/ into the APK.
+    implementation libs.androidx.webkit
 
     // --- The data layer (data/ package) ---
     // DataStore holds the settings; the ViewModel pieces are what lets a screen

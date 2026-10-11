@@ -17,8 +17,23 @@
 #   (android/keystore/release.jks) is gitignored and must be backed up
 #   separately — it signs every distributed APK. If these are absent, release
 #   builds are left unsigned.
+#
+# TIANDITU_MAP_KEY
+#   Optional, and normally absent. The 天地图 JS API key the bundled map shell
+#   boots with; if unset, the build falls back to the key the website already
+#   uses. That key is printed in the page source of /main/tianditu, so it is not
+#   a secret and there is nothing to fill in here. Set it only to move the app
+#   onto a different 天地图 account — the line at the bottom shows the shape.
+#
+#   The key is a "browser" type: 天地图 validates it on the User-Agent, not on
+#   the Referer, which is why a WebView can use it and why neither a SHA-1 nor a
+#   package name is involved. Those two belong to the Android SDK key type,
+#   which this app does not use.
 MQTT_DEVICE_SHARED_SECRET=change_me_same_as_server_env
 RELEASE_KEYSTORE_PATH=keystore/release.jks
 RELEASE_KEY_ALIAS=release
 RELEASE_STORE_PASSWORD=change_me_release_store_password
 RELEASE_KEY_PASSWORD=change_me_release_key_password
+
+# Only if the app should use a 天地图 account other than the website's.
+#TIANDITU_MAP_KEY=

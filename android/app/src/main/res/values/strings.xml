@@ -10,8 +10,7 @@
     <!-- The Compose UI (org.rpwt.wlwdw.ui). Text that belongs to the interface
          lives here. Values that are really data (coordinates, the last report
          time, the device id) are not text and are not here: they come from
-         the data layer or, where nothing produces them yet, from
-         ui/demo/DemoData.kt. -->
+         the data layer. -->
 
     <string name="wlwdw_title_settings">设置</string>
     <string name="wlwdw_action_settings">设置</string>
@@ -97,9 +96,11 @@
     <!-- Map screen -->
     <string name="wlwdw_map_my_location">我的位置</string>
     <string name="wlwdw_map_locate">定位到我的位置</string>
-    <string name="wlwdw_map_layers">切换图层</string>
-    <string name="wlwdw_map_placeholder">地图将在此渲染（天地图 WMTS 瓦片）</string>
     <string name="wlwdw_map_self">本机</string>
+    <string name="wlwdw_map_loading">正在载入地图…</string>
+    <string name="wlwdw_map_failed">地图加载失败</string>
+    <string name="wlwdw_map_retry">重试</string>
+    <string name="wlwdw_map_empty">还没有可显示的位置</string>
 
     <!-- Messages screen -->
     <string name="wlwdw_messages_mark_all_read">全部已读</string>

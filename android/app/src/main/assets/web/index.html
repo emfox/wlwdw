@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<!-- The map fills the view and is not meant to be zoomed like a document:
+     pinch is the map's own gesture (the SDK handles it), and double-tap
+     zoom on the page would fight it. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>地图</title>
+<style type="text/css">
+html, body {
+	height: 100%;
+	margin: 0;
+	padding: 0;
+	overflow: hidden;
+	background: #e8ece5;
+}
+#map {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+/* Copied from the website's template -- tianditu.js builds its text labels out
+   of `.labels` spans, so the class has to exist here too or every label would
+   render as unstyled text over the map. */
+.labels {
+	color: black;
+	background-color: white;
+	font-family: "Lucida Grande", "Arial", sans-serif;
+	font-size: 10px;
+	font-weight: normal;
+	text-align: center;
+	border: 1px solid red;
+	white-space: nowrap;
+}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<!-- The map itself is the website's code, unchanged. The four scripts below are
+     the same files /main/tianditu loads, in the same order, synced out of
+     public/ by the syncWebAssets Gradle task. Nothing here re-implements any of
+     it: this page only provides what the website's Twig template provided
+     (the marker image paths and a container), then hands the JS its data. -->
+<script type="text/javascript" src="vendor/jquery/jquery.min.js"></script>
+<script type="text/javascript" src="vendor/proj4/proj4.js"></script>
+<script type="text/javascript" src="js/wlwdw-map/core.js"></script>
+
+<script type="text/javascript">
+/*
+ * The four globals the website's template injects as asset() URLs. Only the
+ * paths differ; the JS reads them exactly as it does on the website.
+ */
+var Marker_Pointer = "images/Marker_Point.png";
+var Marker_Blank = "images/Marker_Blank.png";
+var Marker_Pin = "images/Marker_Pin.png";
+var Anchor_Path = "images/anchors/";
+
+/*
+ * core.js was written for the website's zTree device tree: reloadOverlay() and
+ * setCurLocation() walk it. This page has no tree -- the app draws one device,
+ * its own -- so the two globals get empty stand-ins. Nothing below calls those
+ * two entry points; the stand-ins exist so that a call to them would be a no-op
+ * rather than a ReferenceError.
+ */
+var anchorNodes = {};
+var zTreeObj = {
+	getNodes: function () { return []; },
+	transformToArray: function () { return []; }
+};
+
+/*
+ * Ported from the website's page script, reduced to what a phone map needs.
+ *
+ * Difference from the website: the data does not arrive over XHR. The website
+ * fetches /anchor/list, /category/hierarchy and /trail/{catid} -- all of which
+ * require a logged-in user. This app has no account and needs none: it draws
+ * the positions it took itself, and the native side hands them over as JSON.
+ * So `apply()` replaces `reloadAll()`, and everything downstream of it --
+ * the provider, the projection, the label text -- is the same code.
+ */
+var sdkReady = false;
+var booted = false;
+var pending = null;
+
+/* Tell the app what happened; it cannot see inside the page otherwise. */
+function notify(state) {
+	if (window.WlwdwHost && window.WlwdwHost.onMapState) {
+		window.WlwdwHost.onMapState(state);
+	}
+}
+
+/*
+ * Called once by the app once the page is up, with the 天地图 key.
+ *
+ * The key is injected rather than written into this file so the APK and the
+ * website can be pointed at different keys without editing HTML, and because
+ * build-time injection is where every other credential in this project lives.
+ */
+window.wlwdwBoot = function (tk) {
+	if (booted) return;
+	booted = true;
+
+	var sdk = document.createElement('script');
+	sdk.src = 'https://api.tianditu.gov.cn/api?v=4.0&tk=' + encodeURIComponent(tk);
+	sdk.onload = function () {
+		try {
+			// core.js's entry point: hands the container to the 天地图 provider.
+			initMap();
+			sdkReady = true;
+			if (pending) {
+				draw(pending);
+				pending = null;
+			}
+			notify('ready');
+		} catch (e) {
+			// A provider that throws here means no map at all -- the app shows
+			// the reason rather than an empty green rectangle.
+			notify('error:init:' + (e && e.message ? e.message : e));
+		}
+	};
+	sdk.onerror = function () {
+		notify('error:sdk');
+	};
+	document.head.appendChild(sdk);
+};
+
+/*
+ * Called by the app whenever the positions change, with:
+ *
+ *   { me:    {title, lat, lng, updatetime:{date}} | null,
+ *     trail: [{lat, lng, time}, ...] }        // time is epoch milliseconds
+ *
+ * The shapes are the ones core.js's pointInfo()/timeLabel() already expect, so
+ * no translation layer is needed on this side.
+ */
+window.wlwdwApply = function (payload) {
+	if (!sdkReady) {
+		// The SDK is still loading (or the app drew before onPageFinished).
+		// Hold the newest payload; the onload above will render it.
+		pending = payload;
+		return;
+	}
+	draw(payload);
+};
+
+/* Ask the map to frame everything it is showing -- the "locate" button. */
+window.wlwdwFit = function () {
+	if (!sdkReady || !pending) return;
+	var points = (pending.trail || []).slice();
+	if (pending.me) points.push(pending.me);
+	if (points.length > 0) {
+		WlwdwMapProvider.fitBounds(points);
+	}
+};
+
+function draw(payload) {
+	pending = payload;
+
+	var me = payload.me ? [payload.me] : [];
+	var trail = payload.trail || [];
+
+	// redraw() clears and redraws the "current position" layer, so it comes
+	// first and the history is appended on top of it -- the same order the
+	// website's reloadOverlay() + addTrail() pair produces.
+	WlwdwMapProvider.redraw([], me);
+	WlwdwMapProvider.drawTrailPoints(trail);
+
+	var points = trail.concat(me);
+	if (points.length > 0) {
+		WlwdwMapProvider.fitBounds(points);
+	}
+}
+</script>
+
+<script type="text/javascript" src="js/wlwdw-map/tianditu.js"></script>
+</body>
+</html>

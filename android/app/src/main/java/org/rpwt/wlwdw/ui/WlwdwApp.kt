@@ -283,7 +283,13 @@ private fun Tabs(
                 )
             }
             composable<WlwdwDest.Map> {
-                MapScreen()
+                // Both come from the ViewModel rather than from the report log
+                // directly: the trail the map draws *is* the report log, and the
+                // chip over it is the same TrackingState the status screen reads.
+                MapScreen(
+                    reports = reports,
+                    tracking = tracking,
+                )
             }
             composable<WlwdwDest.Messages> {
                 MessageScreen(

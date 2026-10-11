@@ -44,6 +44,8 @@ import org.rpwt.wlwdw.ui.component.Callout
 import org.rpwt.wlwdw.ui.component.StatusPill
 import org.rpwt.wlwdw.ui.component.StatusRing
 import org.rpwt.wlwdw.ui.component.StatusTone
+import org.rpwt.wlwdw.ui.component.statusTitle
+import org.rpwt.wlwdw.ui.component.statusTone
 import org.rpwt.wlwdw.ui.component.WlwdwCard
 import org.rpwt.wlwdw.ui.model.DeviceStatus
 import org.rpwt.wlwdw.ui.relativeTime
@@ -128,8 +130,8 @@ fun StatusScreen(
             }
 
             StatusRing(
-                tone = ringTone(status),
-                title = stringResource(ringTitle(status)),
+                tone = statusTone(status),
+                title = stringResource(statusTitle(status)),
                 caption = ringCaption(status, reportIntervalMinutes),
             )
 
@@ -312,26 +314,9 @@ private fun LinkRow(label: String, pill: String, tone: StatusTone) {
 
 // --- Status matrix ---------------------------------------------------------
 
-private fun ringTone(status: DeviceStatus): StatusTone = when (status) {
-    DeviceStatus.Reporting -> StatusTone.Ok
-    DeviceStatus.PermissionMissing -> StatusTone.Warn
-    DeviceStatus.Retrying -> StatusTone.Warn
-    DeviceStatus.Stopped -> StatusTone.Idle
-    DeviceStatus.PushOffline -> StatusTone.Warn
-    DeviceStatus.LocationFailed -> StatusTone.Error
-    DeviceStatus.DeviceUnregistered -> StatusTone.Error
-}
-
-@StringRes
-private fun ringTitle(status: DeviceStatus): Int = when (status) {
-    DeviceStatus.Reporting -> R.string.wlwdw_ring_reporting
-    DeviceStatus.PermissionMissing -> R.string.wlwdw_ring_permission
-    DeviceStatus.Retrying -> R.string.wlwdw_ring_retrying
-    DeviceStatus.Stopped -> R.string.wlwdw_ring_stopped
-    DeviceStatus.PushOffline -> R.string.wlwdw_ring_push_offline
-    DeviceStatus.LocationFailed -> R.string.wlwdw_ring_no_fix
-    DeviceStatus.DeviceUnregistered -> R.string.wlwdw_ring_unregistered
-}
+// The ring's colour and its word live in ui/component/StatusMatrix.kt: the
+// map's floating chip reports the same DeviceStatus, and a second `when` here
+// would be a second place to forget the next case.
 
 @Composable
 private fun ringCaption(status: DeviceStatus, reportIntervalMinutes: Int): String = when (status) {
