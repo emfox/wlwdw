@@ -28,8 +28,11 @@
  *   fitBounds(wgsPoints)
  *       把视口套到这些点上。
  *
- * provider 可复用的文案：WlwdwMap.core.pointInfo(point)、WlwdwMap.core.timeLabel(time)。
- * 图标路径来自模板注入的全局变量 Marker_Pointer / Marker_Blank / Marker_Pin / Anchor_Path。
+ * provider 可复用的文案与构图：WlwdwMap.core.pointInfo(point)、
+ * WlwdwMap.core.timeLabel(time)、WlwdwMap.core.pin（单位当前点的尺寸与锚点）、
+ * WlwdwMap.core.pinLabel(title, interactive)（单位名标签的 HTML —— 它以自身
+ * 中心对齐坐标，provider 只要把它放在坐标上）。图标路径来自模板注入的全局变量
+ * Marker_Pointer / Marker_Blank / Marker_Pin / Anchor_Path。
  *
  * 注意：历史点与参考点的标签可拖动性、点击响应，两个 provider 目前并不一致，
  * 属既有差异，已按各自原行为保留。要统一就改各自的 provider。
@@ -85,6 +88,60 @@ var WlwdwMap = (function () {
 			throw new Error('wlwdw-map: 没有加载 provider');
 		}
 		return impl;
+	}
+
+	/* ---- 点位构图（三个 provider 共用同一份）----
+	 *
+	 * 坐标点上要叠三样东西，而"谁跟谁对齐"是个决定，不是各家的自由：
+	 *
+	 *   图标   32x32，锚底边中点   —— 锥尖指着坐标
+	 *   手柄   32x18，锚正中心     —— 拖拽面，方框**以坐标为中心**
+	 *   名称   以自身中心对齐坐标  —— 于是文字正好落在手柄方框里（重合）
+	 *
+	 * 为什么居中而不是左上角对齐：手柄是"把标记挪到别处"的抓取面，抓取面的中心
+	 * 才是它代表的那个位置；而锥尖（一个点）本来就是居中，两种约定混用会让同一个
+	 * 坐标在图上对应两个地方。尺寸与锚点只写在这里，谁都不许再各写一份。
+	 *
+	 * provider 负责的只有"翻译"：百度 Marker 的 anchor、天地图 Icon 的 iconAnchor
+	 * 与 DivIcon 的取负 margin、google 的 MarkerImage anchor 与 labelAnchor ——
+	 * 换算规则各家不同，所以留在 provider（见本文件顶部的契约说明）。
+	 */
+	var pin = {
+		icon: {size: 32, anchor: [16, 32]},
+		handle: {w: 32, h: 18, anchor: [16, 9]}
+	};
+
+	/*
+	 * 单位名标签的 HTML —— **以自身中心对齐坐标**。
+	 *
+	 * 居中由元素自己算：文字宽度取决于单位名，锚点算不出来；把 translate 写进元素，
+	 * provider 就只需要"把这个元素的左上角放在坐标上"，而这是三家 SDK 的共同行为
+	 * （百度 Label 的 offset(0,0)、天地图 DivIcon 的 iconAnchor(0,0)、google
+	 * MarkerWithLabel 的 labelAnchor(0,0)）。这就是通用方法 —— 不靠百度那句
+	 * marker.setLabel()，天地图没有那个 API。
+	 *
+	 * interactive：这个标签自己是不是拖拽面。
+	 *   百度与天地图的拖拽面是另一个覆盖物（BMap.Label 没有 enableDragging，只有
+	 *   带透明图标的 Marker；天地图的 DivIcon 同样只是一个内容容器），所以标签必须
+	 *   让指针事件穿过去，否则文字会盖住手柄、把拖拽整个吃掉 —— 改之前两边都没重合，
+	 *   这个冲突看不出来，重合之后它就必然出现。
+	 *   Google 的 MarkerWithLabel 没有独立手柄、标签就是拖拽面，必须保留事件。
+	 *
+	 * 样式全部写在元素上（不依赖页面里的 CSS，三处宿主只有 .labels 一份共同的）：
+	 *   display:inline-block  宽度由内容撑开 —— 天地图那个包裹 div 的宽度是 0，块级
+	 *                     元素会跟着算成 0；inline-block 在 0 宽里也能用文字宽度撑开
+	 *                     （文字不换行，最小内容宽度就是整串文字）；
+	 *   vertical-align:top    inline-block 会被行框的基线推下去几个 px（天地图的
+	 *                     包裹 div 行高 18px、字号 10px，实测推下 3px），顶对齐即可；
+	 *   transform            居中 —— 只有元素自己知道文字多宽，锚点算不出来。
+	 * 不用 width:fit-content：老 Safari 上要加前缀，inline-block 到处都一样。
+	 */
+	function pinLabel(text, interactive) {
+		var style = 'display:inline-block;vertical-align:top;transform:translate(-50%,-50%)';
+		if (!interactive) {
+			style += ';pointer-events:none';
+		}
+		return '<span class="labels" style="' + style + '">' + text + '</span>';
 	}
 
 	/* ---- 模板调用的四个入口 ---- */
@@ -146,7 +203,9 @@ var WlwdwMap = (function () {
 			hoverText: hoverText,
 			recordPicked: recordPicked,
 			pointInfo: pointInfo,
-			timeLabel: timeLabel
+			timeLabel: timeLabel,
+			pin: pin,
+			pinLabel: pinLabel
 		}
 	};
 })();

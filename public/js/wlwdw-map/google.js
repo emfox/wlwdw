@@ -36,11 +36,13 @@
 		return new google.maps.LatLng(native.lat, native.lng);
 	}
 
+	// 尺寸与锚点取自 core.js 的 pin：三家 provider 共用同一份构图，谁也不另写一份。
 	function icon(url) {
+		var layout = WlwdwMap.core.pin.icon;
 		return new google.maps.MarkerImage(url,
-			new google.maps.Size(32, 32),
+			new google.maps.Size(layout.size, layout.size),
 			new google.maps.Point(0, 0),   // origin
-			new google.maps.Point(16, 32)); // anchor
+			new google.maps.Point(layout.anchor[0], layout.anchor[1])); // anchor
 	}
 
 	// 记录本层画过的覆盖物。Google 没有"清空全部覆盖物"的接口，必须自己留账。
@@ -146,6 +148,11 @@
 			zIndex: 1
 		}));
 
+		// 这里没有第二个覆盖物当手柄：MarkerWithLabel 的标签本身就是拖拽面。
+		// 所以内容用 core.pinLabel(text, true) —— 那个元素自己居中（于是名称的
+		// 中心落在坐标上，与百度/天地图的手柄方框中心同一个位置），而且它必须
+		// 保留指针事件（它就是被拖的东西）。labelClass 留空：外观归 .labels
+		// 那个 span，套在外面的 div 再加一层边框会变成双层框。
 		var label = keep(new MarkerWithLabel({
 			position: p,
 			icon: ' ',
@@ -154,8 +161,8 @@
 			map: map,
 			optimized: false,
 			zIndex: 0,
-			labelContent: point.title,
-			labelClass: 'labels',
+			labelContent: WlwdwMap.core.pinLabel(point.title, true),
+			labelClass: '',
 			labelAnchor: new google.maps.Point(0, 0)
 		}));
 

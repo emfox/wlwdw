@@ -53,12 +53,19 @@
 		return new T.LngLat(native.lng, native.lat);
 	}
 
+	// 尺寸与锚点取自 core.js 的 pin：三家 provider 共用同一份构图，谁也不另写一份。
 	function icon(url, w, h, anchorX, anchorY) {
 		return new T.Icon({
 			iconUrl: url,
 			iconSize: new T.Point(w, h),
 			iconAnchor: new T.Point(anchorX, anchorY)
 		});
+	}
+
+	// 32x32、锚底边中点的图标（历史点与参考点），参数同 icon()。
+	function pointIcon(url) {
+		var layout = WlwdwMap.core.pin.icon;
+		return icon(url, layout.size, layout.size, layout.anchor[0], layout.anchor[1]);
 	}
 
 	// DivIcon 把 iconAnchor 实现成 marginLeft / -marginTop 的**取负**（见主包里 Icon.er），
@@ -69,6 +76,22 @@
 			html: '<span class="labels">' + text + '</span>',
 			iconSize: new T.Point(0, 0),
 			iconAnchor: new T.Point(-dx, dy)
+		});
+	}
+
+	// 单位名标签：内容由 core.js 给（那个元素自己把中心对到原点上），这里只负责
+	// 把它的原点放回坐标。两处天地图特有的换算，都是实测出来的：
+	//
+	//  1. DivIcon 的包裹 div 自带 1px 边框（.tdt-div-icon），而块级子元素的起点是
+	//     它的 **padding box**（CSS 规定绝对定位祖先是包含块时取内边距边），所以
+	//     锚点得往里挪 1px。按上面那条取负规则，往里挪 1px = 传 (1, 1)。
+	//  2. iconSize 传 (0,0)：div 的宽度算 0，宽度交给内容的 inline-block 自己撑开
+	//     （见 core.pinLabel 的样式说明）。
+	function pinName(text) {
+		return new T.DivIcon({
+			html: WlwdwMap.core.pinLabel(text, false),
+			iconSize: new T.Point(0, 0),
+			iconAnchor: new T.Point(1, 1)
 		});
 	}
 
@@ -138,27 +161,37 @@
 
 	/* ---- 三种点位的画法 ---- */
 
-	// 单位当前点：图标 + 一张透明图标做的拖拽手柄（挂单位名标签）+ 一条跟随拖动的引线
+	// 单位当前点：图标 + 一张透明图标做的拖拽手柄 + 挂在手柄上的单位名标签
+	// + 一条跟随拖动的引线。构图（各覆盖物多大、锚在哪）见 core.js 的 pin。
 	function drawPin(point) {
 		var p = toLngLat(point);
+		var layout = WlwdwMap.core.pin;
 		var infoWindow = new T.InfoWindow(WlwdwMap.core.pointInfo(point));
 
-		var marker = keep(new T.Marker(p, {icon: icon(Marker_Pointer, 32, 32, 16, 32)}));
+		var marker = keep(new T.Marker(p, {icon: pointIcon(Marker_Pointer)}));
 		marker.addEventListener('click', function () {
 			marker.openInfoWindow(infoWindow);
 		});
 
-		// 手柄用透明图标、锚点居中 —— 对应 baidu.js 里 32x18 的图标加 (16,9) 偏移。
+		// 单位名：天地图没有 Marker.setLabel，所以它是个独立的标注点，自己居中
+		// （见 pinName），于是落在手柄方框里，拖拽时要自己跟过去。
+		//
+		// ⚠️ 顺序：标签要**先**建、手柄后建。标签的包裹 div 是个 2x2 的点（iconSize
+		// 传 0 加 .tdt-div-icon 的 1px 边框），它落在坐标上正好是手柄的中心 —— 后建
+		// 的那个压在先建的上面，所以手柄最后加，压住那个点，整块手柄上的按压才都
+		// 落在手柄上（标签自己 pointer-events:none，但它拦不住包裹 div）。
+		var title = keep(new T.Marker(p, {icon: pinName(point.title)}));
+
+		// 手柄用透明图标、锚点在正中心 —— 方框以坐标为中心，和百度那边一致
+		// （百度是靠 Icon 的 anchor，这里靠 iconAnchor，参见 core.js 的 pin）。
 		var handle = keep(new T.Marker(p, {
-			icon: icon(Marker_Blank, 32, 18, 16, 9),
+			icon: icon(Marker_Blank, layout.handle.w, layout.handle.h,
+				layout.handle.anchor[0], layout.handle.anchor[1]),
 			draggable: true
 		}));
 		handle.addEventListener('click', function () {
 			handle.openInfoWindow(infoWindow);
 		});
-
-		// 天地图没有 Marker.setLabel，单位名是独立的标注点，拖拽时要自己跟过去。
-		var title = keep(new T.Marker(p, {icon: textLabel(point.title, 0, 0)}));
 
 		var line = keep(new T.Polyline([p, p], {color: 'red', weight: 1, opacity: 0.8}));
 		handle.addEventListener('dragend', function (e) {
@@ -172,7 +205,7 @@
 	function drawTrailPoint(point) {
 		var p = toLngLat(point);
 
-		keep(new T.Marker(p, {icon: icon(Marker_Pin, 32, 32, 16, 32)}));
+		keep(new T.Marker(p, {icon: pointIcon(Marker_Pin)}));
 
 		var time = keep(new T.Marker(p, {icon: textLabel(WlwdwMap.core.timeLabel(point.time), 10, 5)}));
 		time.addEventListener('click', function () {
@@ -184,7 +217,7 @@
 	function drawAnchor(point) {
 		var p = toLngLat(point);
 
-		keep(new T.Marker(p, {icon: icon(Anchor_Path + point.icon, 32, 32, 16, 32)}));
+		keep(new T.Marker(p, {icon: pointIcon(Anchor_Path + point.icon)}));
 
 		var name = keep(new T.Marker(p, {icon: textLabel(point.title, 10, 5)}));
 		name.addEventListener('click', function () {
