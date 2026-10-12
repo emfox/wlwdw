@@ -5,7 +5,7 @@
          title the interface shows (the consent headline and the status top bar):
          one name everywhere, so the app does not introduce itself twice. The
          English form is in values-en. -->
-    <string name="app_name">物联网定位</string>
+    <string name="app_name">组织外勤物流定位系统</string>
 
     <!-- The Compose UI (org.rpwt.wlwdw.ui). Text that belongs to the interface
          lives here. Values that are really data (coordinates, the last report
@@ -114,7 +114,7 @@
          them rather than dropping them. -->
     <string name="wlwdw_messages_earlier">更早</string>
     <string name="wlwdw_messages_empty_title">还没有消息</string>
-    <string name="wlwdw_messages_empty_body">家人发来的消息和上报异常提醒会出现在这里。</string>
+    <string name="wlwdw_messages_empty_body">管理员发来的消息和上报异常提醒会出现在这里。</string>
 
     <!-- Settings screen -->
     <string name="wlwdw_settings_device_group">本机设备</string>
@@ -160,8 +160,8 @@
     <string name="wlwdw_reports_failed_unknown">未知原因（%1$s）</string>
 
     <!-- First-run consent -->
-    <string name="wlwdw_consent_tagline">让家人知道你在哪里</string>
-    <string name="wlwdw_consent_point_location">位置信息只用于本应用的定位上报，供家人查看</string>
+    <string name="wlwdw_consent_tagline">让管理员掌握外勤位置</string>
+    <string name="wlwdw_consent_point_location">位置信息只用于本应用的定位上报，供管理员查看</string>
     <string name="wlwdw_consent_point_contacts">不会读取通讯录、照片、文件或通话记录</string>
     <string name="wlwdw_consent_point_background">后台定位只在你主动开启追踪后才启用</string>
     <string name="wlwdw_consent_point_stop">随时可以在状态页停止上报</string>
